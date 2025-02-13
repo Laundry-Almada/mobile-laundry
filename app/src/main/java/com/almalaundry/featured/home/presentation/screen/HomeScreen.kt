@@ -1,8 +1,11 @@
 package com.almalaundry.featured.home.presentation.screen
 
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -30,6 +33,9 @@ fun HomeScreen(
 
     CompositionLocalProvider(LocalHomeNavController provides homeNavController) {
         Scaffold(
+            contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
+                sides = WindowInsetsSides.Bottom
+            ),
             bottomBar = {
                 BottomNavigation(navController = homeNavController)
             }
