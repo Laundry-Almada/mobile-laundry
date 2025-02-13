@@ -5,7 +5,7 @@ import androidx.navigation.compose.composable
 import com.almalaundry.featured.home.presentation.screen.HomeScreen
 
 fun NavGraphBuilder.homeNavigation() {
-    composable(route = HomeRoutes.Index.route) {
+    composable(HomeRoutes.Index.route) {
         HomeScreen()
     }
 }
