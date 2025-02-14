@@ -1,8 +1,7 @@
-package com.almalaundry.shared.commons.navigation
+package com.almalaundry.shared.presentation.components
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.almalaundry.featured.home.commons.HomeRoutes
-import com.composables.icons.lucide.Camera
 import com.composables.icons.lucide.Focus
 import com.composables.icons.lucide.History
 import com.composables.icons.lucide.LayoutDashboard
