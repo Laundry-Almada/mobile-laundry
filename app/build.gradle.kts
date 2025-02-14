@@ -46,8 +46,8 @@ android {
 
 dependencies {
 
-    //    Hilt dagger
-//    ksp(libs.dagger.compiler) // Dagger compiler
+    //  Hilt dagger
+    //  ksp(libs.dagger.compiler) // Dagger compiler
     ksp(libs.hilt.android.compiler)   // Hilt compiler
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -64,12 +64,18 @@ dependencies {
     // Kotlin serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // google font
-    implementation(libs.androidx.ui.text.google.fonts)
-
     // lucide icon
     implementation(libs.icons.lucide.android)
 
+    // ML Kit Barcode Scanning
+    implementation(libs.barcode.scanning)
+
+    // CameraX
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+
+    // Coil
     implementation(libs.coil.compose)
 
     implementation(libs.androidx.core.ktx)
