@@ -16,17 +16,24 @@ class ScanViewModel @Inject constructor() : ViewModel() {
     val state = _state.asStateFlow()
 
     fun onBarcodeDetected(value: String) {
-        viewModelScope.launch {
-            _state.update { it.copy(barcodeValue = value, isScanning = false) }
+        _state.update {
+            it.copy(
+                barcodeValue = value,
+                isScanning = false,
+                error = null,
+                successMessage = "Berhasil scan: $value"
+            )
         }
     }
 
     fun startScanning() {
-        _state.update { it.copy(isScanning = true) }
-    }
-
-    fun stopScanning() {
-        _state.update { it.copy(isScanning = false) }
+        _state.update {
+            it.copy(
+                isScanning = true,
+                error = null,
+                barcodeValue = ""
+            )
+        }
     }
 
     fun updatePermissionStatus(hasPermission: Boolean) {
@@ -34,6 +41,11 @@ class ScanViewModel @Inject constructor() : ViewModel() {
     }
 
     fun setError(message: String?) {
-        _state.update { it.copy(error = message) }
+        _state.update { it.copy(error = message, isScanning = false) }
+    }
+    fun resetState() {
+        _state.update {
+            ScanState()
+        }
     }
 }

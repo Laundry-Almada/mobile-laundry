@@ -47,8 +47,7 @@ import com.composables.icons.lucide.Lucide
 @Composable
 fun BottomNavigation(
     navController: NavController,
-    items: List<NavigationItem> = NavigationItems.items,
-    onScanClick: () -> Unit = {}
+    items: List<NavigationItem> = NavigationItems.items
 ) {
     val softGray = Color.Gray.copy(alpha = 0.5f)
     Box(
@@ -147,9 +146,6 @@ fun BottomNavigation(
         FloatingActionButton(
             onClick = {
                 navController.navigate(ScanRoutes.Index.route) {
-                    popUpTo(navController.graph.findStartDestination().id) {
-                        saveState = true
-                    }
                     launchSingleTop = true
                 }
             },

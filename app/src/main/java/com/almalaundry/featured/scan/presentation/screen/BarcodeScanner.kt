@@ -1,5 +1,6 @@
 package com.almalaundry.featured.scan.presentation.screen
 
+import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
@@ -15,84 +16,105 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
 import com.google.mlkit.vision.common.InputImage
 
 @Composable
 fun BarcodeScanner(
     onBarcodeDetected: (String) -> Unit,
+    onError: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            cameraProviderFuture.get().unbindAll()
-        }
-    }
-
     AndroidView(
         modifier = modifier,
         factory = { ctx ->
-            PreviewView(ctx).apply {
+            val previewView = PreviewView(ctx).apply {
                 implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                scaleType = PreviewView.ScaleType.FILL_CENTER
+            }
 
-                cameraProviderFuture.addListener({
+            cameraProviderFuture.addListener({
+                try {
                     val cameraProvider = cameraProviderFuture.get()
+
+                    // Camera configuration
                     val preview = Preview.Builder().build()
                     val cameraSelector = CameraSelector.Builder()
                         .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                         .build()
 
                     val imageAnalysis = ImageAnalysis.Builder()
+                        .setTargetResolution(Size(1280, 720))
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build()
                         .apply {
                             setAnalyzer(
                                 ContextCompat.getMainExecutor(ctx),
-                                BarcodeAnalyzer { barcode ->
-                                    onBarcodeDetected(barcode)
-                                }
+                                BarcodeAnalyzer(
+                                    onSuccess = onBarcodeDetected,
+                                    onError = { onError("Barcode detection failed") }
+                                )
                             )
                         }
 
-                    try {
-                        cameraProvider.unbindAll()
-                        cameraProvider.bindToLifecycle(
-                            lifecycleOwner,
-                            cameraSelector,
-                            preview,
-                            imageAnalysis
-                        )
-                        preview.surfaceProvider = surfaceProvider
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                    }
-                }, ContextCompat.getMainExecutor(ctx))
-            }
+                    // Bind use cases
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        lifecycleOwner,
+                        cameraSelector,
+                        preview,
+                        imageAnalysis
+                    )
+                    preview.surfaceProvider = previewView.surfaceProvider
+                } catch (e: Exception) {
+                    onError("Camera initialization failed: ${e.localizedMessage}")
+                }
+            }, ContextCompat.getMainExecutor(ctx))
+
+            previewView
         }
     )
 }
 
-class BarcodeAnalyzer(private val onBarcodeDetected: (String) -> Unit) : ImageAnalysis.Analyzer {
-    private val scanner = BarcodeScanning.getClient()
+class BarcodeAnalyzer(
+    private val onSuccess: (String) -> Unit,
+    private val onError: () -> Unit
+) : ImageAnalysis.Analyzer {
+    private val scanner = BarcodeScanning.getClient(
+        BarcodeScannerOptions.Builder()
+            .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+            .build()
+    )
 
     @ExperimentalGetImage
     override fun analyze(imageProxy: ImageProxy) {
-        val mediaImage = imageProxy.image
-        if (mediaImage != null) {
-            val image = InputImage.fromMediaImage(mediaImage, imageProxy.imageInfo.rotationDegrees)
-            scanner.process(image)
-                .addOnSuccessListener { barcodes ->
-                    barcodes.firstOrNull()?.rawValue?.let { value ->
-                        onBarcodeDetected(value)
-                    }
-                }
-                .addOnCompleteListener {
-                    imageProxy.close()
-                }
+        val mediaImage = imageProxy.image ?: run {
+            imageProxy.close()
+            return
         }
+
+        val image = InputImage.fromMediaImage(
+            mediaImage,
+            imageProxy.imageInfo.rotationDegrees
+        )
+
+        scanner.process(image)
+            .addOnSuccessListener { barcodes ->
+                barcodes.firstOrNull()?.rawValue?.let { value ->
+                    onSuccess(value)
+                }
+            }
+            .addOnFailureListener {
+                onError()
+            }
+            .addOnCompleteListener {
+                imageProxy.close()
+            }
     }
 }

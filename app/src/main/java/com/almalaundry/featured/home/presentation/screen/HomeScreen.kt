@@ -16,10 +16,13 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.almalaundry.featured.history.commons.HistoryRoutes
 import com.almalaundry.featured.history.presentation.screen.HistoryScreen
 import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.featured.home.presentation.viewmodels.HomeViewModel
+import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.screen.OrderScreen
+import com.almalaundry.featured.profile.commons.ProfileRoutes
 import com.almalaundry.featured.profile.presentation.screen.ProfileScreen
 import com.almalaundry.featured.scan.commons.ScanRoutes
 import com.almalaundry.featured.scan.presentation.screen.ScanScreen
@@ -65,16 +68,16 @@ fun HomeNavGraph(
         composable(HomeRoutes.Dashboard.route) {
             DashboardUser()
         }
-        composable(HomeRoutes.Orders.route) {
+        composable(OrderRoutes.Index.route) {
             OrderScreen()
         }
-        composable(HomeRoutes.Index.route){
+        composable(ScanRoutes.Index.route) {
             ScanScreen()
         }
-        composable(HomeRoutes.History.route) {
+        composable(HistoryRoutes.Index.route) {
             HistoryScreen()
         }
-        composable(HomeRoutes.Profile.route) {
+        composable(ProfileRoutes.Index.route) {
             ProfileScreen()
         }
     }

@@ -1,7 +1,10 @@
 package com.almalaundry.shared.presentation.components
 
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.almalaundry.featured.history.commons.HistoryRoutes
 import com.almalaundry.featured.home.commons.HomeRoutes
+import com.almalaundry.featured.order.commons.OrderRoutes
+import com.almalaundry.featured.profile.commons.ProfileRoutes
 import com.composables.icons.lucide.Focus
 import com.composables.icons.lucide.History
 import com.composables.icons.lucide.LayoutDashboard
@@ -17,7 +20,7 @@ object NavigationItems {
             label = "Home"
         ),
         NavigationItem(
-            route = HomeRoutes.Orders.route,
+            route = OrderRoutes.Index.route,
             icon = Lucide.ShoppingBag,
             label = "Orders"
         ),
@@ -27,12 +30,12 @@ object NavigationItems {
             label = "Scan"
         ),
         NavigationItem(
-            route = HomeRoutes.History.route,
+            route = HistoryRoutes.Index.route,
             icon = Lucide.History,
             label = "History"
         ),
         NavigationItem(
-            route = HomeRoutes.Profile.route,
+            route = ProfileRoutes.Index.route,
             icon = Lucide.User,
             label = "Profile"
         )

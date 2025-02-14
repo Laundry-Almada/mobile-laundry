@@ -4,5 +4,6 @@ data class ScanState(
     val barcodeValue: String = "",
     val isScanning: Boolean = false,
     val hasPermission: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val successMessage: String? = null
 )
