@@ -14,6 +14,9 @@ sealed class HomeRoutes(val route: String) {
     data object Orders : HomeRoutes("orders")
 
     @Serializable
+    data object Scan : HomeRoutes("scan")
+
+    @Serializable
     data object Profile : HomeRoutes("profile")
 
     @Serializable

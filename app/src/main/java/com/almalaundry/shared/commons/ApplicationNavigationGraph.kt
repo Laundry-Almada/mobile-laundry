@@ -8,6 +8,7 @@ import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.featured.home.commons.homeNavigation
 import com.almalaundry.featured.order.commons.orderNavigation
 import com.almalaundry.featured.profile.commons.profileNavigation
+import com.almalaundry.featured.scan.commons.scanNavigation
 
 @Composable
 fun ApplicationNavigationGraph(
@@ -19,6 +20,7 @@ fun ApplicationNavigationGraph(
     ) {
         homeNavigation()
         orderNavigation()
+        scanNavigation()
         historyNavigation()
         profileNavigation()
     }

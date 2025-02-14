@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.almalaundry.featured.scan.commons.ScanRoutes
 import com.composables.icons.lucide.Focus
 import com.composables.icons.lucide.Lucide
 
@@ -144,7 +145,14 @@ fun BottomNavigation(
         }
 
         FloatingActionButton(
-            onClick = onScanClick,
+            onClick = {
+                navController.navigate(ScanRoutes.Index.route) {
+                    popUpTo(navController.graph.findStartDestination().id) {
+                        saveState = true
+                    }
+                    launchSingleTop = true
+                }
+            },
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .offset(y = (-20).dp)

@@ -46,6 +46,7 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.espresso.core)
     //  Hilt dagger
     //  ksp(libs.dagger.compiler) // Dagger compiler
     ksp(libs.hilt.android.compiler)   // Hilt compiler

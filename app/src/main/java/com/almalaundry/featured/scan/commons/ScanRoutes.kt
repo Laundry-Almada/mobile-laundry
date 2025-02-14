@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 @Serializable
 sealed class ScanRoutes(val route: String) {
     @Serializable
-    data object Index : ScanRoutes("order")
+    data object Index : ScanRoutes("scan")
 }
