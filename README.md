@@ -1,10 +1,60 @@
-##Feature Mobile
-- [x] Auth: Register & Login
-- [x] Scanner Barcode
-- [ ] Home Dashboard
-- [ ] Order List
-- [ ] Create Order
-- [ ] Update Order & Order Status
-- [ ] Delete Order
-- [ ] History Order
-- [ ] Profile: Edit
+## ✅ Feature Progress
+
+### Authentication
+
+| Status | Fungsional              |
+| :----: | ----------------------- |
+|   ✅   | login                   |
+|   ✅   | register                |
+|   🚧   | logout                  |
+
+### Barcode Scanner
+
+| Status | Fungsional                                               |
+| :----: | -------------------------------------------------------- |
+|   ✅   | Scan Barcode                                             |
+
+### Dashboard
+
+| Status | Fungsional                                               |
+| :----: | -------------------------------------------------------- |
+|   ⬜   | Statistik |
+|   ⬜   | Notif |
+
+
+### Profile
+
+| Status | Fungsional |
+| :----: | -------------------------------------------------------- |
+| 🚧 | Get Profile |
+| 🚧 | Update Profile |
+
+### Order
+
+| Status | Fungsional |
+| :----: | -------------------------------------------------------- |
+| 🚧 | List Order |
+| 🚧 | Create Order |
+| 🚧 | Edit Order & Update Order Status |
+| 🚧 | Delete Order |
+
+### History Order
+
+| Status | Fungsional |
+| :----: | -------------------------------------------------------- |
+| ⬜ | List Order yang sudah selesai |
+| ⬜ | Filtering order |
+
+### Guest
+
+| Status | Fungsional |
+| :----: | -------------------------------------------------------- |
+| ⬜ | Cek status Order by customer guest/public |
+
+---
+
+### Legend:
+
+- ✅ = Completed
+- 🚧 = In Progress
+- ⬜ = Not started
