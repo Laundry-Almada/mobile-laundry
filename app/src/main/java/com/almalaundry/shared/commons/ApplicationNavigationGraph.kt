@@ -4,8 +4,9 @@ import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import com.almalaundry.featured.auth.commons.AuthRoutes
+import com.almalaundry.featured.auth.commons.authNavigation
 import com.almalaundry.featured.history.commons.historyNavigation
-import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.featured.home.commons.homeNavigation
 import com.almalaundry.featured.order.commons.orderNavigation
 import com.almalaundry.featured.profile.commons.profileNavigation
@@ -17,12 +18,14 @@ fun ApplicationNavigationGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = HomeRoutes.Index.route,
+//        startDestination = HomeRoutes.Index.route,
+        startDestination = AuthRoutes.Login.route,
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) },
         exitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
         popExitTransition = { slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End) },
     ) {
+        authNavigation()
         homeNavigation()
         orderNavigation()
         scanNavigation()
