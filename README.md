@@ -12,7 +12,8 @@
 
 | Status | Fungsional                                               |
 | :----: | -------------------------------------------------------- |
-|   ✅   | Scan Barcode                                             |
+|   ✅   | Scan Barcode |
+| ⬜ | print Barcode & connect to physcical print device |
 
 ### Dashboard
 
