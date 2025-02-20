@@ -1,8 +1,9 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-
 
     kotlin("plugin.serialization") version "2.0.21"
     id("com.google.devtools.ksp")
@@ -24,8 +25,26 @@ android {
     }
 
     buildTypes {
+        debug {
+            val properties = Properties()
+            properties.load(rootProject.file(".env.development").inputStream())
+
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"${properties.getProperty("BASE_URL")}\""
+            )
+        }
         release {
-            isMinifyEnabled = false
+            val properties = Properties()
+            properties.load(rootProject.file(".env.production").inputStream())
+
+            buildConfigField(
+                "String",
+                "BASE_URL",
+                "\"${properties.getProperty("BASE_URL")}\""
+            )
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -45,12 +64,14 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
 dependencies {
 
     implementation(libs.androidx.espresso.core)
+//    implementation(libs.firebase.crashlytics.buildtools)
     //  Hilt dagger
     //  ksp(libs.dagger.compiler) // Dagger compiler
     ksp(libs.hilt.android.compiler)   // Hilt compiler
