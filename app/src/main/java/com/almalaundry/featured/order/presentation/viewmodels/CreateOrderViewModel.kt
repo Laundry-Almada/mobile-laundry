@@ -64,14 +64,14 @@ class CreateOrderViewModel @Inject constructor(
                 }
 
                 repository.checkCustomer(_state.value.phone).onSuccess { customer ->
-                        // Customer ditemukan, langsung create order
-                        createOrder()
-                    }.onFailure {
-                        // Customer tidak ditemukan, tampilkan dialog nama
-                        _state.value = _state.value.copy(
-                            isLoading = false, showNameDialog = true
-                        )
-                    }
+                    // Customer ditemukan, langsung create order
+                    createOrder()
+                }.onFailure {
+                    // Customer tidak ditemukan, tampilkan dialog nama
+                    _state.value = _state.value.copy(
+                        isLoading = false, showNameDialog = true
+                    )
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false, error = e.message ?: "Terjadi kesalahan"
@@ -80,15 +80,25 @@ class CreateOrderViewModel @Inject constructor(
         }
     }
 
-
     fun createOrder() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
 
             try {
+                // Pastikan nama terisi untuk customer baru
+                if (_state.value.showNameDialog && _state.value.name.isBlank()) {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Nama customer harus diisi"
+                    )
+                    return@launch
+                }
+
+                // Buat request sesuai kondisi customer
                 val request = CreateOrderRequest(
                     phone = _state.value.phone,
-                    name = _state.value.name,
+                    // Kirim nama hanya jika customer baru dan dialog nama ditampilkan
+                    name = _state.value.name.takeIf { it.isNotBlank() },
                     laundryId = _state.value.laundryId,
                     type = _state.value.type,
                     weight = _state.value.weight.toDoubleOrNull() ?: 0.0,
@@ -96,24 +106,25 @@ class CreateOrderViewModel @Inject constructor(
                     note = _state.value.note
                 )
 
-                repository.createOrder(request).onSuccess {
+                repository.createOrder(request)
+                    .onSuccess {
                         _state.value = _state.value.copy(
-                            isLoading = false, success = true, error = null
+                            isLoading = false,
+                            success = true,
+                            error = null,
+                            showNameDialog = false
                         )
-                    }.onFailure { exception ->
-                        if (exception.message?.contains("The name field is required") == true) {
-                            showNameDialog()
-                            _state.value = _state.value.copy(isLoading = false)
-                        } else {
-                            _state.value = _state.value.copy(
-                                isLoading = false,
-                                error = exception.message ?: "Unknown error occurred"
-                            )
-                        }
+                    }
+                    .onFailure { exception ->
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            error = exception.message ?: "Unknown error occurred"
+                        )
                     }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    isLoading = false, error = e.message ?: "Unknown error occurred"
+                    isLoading = false,
+                    error = e.message ?: "Unknown error occurred"
                 )
             }
         }

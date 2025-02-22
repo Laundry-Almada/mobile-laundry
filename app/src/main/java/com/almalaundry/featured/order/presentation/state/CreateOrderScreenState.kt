@@ -11,5 +11,5 @@ data class CreateOrderScreenState(
     val totalPrice: String = "",
     val note: String = "",
     val showNameDialog: Boolean = false,
-    val name: String = ""
+    val name: String = "",
 )
