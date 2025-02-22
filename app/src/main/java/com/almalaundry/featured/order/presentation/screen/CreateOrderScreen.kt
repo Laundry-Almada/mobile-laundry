@@ -72,7 +72,7 @@ fun CreateOrderScreen(
                     onClick = {
                         if (state.name.isNotBlank()) {
                             viewModel.hideNameDialog()
-                            viewModel.createOrder()
+                            viewModel.saveCustomerAndCreateOrder()
                         }
                     },
                     enabled = state.name.isNotBlank()
@@ -152,7 +152,7 @@ fun CreateOrderScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.checkAndCreateOrder() },
+                onClick = { viewModel.createOrder() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {

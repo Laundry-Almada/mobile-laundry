@@ -77,7 +77,6 @@ class OrderRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
-                // Parse error message dari response body
                 val errorBody = response.errorBody()?.string()
                 println(errorBody)
                 val errorMessage = try {

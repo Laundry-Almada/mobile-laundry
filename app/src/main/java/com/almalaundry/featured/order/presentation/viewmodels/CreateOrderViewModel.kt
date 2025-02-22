@@ -42,15 +42,11 @@ class CreateOrderViewModel @Inject constructor(
         _state.value = _state.value.copy(name = name)
     }
 
-    private fun showNameDialog() {
-        _state.value = _state.value.copy(showNameDialog = true)
-    }
-
     fun hideNameDialog() {
         _state.value = _state.value.copy(showNameDialog = false)
     }
-
-    fun checkAndCreateOrder() {
+    
+    fun createOrder() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
 
@@ -63,11 +59,12 @@ class CreateOrderViewModel @Inject constructor(
                     return@launch
                 }
 
-                repository.checkCustomer(_state.value.phone).onSuccess { customer ->
-                    // Customer ditemukan, langsung create order
-                    createOrder()
+                // Check customer dulu
+                repository.checkCustomer(_state.value.phone).onSuccess {
+                    // Customer ada, langsung buat order
+                    proceedCreateOrder()
                 }.onFailure {
-                    // Customer tidak ditemukan, tampilkan dialog nama
+                    // Customer tidak ada, tampilkan dialog nama
                     _state.value = _state.value.copy(
                         isLoading = false, showNameDialog = true
                     )
@@ -80,53 +77,49 @@ class CreateOrderViewModel @Inject constructor(
         }
     }
 
-    fun createOrder() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+    private suspend fun proceedCreateOrder() {
+        try {
+            val request = CreateOrderRequest(
+                phone = _state.value.phone,
+                name = _state.value.name.takeIf { it.isNotBlank() },
+                laundryId = _state.value.laundryId,
+                type = _state.value.type,
+                weight = _state.value.weight.toDoubleOrNull() ?: 0.0,
+                totalPrice = _state.value.totalPrice.toIntOrNull() ?: 0,
+                note = _state.value.note
+            )
 
-            try {
-                // Pastikan nama terisi untuk customer baru
-                if (_state.value.showNameDialog && _state.value.name.isBlank()) {
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = "Nama customer harus diisi"
-                    )
-                    return@launch
-                }
-
-                // Buat request sesuai kondisi customer
-                val request = CreateOrderRequest(
-                    phone = _state.value.phone,
-                    // Kirim nama hanya jika customer baru dan dialog nama ditampilkan
-                    name = _state.value.name.takeIf { it.isNotBlank() },
-                    laundryId = _state.value.laundryId,
-                    type = _state.value.type,
-                    weight = _state.value.weight.toDoubleOrNull() ?: 0.0,
-                    totalPrice = _state.value.totalPrice.toIntOrNull() ?: 0,
-                    note = _state.value.note
-                )
-
-                repository.createOrder(request)
-                    .onSuccess {
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            success = true,
-                            error = null,
-                            showNameDialog = false
-                        )
-                    }
-                    .onFailure { exception ->
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Unknown error occurred"
-                        )
-                    }
-            } catch (e: Exception) {
+            repository.createOrder(request).onSuccess {
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = e.message ?: "Unknown error occurred"
+                    success = true,
+                    error = null,
+                    showNameDialog = false,
+                    name = ""
+                )
+            }.onFailure { exception ->
+                _state.value = _state.value.copy(
+                    isLoading = false, error = exception.message ?: "Unknown error occurred"
+                )
+            }
+        } catch (e: Exception) {
+            _state.value = _state.value.copy(
+                isLoading = false, error = e.message ?: "Unknown error occurred"
+            )
+        }
+    }
+
+    fun saveCustomerAndCreateOrder() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                proceedCreateOrder() // Langsung buat order tanpa pengecekan customer lagi
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false, error = e.message ?: "Terjadi kesalahan"
                 )
             }
         }
     }
+
 }

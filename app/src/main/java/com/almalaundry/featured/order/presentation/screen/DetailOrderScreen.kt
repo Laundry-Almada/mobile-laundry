@@ -117,7 +117,7 @@ fun DetailOrderScreen(
                             Text(text = "Barcode: ${state.order?.barcode}")
                             Text(text = "Tipe: ${state.order?.type}")
                             Text(text = "Berat: ${state.order?.weight} kg")
-                            Text(text = "Total: Rp ${state.order?.total_price}")
+                            Text(text = "Total: Rp ${state.order?.totalPrice}")
 
                             if (!state.order?.note.isNullOrEmpty()) {
                                 Spacer(modifier = Modifier.height(8.dp))

@@ -1,5 +1,7 @@
 package com.almalaundry.featured.order.domain.models
 
+import com.google.gson.annotations.SerializedName
+
 data class Order(
     val id: String = "",
     val customer: Customer = Customer(),
@@ -8,8 +10,8 @@ data class Order(
     val type: String = "",
     val barcode: String = "",
     val weight: String = "",
-    val total_price: String = "",
+    @SerializedName("total_price") val totalPrice: String = "",
     val note: String = "",
-    val created_at: String = "",
-    val updated_at: String = ""
+    @SerializedName("created_at") val createdAt: String = "",
+    @SerializedName("updated_at") val updatedAt: String = ""
 )
