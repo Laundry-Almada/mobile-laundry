@@ -1,9 +1,12 @@
 package com.almalaundry.featured.order.data.source
 
+import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.OrderDetailResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
 import retrofit2.Response
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -23,4 +26,7 @@ interface OrderApi {
 
     @GET("orders/{orderId}")
     suspend fun getOrderDetail(@Path("orderId") orderId: String): Response<OrderDetailResponse>
+
+    @POST("orders")
+    suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderDetailResponse>
 }

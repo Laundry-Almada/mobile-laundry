@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +38,7 @@ import com.almalaundry.featured.order.presentation.components.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.OrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Plus
 import com.composables.icons.lucide.RefreshCcw
 
 @Composable
@@ -54,7 +56,14 @@ fun OrderScreen(
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
             WindowInsetsSides.Top
-        )
+        ),
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(OrderRoutes.Create.route) }
+            ) {
+                Icon(Lucide.Plus, "Create Order")
+            }
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier

@@ -3,7 +3,7 @@ package com.almalaundry.featured.order.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.almalaundry.featured.order.data.repositories.OrderRepository
-import com.almalaundry.featured.order.presentation.state.OrderState
+import com.almalaundry.featured.order.presentation.state.OrderScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,7 +14,7 @@ import javax.inject.Inject
 class OrderViewModel @Inject constructor(
     private val repository: OrderRepository
 ) : ViewModel() {
-    private val _state = MutableStateFlow(OrderState())
+    private val _state = MutableStateFlow(OrderScreenState())
     val state = _state.asStateFlow()
 
     init {
@@ -48,7 +48,7 @@ class OrderViewModel @Inject constructor(
         }
     }
 
-//
+    //
     fun searchOrders(query: String) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)

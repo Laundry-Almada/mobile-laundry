@@ -1,8 +1,14 @@
 package com.almalaundry.featured.order.data.dtos
 
+import com.google.gson.annotations.SerializedName
+
 data class OrderMeta(
-    val total_orders: Int,
-    val total_pages: Int,
-    val current_page: Int,
-    val per_page: Int
+    @SerializedName("total_orders")
+    val totalOrders: Int,
+    @SerializedName("total_pages")
+    val totalPages: Int,
+    @SerializedName("current_page")
+    val currentPage: Int,
+    @SerializedName("per_page")
+    val perPage: Int
 )

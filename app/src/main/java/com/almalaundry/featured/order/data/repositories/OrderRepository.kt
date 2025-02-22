@@ -1,5 +1,6 @@
 package com.almalaundry.featured.order.data.repositories
 
+import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.OrderResponse
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
@@ -49,6 +50,19 @@ class OrderRepository @Inject constructor(
                 Result.success(response.body()!!.data)
             } else {
                 Result.failure(Exception("Failed to fetch order detail"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun createOrder(request: CreateOrderRequest): Result<Order> {
+        return try {
+            val response = api.createOrder(request)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.data)
+            } else {
+                Result.failure(Exception("Failed to create order"))
             }
         } catch (e: Exception) {
             Result.failure(e)
