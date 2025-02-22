@@ -9,5 +9,7 @@ data class CreateOrderScreenState(
     val type: String = "regular",
     val weight: String = "",
     val totalPrice: String = "",
-    val note: String = ""
+    val note: String = "",
+    val showNameDialog: Boolean = false,
+    val name: String = ""
 )

@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -18,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -45,18 +47,54 @@ fun CreateOrderScreen(
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Buat Order Baru") },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Lucide.ArrowLeft, "Back")
-                    }
+    if (state.showNameDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.hideNameDialog() },
+            title = { Text("Input Nama Customer") },
+            text = {
+                Column {
+                    Text(
+                        text = "Customer belum terdaftar di database, masukkan nama",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = state.name,
+                        onValueChange = { viewModel.updateName(it) },
+                        label = { Text("Nama") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
-            )
-        }
-    ) { paddingValues ->
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        if (state.name.isNotBlank()) {
+                            viewModel.hideNameDialog()
+                            viewModel.createOrder()
+                        }
+                    },
+                    enabled = state.name.isNotBlank()
+                ) {
+                    Text("Simpan")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.hideNameDialog() }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
+
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("Buat Order Baru") }, navigationIcon = {
+            IconButton(onClick = { navController.navigateUp() }) {
+                Icon(Lucide.ArrowLeft, "Back")
+            }
+        })
+    }) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -114,14 +152,13 @@ fun CreateOrderScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { viewModel.createOrder() },
+                onClick = { viewModel.checkAndCreateOrder() },
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isLoading
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
                     Text("Buat Order")

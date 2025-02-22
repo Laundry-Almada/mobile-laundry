@@ -1,9 +1,11 @@
 package com.almalaundry.featured.order.data.repositories
 
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
+import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
+import org.json.JSONObject
 import javax.inject.Inject
 
 class OrderRepository @Inject constructor(
@@ -56,13 +58,36 @@ class OrderRepository @Inject constructor(
         }
     }
 
+    suspend fun checkCustomer(phone: String): Result<CustomerResponse> {
+        return try {
+            val response = api.checkCustomer(phone)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Customer tidak ditemukan"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun createOrder(request: CreateOrderRequest): Result<Order> {
         return try {
             val response = api.createOrder(request)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
-                Result.failure(Exception("Failed to create order"))
+                // Parse error message dari response body
+                val errorBody = response.errorBody()?.string()
+                println(errorBody)
+                val errorMessage = try {
+                    val jsonObject = JSONObject(errorBody ?: "")
+                    jsonObject.getString("message")
+                } catch (e: Exception) {
+                    "Failed to create order"
+                }
+                println(errorMessage)
+                Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
             Result.failure(e)

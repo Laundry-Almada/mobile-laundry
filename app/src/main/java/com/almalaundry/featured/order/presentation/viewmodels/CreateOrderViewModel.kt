@@ -38,6 +38,49 @@ class CreateOrderViewModel @Inject constructor(
         _state.value = _state.value.copy(note = note)
     }
 
+    fun updateName(name: String) {
+        _state.value = _state.value.copy(name = name)
+    }
+
+    private fun showNameDialog() {
+        _state.value = _state.value.copy(showNameDialog = true)
+    }
+
+    fun hideNameDialog() {
+        _state.value = _state.value.copy(showNameDialog = false)
+    }
+
+    fun checkAndCreateOrder() {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+
+            try {
+                // Validasi input dasar
+                if (_state.value.phone.isBlank()) {
+                    _state.value = _state.value.copy(
+                        isLoading = false, error = "Nomor telepon harus diisi"
+                    )
+                    return@launch
+                }
+
+                repository.checkCustomer(_state.value.phone).onSuccess { customer ->
+                        // Customer ditemukan, langsung create order
+                        createOrder()
+                    }.onFailure {
+                        // Customer tidak ditemukan, tampilkan dialog nama
+                        _state.value = _state.value.copy(
+                            isLoading = false, showNameDialog = true
+                        )
+                    }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false, error = e.message ?: "Terjadi kesalahan"
+                )
+            }
+        }
+    }
+
+
     fun createOrder() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
@@ -45,6 +88,7 @@ class CreateOrderViewModel @Inject constructor(
             try {
                 val request = CreateOrderRequest(
                     phone = _state.value.phone,
+                    name = _state.value.name,
                     laundryId = _state.value.laundryId,
                     type = _state.value.type,
                     weight = _state.value.weight.toDoubleOrNull() ?: 0.0,
@@ -52,24 +96,24 @@ class CreateOrderViewModel @Inject constructor(
                     note = _state.value.note
                 )
 
-                repository.createOrder(request)
-                    .onSuccess {
+                repository.createOrder(request).onSuccess {
                         _state.value = _state.value.copy(
-                            isLoading = false,
-                            success = true,
-                            error = null
+                            isLoading = false, success = true, error = null
                         )
-                    }
-                    .onFailure { exception ->
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            error = exception.message ?: "Unknown error occurred"
-                        )
+                    }.onFailure { exception ->
+                        if (exception.message?.contains("The name field is required") == true) {
+                            showNameDialog()
+                            _state.value = _state.value.copy(isLoading = false)
+                        } else {
+                            _state.value = _state.value.copy(
+                                isLoading = false,
+                                error = exception.message ?: "Unknown error occurred"
+                            )
+                        }
                     }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "Unknown error occurred"
+                    isLoading = false, error = e.message ?: "Unknown error occurred"
                 )
             }
         }
