@@ -18,7 +18,6 @@ fun ApplicationNavigationGraph(
 ) {
     NavHost(
         navController = navController,
-//        startDestination = HomeRoutes.Index.route,
         startDestination = AuthRoutes.Login.route,
         enterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start) },
         popEnterTransition = { slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.End) },

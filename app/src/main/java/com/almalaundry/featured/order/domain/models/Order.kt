@@ -1,14 +1,15 @@
 package com.almalaundry.featured.order.domain.models
 
 data class Order(
-    val id: Int,
-    val customerName: String,
-    val phoneNumber: String,
-    val type: String,
-    val status: String,
-    val barcode: String,
-    val weight: Double,
-    val totalPrice: Double,
-    val note: String,
-    val createdAt: String
+    val id: String = "",
+    val customer: Customer = Customer(),
+    val laundry: Laundry = Laundry(),
+    val status: String = "",
+    val type: String = "",
+    val barcode: String = "",
+    val weight: String = "",
+    val total_price: String = "",
+    val note: String = "",
+    val created_at: String = "",
+    val updated_at: String = ""
 )

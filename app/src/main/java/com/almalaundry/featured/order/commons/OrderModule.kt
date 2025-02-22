@@ -16,7 +16,7 @@ object OrderModule {
     fun provideOrderApi(networkApi: NetworkApi): OrderApi {
         return networkApi.retrofit.create(OrderApi::class.java)
     }
-
+}
 //    @Provides
 //    @Singleton
 //    fun provideOrderRepository(
@@ -24,6 +24,6 @@ object OrderModule {
 //    ): OrderRepository {
 //        return OrderRepositoryImpl(orderApi)
 //    }
-}
+
 
 //retrofit.create(OrderApi::class.java)

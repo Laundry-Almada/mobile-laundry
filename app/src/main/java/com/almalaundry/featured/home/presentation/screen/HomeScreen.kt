@@ -71,6 +71,13 @@ fun HomeNavGraph(
         composable(OrderRoutes.Index.route) {
             OrderScreen()
         }
+//        composable(
+//            route = OrderRoutes.Detail.ROUTE,
+//            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+//        ) { backStackEntry ->
+//            val orderId = backStackEntry.arguments?.getString("id")
+//            DetailOrderScreen(orderId)
+//        }
         composable(ScanRoutes.Index.route) {
             ScanScreen()
         }
