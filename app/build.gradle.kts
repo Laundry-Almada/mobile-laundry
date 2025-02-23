@@ -89,6 +89,9 @@ dependencies {
     implementation(libs.icons.lucide.android)
     implementation(libs.font.awesome)
 
+    // barcode generate
+    implementation(libs.core)
+
     // ML Kit Barcode Scanning
     implementation(libs.barcode.scanning)
 

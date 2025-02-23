@@ -1,5 +1,6 @@
 package com.almalaundry.featured.order.presentation.screen
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,10 +46,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.presentation.components.StatusChip
 import com.almalaundry.featured.order.presentation.viewmodels.DetailOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.almalaundry.shared.utils.barcode.generateBarcode
+import com.almalaundry.shared.utils.barcode.printBarcode
 import com.almalaundry.shared.utils.openWhatsApp
 import com.composables.icons.lucide.ArrowLeft
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Printer
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Brands
 import compose.icons.fontawesomeicons.brands.Whatsapp
@@ -63,7 +67,7 @@ fun DetailOrderScreen(
     }
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
-    val context = LocalContext.current // Untuk intent WhatsApp
+    val context = LocalContext.current
 
     val statusList = listOf(
         "pending", "washed", "dried", "ironed", "ready_picked", "completed", "cancelled"
@@ -192,6 +196,7 @@ fun DetailOrderScreen(
                                 }
                             }
 
+                            // WhatsApp Button
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
                                 onClick = {
@@ -225,8 +230,7 @@ fun DetailOrderScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF25D366), // Warna hijau WhatsApp
-                                    contentColor = Color.White
+                                    containerColor = Color(0xFF25D366), contentColor = Color.White
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {
@@ -242,6 +246,42 @@ fun DetailOrderScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text("Kirim Pesan WhatsApp")
+                                }
+                            }
+
+                            // Print Barcode Button
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Button(
+                                onClick = {
+                                    state.order?.barcode?.let { barcode ->
+                                        val barcodeBitmap = generateBarcode(barcode)
+                                        barcodeBitmap?.let {
+                                            // Ganti "deviceAddress" dengan MAC address printer
+                                            printBarcode(context, it, "00:11:22:33:44:55")
+                                        } ?: Toast.makeText(
+                                            context, "Gagal generate barcode", Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF1976D2), // Warna biru untuk print
+                                    contentColor = Color.White
+                                ),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Lucide.Printer,
+                                        contentDescription = "Print",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text("Cetak Barcode")
                                 }
                             }
                         }
