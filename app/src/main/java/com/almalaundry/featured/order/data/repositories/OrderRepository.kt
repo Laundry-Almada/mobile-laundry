@@ -3,6 +3,7 @@ package com.almalaundry.featured.order.data.repositories
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
+import com.almalaundry.featured.order.data.dtos.StatusRequest
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
 import org.json.JSONObject
@@ -87,6 +88,19 @@ class OrderRepository @Inject constructor(
                 }
                 println(errorMessage)
                 Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updateOrderStatus(orderId: String, status: String): Result<Order> {
+        return try {
+            val response = api.updateOrderStatus(orderId, StatusRequest(status))
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.data)
+            } else {
+                Result.failure(Exception("Failed to update order status"))
             }
         } catch (e: Exception) {
             Result.failure(e)

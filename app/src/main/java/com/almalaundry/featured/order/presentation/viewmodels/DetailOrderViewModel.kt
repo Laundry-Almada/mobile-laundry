@@ -13,7 +13,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DetailOrderViewModel @Inject constructor(
-    private val repository: OrderRepository, savedStateHandle: SavedStateHandle
+    private val repository: OrderRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _state = MutableStateFlow(DetailOrderScreenState())
     val state = _state.asStateFlow()
@@ -28,20 +29,48 @@ class DetailOrderViewModel @Inject constructor(
     fun loadOrderDetail() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-
             try {
                 repository.getOrderDetail(orderId).onSuccess { order ->
                     _state.value = _state.value.copy(
-                        isLoading = false, order = order, error = null
+                        isLoading = false,
+                        order = order,
+                        error = null
                     )
                 }.onFailure { exception ->
                     _state.value = _state.value.copy(
-                        isLoading = false, error = exception.message
+                        isLoading = false,
+                        error = exception.message
                     )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
-                    isLoading = false, error = e.message
+                    isLoading = false,
+                    error = e.message
+                )
+            }
+        }
+    }
+
+    fun updateStatus(newStatus: String) {
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoading = true)
+            try {
+                repository.updateOrderStatus(orderId, newStatus).onSuccess { updatedOrder ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        order = updatedOrder,
+                        error = null
+                    )
+                }.onFailure { exception ->
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = exception.message
+                    )
+                }
+            } catch (e: Exception) {
+                _state.value = _state.value.copy(
+                    isLoading = false,
+                    error = e.message
                 )
             }
         }

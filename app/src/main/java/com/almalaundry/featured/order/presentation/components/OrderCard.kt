@@ -44,7 +44,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = order.customer.phone,
+                text = "0${order.customer.phone}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color.Gray
             )
