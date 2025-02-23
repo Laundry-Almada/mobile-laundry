@@ -6,6 +6,7 @@ cameraCamera2 = "1.4.1"
 coilCompose = "3.1.0"
 composeShimmer = "1.3.2"
 daggerCompiler = "2.53"
+fontAwesome = "1.1.1"
 iconsLucideAndroid = "1.0.0"
 kotlin = "2.0.20"
 coreKtx = "1.15.0"
@@ -39,6 +40,7 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilCo
 compose-shimmer = { module = "com.valentinilk.shimmer:compose-shimmer", version.ref = "composeShimmer" }
 dagger-compiler = { module = "com.google.dagger:dagger-compiler", version.ref = "daggerCompiler" }
 
+font-awesome = { module = "br.com.devsrsouza.compose.icons:font-awesome", version.ref = "fontAwesome" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hiltAndroid" }
 hilt-android-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltAndroid" }
 icons-lucide-android = { module = "com.composables:icons-lucide-android", version.ref = "iconsLucideAndroid" }

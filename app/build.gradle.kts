@@ -30,9 +30,7 @@ android {
             properties.load(rootProject.file(".env.development").inputStream())
 
             buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"${properties.getProperty("BASE_URL")}\""
+                "String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\""
             )
         }
         release {
@@ -40,14 +38,11 @@ android {
             properties.load(rootProject.file(".env.production").inputStream())
 
             buildConfigField(
-                "String",
-                "BASE_URL",
-                "\"${properties.getProperty("BASE_URL")}\""
+                "String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\""
             )
             isMinifyEnabled = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
@@ -71,7 +66,7 @@ android {
 dependencies {
 
     implementation(libs.androidx.espresso.core)
-//    implementation(libs.firebase.crashlytics.buildtools)
+    //  implementation(libs.firebase.crashlytics.buildtools)
     //  Hilt dagger
     //  ksp(libs.dagger.compiler) // Dagger compiler
     ksp(libs.hilt.android.compiler)   // Hilt compiler
@@ -90,8 +85,9 @@ dependencies {
     // Kotlin serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // lucide icon
+    // icon
     implementation(libs.icons.lucide.android)
+    implementation(libs.font.awesome)
 
     // ML Kit Barcode Scanning
     implementation(libs.barcode.scanning)
