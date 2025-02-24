@@ -1,5 +1,5 @@
 package com.almalaundry.featured.order.data.dtos
 
-data class StatusRequest(
+data class UpdateStatusRequest(
     val status: String
 )
