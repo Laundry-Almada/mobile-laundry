@@ -4,8 +4,8 @@
 
 | Status | Fungsional              |
 | :----: | ----------------------- |
-|   ✅   | login                   |
-|   ✅   | register                |
+|   🚧   | login                   |
+|   🚧   | register                |
 |   🚧   | logout                  |
 
 ### Barcode Scanner
@@ -43,7 +43,7 @@
 
 | Status | Fungsional |
 | :----: | -------------------------------------------------------- |
-| ⬜ | List Order yang sudah selesai |
+| ✅ | List Order yang sudah selesai |
 | ⬜ | Filtering order |
 
 ### Guest
