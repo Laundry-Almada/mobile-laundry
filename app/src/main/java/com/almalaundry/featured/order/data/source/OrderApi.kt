@@ -2,11 +2,13 @@ package com.almalaundry.featured.order.data.source
 
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
+import com.almalaundry.featured.order.data.dtos.DeleteOrderResponse
 import com.almalaundry.featured.order.data.dtos.OrderDetailResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
-import com.almalaundry.featured.order.data.dtos.StatusRequest
+import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -38,7 +40,9 @@ interface OrderApi {
 
     @PATCH("orders/{orderId}/status")
     suspend fun updateOrderStatus(
-        @Path("orderId") orderId: String,
-        @Body statusRequest: StatusRequest
+        @Path("orderId") orderId: String, @Body statusRequest: UpdateStatusRequest
     ): Response<OrderDetailResponse>
+
+    @DELETE("orders/{orderId}")
+    suspend fun deleteOrder(@Path("orderId") orderId: String): Response<DeleteOrderResponse>
 }

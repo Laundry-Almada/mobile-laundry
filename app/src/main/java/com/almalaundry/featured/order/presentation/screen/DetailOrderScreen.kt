@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -53,6 +55,7 @@ import com.composables.icons.lucide.ArrowLeft
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Printer
+import com.composables.icons.lucide.Trash
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Brands
 import compose.icons.fontawesomeicons.brands.Whatsapp
@@ -77,10 +80,43 @@ fun DetailOrderScreen(
         mutableStateOf(state.order?.status ?: "pending")
     }
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    if (showDeleteDialog) {
+        AlertDialog(onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Konfirmasi Hapus") },
+            text = { Text("Apakah Anda yakin ingin menghapus order ini?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.deleteOrder {
+                        Toast.makeText(
+                            context, "Order berhasil dihapus", Toast.LENGTH_SHORT
+                        ).show()
+                        navController.popBackStack()
+                    }
+                    showDeleteDialog = false
+                }) {
+                    Text("Hapus", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Batal")
+                }
+            })
+    }
+
     Scaffold(topBar = {
         TopAppBar(title = { Text("Detail Order") }, navigationIcon = {
             IconButton(onClick = navController::popBackStack) {
                 Icon(Lucide.ArrowLeft, "Back")
+            }
+        }, actions = {
+            // Tambahkan tombol delete di TopAppBar
+            IconButton(onClick = { showDeleteDialog = true }) {
+                Icon(
+                    imageVector = Lucide.Trash, contentDescription = "Delete", tint = Color.Red
+                )
             }
         })
     }) { paddingValues ->
@@ -219,11 +255,11 @@ fun DetailOrderScreen(
                                             - Tipe: ${order.type}
                                             - Berat: ${order.weight} kg
                                             - Total Harga: Rp ${order.totalPrice}
-                                            - Catatan: ${order.note ?: "-"}
+                                            - Catatan: ${order.note}
                                             
                                             Terima kasih telah menggunakan Laundry Bersih Jaya!
                                         """.trimIndent()
-                                        order.customer.phone?.let { phone ->
+                                        order.customer.phone.let { phone ->
                                             openWhatsApp(phone, message, context)
                                         }
                                     }
