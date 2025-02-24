@@ -1,5 +1,6 @@
 package com.almalaundry.featured.order.data.repositories
 
+import android.util.Log
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
@@ -35,13 +36,16 @@ class OrderRepository @Inject constructor(
                 perPage = perPage,
                 page = page
             )
+            Log.d("OrderRepository", "Response: ${response.body()}")
 
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
+                Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
                 Result.failure(Exception("Failed to fetch orders: ${response.message()}"))
             }
         } catch (e: Exception) {
+            Log.e("OrderRepository", "Exception: ${e.message}")
             Result.failure(e)
         }
     }

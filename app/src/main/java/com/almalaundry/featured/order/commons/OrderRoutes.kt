@@ -18,4 +18,8 @@ sealed class OrderRoutes(val route: String) {
     data class Detail(
         val orderId: String
     ) : OrderRoutes("order/{orderId}")
+
+    @Serializable
+    @SerialName("orderHistory")
+    data object History : OrderRoutes("orderHistory")
 }

@@ -6,7 +6,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import com.almalaundry.featured.auth.commons.AuthRoutes
 import com.almalaundry.featured.auth.commons.authNavigation
-import com.almalaundry.featured.history.commons.historyNavigation
 import com.almalaundry.featured.home.commons.homeNavigation
 import com.almalaundry.featured.order.commons.orderNavigation
 import com.almalaundry.featured.profile.commons.profileNavigation
@@ -28,7 +27,6 @@ fun ApplicationNavigationGraph(
         homeNavigation()
         orderNavigation()
         scanNavigation()
-        historyNavigation()
         profileNavigation()
     }
 }

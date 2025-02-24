@@ -6,7 +6,7 @@ data class Order(
     val id: String = "",
     val customer: Customer = Customer(),
     val laundry: Laundry = Laundry(),
-    val status: String = "",
+    val status: String = "", // 'pending', 'washed', 'dried', 'ironed', 'ready_picked', 'completed', 'cancelled'
     val type: String = "",
     val barcode: String = "",
     val weight: String = "",

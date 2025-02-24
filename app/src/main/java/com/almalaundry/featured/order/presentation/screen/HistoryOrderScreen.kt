@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,23 +36,21 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.ShimmerOrderCard
-import com.almalaundry.featured.order.presentation.viewmodels.OrderViewModel
+import com.almalaundry.featured.order.presentation.viewmodels.HistoryOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.composables.icons.lucide.Lucide
-import com.composables.icons.lucide.Plus
 import com.composables.icons.lucide.RefreshCcw
 import kotlinx.coroutines.flow.distinctUntilChanged
 
 @Composable
-fun OrderScreen(
-    viewModel: OrderViewModel = hiltViewModel()
+fun HistoryOrderScreen(
+    viewModel: HistoryOrderViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
     val listState = rememberLazyListState()
 
-//    akan terefresh ketika ke page ini
-    LaunchedEffect(Unit) { viewModel.loadOrders() }
+    LaunchedEffect(Unit) { viewModel.loadHistories() }
 
     LaunchedEffect(listState) {
         snapshotFlow {
@@ -64,18 +61,14 @@ fun OrderScreen(
             lastVisibleItemIndex > 0 && lastVisibleItemIndex >= totalItemsNumber - 2
         }.distinctUntilChanged().collect {
             if (it && !state.isLoadingMore && !state.isLoading) {
-                viewModel.loadOrders(isLoadMore = true)
+                viewModel.loadHistories(isLoadMore = true)
             }
         }
     }
 
-    Scaffold(contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
-        WindowInsetsSides.Top
-    ), floatingActionButton = {
-        FloatingActionButton(onClick = { navController.navigate(OrderRoutes.Create.route) }) {
-            Icon(Lucide.Plus, "Create Order")
-        }
-    }) { paddingValues ->
+    Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top)
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -92,24 +85,23 @@ fun OrderScreen(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Daftar Order",
+                        text = "Riwayat Order",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                     Text(
-                        text = "Berikut adalah daftar order yang tersedia",
+                        text = "Berikut adalah riwayat order yang telah selesai",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.Gray
                     )
                 }
                 Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = { viewModel.loadOrders() }) {
+                IconButton(onClick = { viewModel.loadHistories() }) {
                     Icon(
-                        imageVector = Lucide.RefreshCcw, contentDescription = "Refresh orders"
+                        imageVector = Lucide.RefreshCcw, contentDescription = "Refresh histories"
                     )
                 }
             }
-
 
             when {
                 state.isLoading -> {
@@ -139,13 +131,12 @@ fun OrderScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(vertical = 8.dp)
                     ) {
-                        items(state.orders) { order ->
-                            OrderCard(order = order, onClick = {
-                                navController.navigate(OrderRoutes.Detail(order.id))
+                        items(state.histories) { history ->
+                            OrderCard(order = history, onClick = {
+                                navController.navigate(OrderRoutes.Detail(history.id))
                             })
                         }
 
-                        // Show loading more indicator
                         item {
                             if (state.isLoadingMore) {
                                 Box(

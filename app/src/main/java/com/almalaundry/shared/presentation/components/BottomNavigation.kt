@@ -46,8 +46,7 @@ import com.composables.icons.lucide.Lucide
 
 @Composable
 fun BottomNavigation(
-    navController: NavController,
-    items: List<NavigationItem> = NavigationItems.items
+    navController: NavController, items: List<NavigationItem> = NavigationItems.items
 ) {
     val softGray = Color.Gray.copy(alpha = 0.5f)
     Box(
@@ -79,65 +78,55 @@ fun BottomNavigation(
                         )
                     )
                 } else {
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = item.icon,
-                                contentDescription = item.label,
-                                modifier = Modifier
-                                    .size(24.dp)
-                                    .scale(
-                                        animateFloatAsState(
-                                            targetValue = if (isSelected) 1.0f else 1f,
-                                            animationSpec = spring(
-                                                dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                stiffness = Spring.StiffnessLow
-                                            )
-                                        ).value
-                                    )
-                                    .fillMaxSize(),
-                                tint = if (isSelected)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    softGray
+                    NavigationBarItem(icon = {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            modifier = Modifier
+                                .size(24.dp)
+                                .scale(
+                                    animateFloatAsState(
+                                        targetValue = if (isSelected) 1.0f else 1f,
+                                        animationSpec = spring(
+                                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                                            stiffness = Spring.StiffnessLow
+                                        )
+                                    ).value
+                                )
+                                .fillMaxSize(),
+                            tint = if (isSelected) MaterialTheme.colorScheme.primary
+                            else softGray
+                        )
+                    }, label = {
+                        AnimatedVisibility(
+                            visible = isSelected,
+                            enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
+                                initialOffsetY = { it / 4 }, animationSpec = tween(300)
+                            ),
+                            exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(
+                                targetOffsetY = { it / 4 }, animationSpec = tween(300)
                             )
-                        },
-                        label = {
-                            AnimatedVisibility(
-                                visible = isSelected,
-                                enter = fadeIn(animationSpec = tween(300)) + slideInVertically(
-                                    initialOffsetY = { it / 4 },
-                                    animationSpec = tween(300)
-                                ),
-                                exit = fadeOut(animationSpec = tween(300)) + slideOutVertically(
-                                    targetOffsetY = { it / 4 },
-                                    animationSpec = tween(300)
-                                )
-                            ) {
-                                Text(
-                                    text = item.label,
-                                    color = MaterialTheme.colorScheme.primary,
-                                    fontSize = 10.sp,
-                                    modifier = Modifier.offset(y = (-4).dp)
-                                )
-                            }
-                        },
-                        selected = isSelected,
-                        onClick = {
-                            item.route?.let { route ->
-                                navController.navigate(route) {
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    launchSingleTop = true
-                                    restoreState = true
+                        ) {
+                            Text(
+                                text = item.label,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 10.sp,
+                                modifier = Modifier.offset(y = (-4).dp)
+                            )
+                        }
+                    }, selected = isSelected, onClick = {
+                        item.route?.let { route ->
+                            navController.navigate(route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color.Transparent
-                        ),
-                        modifier = Modifier.offset(y = 4.dp)
+                        }
+                    }, colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = Color.Transparent
+                    ), modifier = Modifier.offset(y = 4.dp)
                     )
                 }
             }
