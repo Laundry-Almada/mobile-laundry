@@ -3,6 +3,7 @@ package com.almalaundry.featured.order.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.almalaundry.featured.order.data.repositories.OrderRepository
+import com.almalaundry.featured.order.domain.models.OrderFilter
 import com.almalaundry.featured.order.presentation.state.OrderScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,11 @@ class OrderViewModel @Inject constructor(
         loadOrders()
     }
 
+    fun applyFilter(filter: OrderFilter) {
+        _state.value = _state.value.copy(filter = filter)
+        loadOrders()
+    }
+
     fun loadOrders(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             if (isLoadMore) {
@@ -31,7 +37,15 @@ class OrderViewModel @Inject constructor(
             }
 
             try {
+                val filter = _state.value.filter
                 val result = repository.getOrders(
+                    status = if (filter.status.isEmpty()) null else filter.status.joinToString(","),
+                    type = filter.type,
+                    startDate = filter.startDate,
+                    endDate = filter.endDate,
+                    search = filter.search,
+                    sortBy = filter.sortBy,
+                    sortDirection = filter.sortDirection,
                     page = if (isLoadMore) _state.value.currentPage + 1 else 1
                 )
 
@@ -58,50 +72,6 @@ class OrderViewModel @Inject constructor(
                     isLoading = false,
                     isLoadingMore = false,
                     error = e.message ?: "Unknown error occurred"
-                )
-            }
-        }
-    }
-
-    //
-    fun searchOrders(query: String) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            try {
-                val result = repository.getOrders(search = query)
-                result.onSuccess { response ->
-                    _state.value = _state.value.copy(
-                        isLoading = false, orders = response.data
-                    )
-                }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false, error = e.message
-                )
-            }
-        }
-    }
-
-    fun filterOrders(
-        status: String? = null,
-        type: String? = null,
-        startDate: String? = null,
-        endDate: String? = null
-    ) {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
-            try {
-                val result = repository.getOrders(
-                    status = status, type = type, startDate = startDate, endDate = endDate
-                )
-                result.onSuccess { response ->
-                    _state.value = _state.value.copy(
-                        isLoading = false, orders = response.data
-                    )
-                }
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false, error = e.message
                 )
             }
         }

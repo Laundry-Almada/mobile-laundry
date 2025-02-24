@@ -7,7 +7,7 @@ data class Order(
     val customer: Customer = Customer(),
     val laundry: Laundry = Laundry(),
     val status: String = "", // 'pending', 'washed', 'dried', 'ironed', 'ready_picked', 'completed', 'cancelled'
-    val type: String = "",
+    val type: String = "", // 'express', 'regular', 'kiloan', 'satuan'
     val barcode: String = "",
     val weight: String = "",
     @SerializedName("total_price") val totalPrice: String = "",
