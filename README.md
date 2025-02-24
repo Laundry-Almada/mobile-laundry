@@ -34,9 +34,9 @@
 
 | Status | Fungsional |
 | :----: | -------------------------------------------------------- |
-| 🚧 | List Order |
-| 🚧 | Create Order |
-| 🚧 | Edit Order & Update Order Status |
+| ✅ | List Order |
+| ✅ | Create Order |
+| ✅ | Edit Order & Update Order Status |
 | 🚧 | Delete Order |
 
 ### History Order
