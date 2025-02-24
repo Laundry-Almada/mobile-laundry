@@ -37,6 +37,7 @@
 | ✅ | List Order |
 | ✅ | Create Order |
 | ✅ | Edit Order & Update Order Status |
+| ✅ | Filtering order |
 | 🚧 | Delete Order |
 
 ### History Order
@@ -44,7 +45,7 @@
 | Status | Fungsional |
 | :----: | -------------------------------------------------------- |
 | ✅ | List Order yang sudah selesai |
-| ⬜ | Filtering order |
+| ✅ | Filtering order |
 
 ### Guest
 
