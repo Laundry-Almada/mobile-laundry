@@ -38,7 +38,7 @@
 | ✅ | Create Order |
 | ✅ | Edit Order & Update Order Status |
 | ✅ | Filtering order |
-| 🚧 | Delete Order |
+| ✅ | Delete Order |
 
 ### History Order
 
