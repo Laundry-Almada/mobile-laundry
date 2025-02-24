@@ -27,6 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,10 +38,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
+import com.almalaundry.featured.order.presentation.components.FilterDialog
 import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.OrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
 import com.composables.icons.lucide.RefreshCcw
@@ -51,8 +56,8 @@ fun OrderScreen(
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
     val listState = rememberLazyListState()
+    var showFilterDialog by remember { mutableStateOf(false) }
 
-//    akan terefresh ketika ke page ini
     LaunchedEffect(Unit) { viewModel.loadOrders() }
 
     LaunchedEffect(listState) {
@@ -103,13 +108,17 @@ fun OrderScreen(
                     )
                 }
                 Spacer(modifier = Modifier.width(16.dp))
-                IconButton(onClick = { viewModel.loadOrders() }) {
-                    Icon(
-                        imageVector = Lucide.RefreshCcw, contentDescription = "Refresh orders"
-                    )
+                Row {
+                    IconButton(onClick = { showFilterDialog = true }) {
+                        Icon(Lucide.Filter, "Filter")
+                    }
+                    IconButton(onClick = { viewModel.loadOrders() }) {
+                        Icon(
+                            imageVector = Lucide.RefreshCcw, contentDescription = "Refresh orders"
+                        )
+                    }
                 }
             }
-
 
             when {
                 state.isLoading -> {
@@ -163,4 +172,11 @@ fun OrderScreen(
             }
         }
     }
+
+    FilterDialog(show = showFilterDialog,
+        currentFilter = state.filter,
+        onDismiss = { showFilterDialog = false },
+        onApply = { filter ->
+            viewModel.applyFilter(filter)
+        })
 }

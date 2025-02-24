@@ -26,6 +26,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,10 +37,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
+import com.almalaundry.featured.order.presentation.components.FilterDialogHistory
 import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.HistoryOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.RefreshCcw
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -49,6 +54,7 @@ fun HistoryOrderScreen(
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
     val listState = rememberLazyListState()
+    var showFilterDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { viewModel.loadHistories() }
 
@@ -95,7 +101,12 @@ fun HistoryOrderScreen(
                         color = Color.Gray
                     )
                 }
-                Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                IconButton(onClick = { showFilterDialog = true }) {
+                    Icon(
+                        imageVector = Lucide.Filter, contentDescription = "Filter histories"
+                    )
+                }
                 IconButton(onClick = { viewModel.loadHistories() }) {
                     Icon(
                         imageVector = Lucide.RefreshCcw, contentDescription = "Refresh histories"
@@ -154,4 +165,10 @@ fun HistoryOrderScreen(
             }
         }
     }
+    FilterDialogHistory(show = showFilterDialog,
+        currentFilter = state.filter,
+        onDismiss = { showFilterDialog = false },
+        onApply = { filter ->
+            viewModel.applyFilter(filter)
+        })
 }

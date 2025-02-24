@@ -3,6 +3,7 @@ package com.almalaundry.featured.order.presentation.viewmodels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.almalaundry.featured.order.data.repositories.OrderRepository
+import com.almalaundry.featured.order.domain.models.OrderFilter
 import com.almalaundry.featured.order.presentation.state.HistoryOrderScreenState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +22,11 @@ class HistoryOrderViewModel @Inject constructor(
         loadHistories()
     }
 
+    fun applyFilter(filter: OrderFilter) {
+        _state.value = _state.value.copy(filter = filter)
+        loadHistories()
+    }
+
     fun loadHistories(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             if (isLoadMore) {
@@ -31,15 +37,18 @@ class HistoryOrderViewModel @Inject constructor(
             }
 
             try {
+                val filter = _state.value.filter
                 val result = repository.getOrders(
                     page = if (isLoadMore) _state.value.currentPage + 1 else 1,
-                    status = "completed,cancelled",
+                    status = filter.status.joinToString(","),
+                    type = filter.type,
+                    startDate = filter.startDate,
+                    endDate = filter.endDate,
                     sortBy = "created_at",
                     sortDirection = "desc"
                 )
 
                 result.onSuccess { response ->
-//                    Log.d("HistoryViewModel", "Received ${response.data.size} histories")
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
