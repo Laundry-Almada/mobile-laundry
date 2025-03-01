@@ -4,8 +4,8 @@
 
 | Status | Fungsional              |
 | :----: | ----------------------- |
-|   ✅   | login                   |
-|   ✅   | register                |
+|   🚧   | login                   |
+|   🚧   | register                |
 |   🚧   | logout                  |
 
 ### Barcode Scanner
@@ -34,17 +34,19 @@
 
 | Status | Fungsional |
 | :----: | -------------------------------------------------------- |
-| 🚧 | List Order |
-| 🚧 | Create Order |
-| 🚧 | Edit Order & Update Order Status |
-| 🚧 | Delete Order |
+| ✅ | List Order |
+| ✅ | Create Order |
+| ✅ | Edit Order & Update Order Status |
+| ✅ | Filtering order |
+| ✅ | Searching order |
+| ✅ | Delete Order |
 
 ### History Order
 
 | Status | Fungsional |
 | :----: | -------------------------------------------------------- |
-| ⬜ | List Order yang sudah selesai |
-| ⬜ | Filtering order |
+| ✅ | List Order yang sudah selesai |
+| ✅ | Filtering order |
 
 ### Guest
 
