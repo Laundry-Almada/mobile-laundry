@@ -1,4 +1,4 @@
-package com.almalaundry.featured.scan.presentation.screen
+package com.almalaundry.featured.order.presentation.components
 
 import android.util.Size
 import androidx.camera.core.CameraSelector

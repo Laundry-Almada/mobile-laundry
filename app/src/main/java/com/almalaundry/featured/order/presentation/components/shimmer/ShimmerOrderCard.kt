@@ -1,4 +1,4 @@
-package com.almalaundry.featured.order.presentation.components
+package com.almalaundry.featured.order.presentation.components.shimmer
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background

@@ -19,10 +19,9 @@ import com.almalaundry.featured.home.presentation.viewmodels.HomeViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.screen.HistoryOrderScreen
 import com.almalaundry.featured.order.presentation.screen.OrderScreen
+import com.almalaundry.featured.order.presentation.screen.ScanScreen
 import com.almalaundry.featured.profile.commons.ProfileRoutes
 import com.almalaundry.featured.profile.presentation.screen.ProfileScreen
-import com.almalaundry.featured.scan.commons.ScanRoutes
-import com.almalaundry.featured.scan.presentation.screen.ScanScreen
 import com.almalaundry.shared.commons.compositional.LocalHomeNavController
 import com.almalaundry.shared.presentation.components.BottomNavigation
 
@@ -68,7 +67,7 @@ fun HomeNavGraph(
         composable(OrderRoutes.Index.route) {
             OrderScreen()
         }
-        composable(ScanRoutes.Index.route) {
+        composable(OrderRoutes.Scan.route) {
             ScanScreen()
         }
         composable(OrderRoutes.History.route) {

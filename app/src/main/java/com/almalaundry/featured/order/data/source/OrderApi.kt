@@ -32,6 +32,9 @@ interface OrderApi {
     @GET("orders/{orderId}")
     suspend fun getOrderDetail(@Path("orderId") orderId: String): Response<OrderDetailResponse>
 
+    @GET("orders/barcode/{barcode}")
+    suspend fun getOrderByBarcode(@Path("barcode") barcode: String): Response<OrderDetailResponse>
+
     @GET("customers/check/{phone}")
     suspend fun checkCustomer(@Path("phone") phone: String): Response<CustomerResponse>
 

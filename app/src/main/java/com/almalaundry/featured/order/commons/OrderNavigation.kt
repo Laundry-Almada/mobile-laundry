@@ -5,7 +5,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
 import com.almalaundry.featured.order.presentation.screen.CreateOrderScreen
 import com.almalaundry.featured.order.presentation.screen.DetailOrderScreen
+import com.almalaundry.featured.order.presentation.screen.HistoryOrderScreen
 import com.almalaundry.featured.order.presentation.screen.OrderScreen
+import com.almalaundry.featured.order.presentation.screen.ScanScreen
 
 fun NavGraphBuilder.orderNavigation() {
     composable<OrderRoutes.Index> {
@@ -18,5 +20,10 @@ fun NavGraphBuilder.orderNavigation() {
         val data = it.toRoute<OrderRoutes.Detail>()
         DetailOrderScreen(orderId = data.orderId)
     }
-
+    composable(OrderRoutes.Scan.route) {
+        ScanScreen()
+    }
+    composable(OrderRoutes.History.route) {
+        HistoryOrderScreen()
+    }
 }

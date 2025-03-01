@@ -9,7 +9,6 @@ import com.almalaundry.featured.auth.commons.authNavigation
 import com.almalaundry.featured.home.commons.homeNavigation
 import com.almalaundry.featured.order.commons.orderNavigation
 import com.almalaundry.featured.profile.commons.profileNavigation
-import com.almalaundry.featured.scan.commons.scanNavigation
 
 @Composable
 fun ApplicationNavigationGraph(
@@ -26,7 +25,6 @@ fun ApplicationNavigationGraph(
         authNavigation()
         homeNavigation()
         orderNavigation()
-        scanNavigation()
         profileNavigation()
     }
 }

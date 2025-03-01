@@ -40,7 +40,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.components.FilterDialog
 import com.almalaundry.featured.order.presentation.components.OrderCard
-import com.almalaundry.featured.order.presentation.components.ShimmerOrderCard
+import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.OrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.composables.icons.lucide.Filter

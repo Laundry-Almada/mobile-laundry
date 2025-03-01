@@ -52,13 +52,38 @@ class OrderRepository @Inject constructor(
 
     suspend fun getOrderDetail(orderId: String): Result<Order> {
         return try {
+            Log.d("OrderRepository", "Fetching order detail: $orderId")
             val response = api.getOrderDetail(orderId)
+            Log.d("OrderRepository", "Response code: ${response.code()}")
+            Log.d("OrderRepository", "Response body: ${response.body()}")
+            Log.d("OrderRepository", "Error body: ${response.errorBody()?.string()}")
+
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
-                Result.failure(Exception("Failed to fetch order detail"))
+                Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
+                Result.failure(Exception("Failed to fetch order detail: ${response.code()}"))
             }
         } catch (e: Exception) {
+            Log.e("OrderRepository", "Exception: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getOrderByBarcode(barcode: String): Result<Order> {
+        return try {
+            Log.d("OrderRepository", "Fetching order with barcode: $barcode")
+            val response = api.getOrderByBarcode(barcode)
+            Log.d("OrderRepository", "Response: ${response.code()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!.data)
+            } else {
+                Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
+                Result.failure(Exception("Failed to fetch order by barcode"))
+            }
+        } catch (e: Exception) {
+            Log.e("OrderRepository", "Exception: ${e.message}")
             Result.failure(e)
         }
     }

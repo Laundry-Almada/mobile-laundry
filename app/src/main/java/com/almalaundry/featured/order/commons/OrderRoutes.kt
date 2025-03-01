@@ -22,4 +22,8 @@ sealed class OrderRoutes(val route: String) {
     @Serializable
     @SerialName("orderHistory")
     data object History : OrderRoutes("orderHistory")
+
+    @Serializable
+    @SerialName("scan")
+    data object Scan : OrderRoutes("scan")
 }
