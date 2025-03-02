@@ -59,13 +59,16 @@ class AuthRepository @Inject constructor(
     suspend fun logout(): Result<Unit> {
         return try {
             val response = api.logout()
-            if (response.isSuccessful) {
+            if (response.isSuccessful && response.body()?.success == true) {
                 clearToken()
                 Result.success(Unit)
             } else {
-                Result.failure(Exception("Logout failed"))
+                val errorBody = response.errorBody()?.string() ?: "No error body"
+                println("Logout failed: ${response.code()} - $errorBody - ${response.body()?.message}")
+                Result.failure(Exception(response.body()?.message ?: "Logout failed: $errorBody"))
             }
         } catch (e: Exception) {
+            println("Logout exception: ${e.message}")
             Result.failure(e)
         }
     }

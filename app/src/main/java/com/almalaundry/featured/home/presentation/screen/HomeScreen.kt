@@ -9,13 +9,11 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.almalaundry.featured.home.commons.HomeRoutes
-import com.almalaundry.featured.home.presentation.viewmodels.HomeViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.screen.HistoryOrderScreen
 import com.almalaundry.featured.order.presentation.screen.OrderScreen
@@ -27,20 +25,17 @@ import com.almalaundry.shared.presentation.components.BottomNavigation
 
 @Composable
 fun HomeScreen(
-    viewModel: HomeViewModel = hiltViewModel()
+//    viewModel: HomeViewModel = hiltViewModel()
 ) {
     val homeNavController = rememberNavController()
 //    val state by viewModel.state.collectAsState()
 
     CompositionLocalProvider(LocalHomeNavController provides homeNavController) {
-        Scaffold(
-            contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
-                sides = WindowInsetsSides.Bottom
-            ),
-            bottomBar = {
-                BottomNavigation(navController = homeNavController)
-            }
-        ) { paddingValues ->
+        Scaffold(contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
+            sides = WindowInsetsSides.Bottom
+        ), bottomBar = {
+            BottomNavigation(navController = homeNavController)
+        }) { paddingValues ->
             HomeNavGraph(
                 navController = homeNavController,
                 modifier = Modifier
@@ -53,8 +48,7 @@ fun HomeScreen(
 
 @Composable
 fun HomeNavGraph(
-    navController: NavHostController,
-    modifier: Modifier = Modifier
+    navController: NavHostController, modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,

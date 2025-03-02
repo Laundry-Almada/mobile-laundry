@@ -2,6 +2,7 @@ package com.almalaundry.featured.auth.data.source
 
 import com.almalaundry.featured.auth.data.dtos.AuthResponse
 import com.almalaundry.featured.auth.data.dtos.LoginRequest
+import com.almalaundry.featured.auth.data.dtos.LogoutResponse
 import com.almalaundry.featured.auth.data.dtos.RegisterRequest
 import retrofit2.Response
 import retrofit2.http.Body
@@ -17,5 +18,5 @@ interface AuthApi {
 
     @POST("logout")
     @Headers("Accept: application/json")
-    suspend fun logout(): Response<Unit>
+    suspend fun logout(): Response<LogoutResponse>
 }
