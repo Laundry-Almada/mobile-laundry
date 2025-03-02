@@ -6,13 +6,14 @@
 |:------:|------------|
 |   ✅    | login      |
 |   🚧   | register   |
-|   🚧   | logout     |
+|   ✅    | logout     |
 
 ### Barcode Scanner
 
 | Status | Fungsional                                        |
 |:------:|---------------------------------------------------|
 |   ✅    | Scan Barcode                                      |
+|   ✅    | Get Barcode Information                           |
 |   ⬜    | print Barcode & connect to physcical print device |
 
 ### Dashboard
@@ -39,6 +40,7 @@
 |   ✅    | Filtering order                  |
 |   ✅    | Searching order                  |
 |   ✅    | Delete Order                     |
+|   ✅    | Send Nota/message whatsapp       |
 
 ### History Order
 
