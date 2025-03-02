@@ -48,8 +48,7 @@ fun CreateOrderScreen(
     }
 
     if (state.showNameDialog) {
-        AlertDialog(
-            onDismissRequest = { viewModel.hideNameDialog() },
+        AlertDialog(onDismissRequest = { viewModel.hideNameDialog() },
             title = { Text("Input Nama Customer") },
             text = {
                 Column {
@@ -74,8 +73,7 @@ fun CreateOrderScreen(
                             viewModel.hideNameDialog()
                             viewModel.saveCustomerAndCreateOrder()
                         }
-                    },
-                    enabled = state.name.isNotBlank()
+                    }, enabled = state.name.isNotBlank()
                 ) {
                     Text("Simpan")
                 }
@@ -84,8 +82,7 @@ fun CreateOrderScreen(
                 TextButton(onClick = { viewModel.hideNameDialog() }) {
                     Text("Batal")
                 }
-            }
-        )
+            })
     }
 
     Scaffold(topBar = {
@@ -112,14 +109,13 @@ fun CreateOrderScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = state.laundryId,
-                onValueChange = { viewModel.updateLaundryId(it) },
-                label = { Text("ID Laundry") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
+            // Laundry ID disembunyikan karena otomatis
+//            Text(
+//                text = "ID Laundry: ${state.laundryId}",
+//                style = MaterialTheme.typography.bodyMedium,
+//                color = MaterialTheme.colorScheme.onSurfaceVariant
+//            )
+//            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = state.weight,
