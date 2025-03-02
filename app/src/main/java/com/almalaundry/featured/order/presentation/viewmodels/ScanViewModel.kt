@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.update
 import javax.inject.Inject
 
 @HiltViewModel
-class ScanScreenViewModel @Inject constructor(
+class ScanViewModel @Inject constructor(
     private val repository: OrderRepository
 ) : ViewModel() {
     private val _state = MutableStateFlow(ScanScreenState())

@@ -27,14 +27,14 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.components.BarcodeScanner
-import com.almalaundry.featured.order.presentation.viewmodels.ScanScreenViewModel
+import com.almalaundry.featured.order.presentation.viewmodels.ScanViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.utils.barcode.extractOrderId
 import kotlinx.coroutines.launch
 
 @Composable
 fun ScanScreen(
-    viewModel: ScanScreenViewModel = hiltViewModel()
+    viewModel: ScanViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
     val navController = LocalNavController.current

@@ -35,6 +35,7 @@ fun LoginScreen(
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
 
+    // Navigate to home screen when login is successful
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
             navController.navigate(HomeRoutes.Index.route) {
@@ -57,10 +58,9 @@ fun LoginScreen(
         )
 
         OutlinedTextField(
-            value = state.username,
-
-            onValueChange = viewModel::onUsernameChange,
-            label = { Text("Username") },
+            value = state.email,
+            onValueChange = viewModel::onEmailChange,
+            label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -91,8 +91,7 @@ fun LoginScreen(
         ) {
             if (state.isLoading) {
                 CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp),
-                    color = MaterialTheme.colorScheme.onPrimary
+                    modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
                 )
             } else {
                 Text("Login")

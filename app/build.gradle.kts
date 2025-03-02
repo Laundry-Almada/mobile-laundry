@@ -68,7 +68,7 @@ dependencies {
     implementation(libs.androidx.espresso.core)
     //  implementation(libs.firebase.crashlytics.buildtools)
     //  Hilt dagger
-    //  ksp(libs.dagger.compiler) // Dagger compiler
+    ksp(libs.dagger.compiler) // Dagger compiler
     ksp(libs.hilt.android.compiler)   // Hilt compiler
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -76,6 +76,8 @@ dependencies {
     // compose
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.animation)
+    // jetpack data store
+    implementation(libs.androidx.datastore.preferences)
 
     // Retrofit
     implementation(libs.retrofit)
@@ -125,9 +127,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     //image slider
-    implementation("com.google.accompanist:accompanist-pager:0.32.0")
-    implementation("com.google.accompanist:accompanist-pager-indicators:0.32.0")
-    implementation("androidx.compose.ui:ui:1.5.0")
-    implementation("androidx.compose.foundation:foundation:1.5.0")
+    implementation(libs.accompanist.pager)
+    implementation(libs.accompanist.pager.indicators)
+    implementation(libs.androidx.foundation)
 
 }

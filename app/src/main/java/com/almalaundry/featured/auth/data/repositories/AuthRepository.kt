@@ -1,38 +1,90 @@
 package com.almalaundry.featured.auth.data.repositories
 
-import com.almalaundry.featured.auth.data.dtos.LoginDto
-import com.almalaundry.featured.auth.data.dtos.RegisterDto
-import com.almalaundry.featured.auth.data.dtos.UserDto
-import com.almalaundry.featured.auth.domain.models.AuthRepository
+import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.almalaundry.featured.auth.data.dtos.AuthData
+import com.almalaundry.featured.auth.data.dtos.LoginRequest
+import com.almalaundry.featured.auth.data.dtos.RegisterRequest
+import com.almalaundry.featured.auth.data.source.AuthApi
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
+
 @Singleton
-class AuthRepositoryImpl @Inject constructor() : AuthRepository {
-    // Dummy data
-    private val dummyUser = UserDto(
-        id = "1",
-        username = "admin",
-        token = "dummy_token"
-    )
+class AuthRepository @Inject constructor(
+    private val api: AuthApi, @ApplicationContext private val context: Context
+) {
+    companion object {
+        private val TOKEN_KEY = stringPreferencesKey("auth_token")
+    }
 
-    override suspend fun login(loginDto: LoginDto): Result<UserDto> {
-        return if (loginDto.username == "admin" && loginDto.password == "admin") {
-            Result.success(dummyUser)
-        } else {
-            Result.failure(Exception("Invalid credentials"))
+    suspend fun login(request: LoginRequest): Result<AuthData> {
+        return try {
+            val response = api.login(request)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val authData = response.body()!!.data
+                saveToken(authData.token)
+                Result.success(authData)
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "Login failed"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    override suspend fun register(registerDto: RegisterDto): Result<UserDto> {
-        return if (registerDto.username.isNotBlank() && registerDto.password.isNotBlank()) {
-            Result.success(dummyUser.copy(username = registerDto.username))
-        } else {
-            Result.failure(Exception("Invalid registration data"))
+    suspend fun register(request: RegisterRequest): Result<AuthData> {
+        return try {
+            val response = api.register(request)
+            if (response.isSuccessful && response.body()?.success == true) {
+                val authData = response.body()!!.data
+                saveToken(authData.token)
+                Result.success(authData)
+            } else {
+                Result.failure(Exception(response.body()?.message ?: "Registration failed"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 
-    override fun isLoggedIn(): Boolean {
-        return false
+    suspend fun logout(): Result<Unit> {
+        return try {
+            val response = api.logout()
+            if (response.isSuccessful) {
+                clearToken()
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception("Logout failed"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun saveToken(token: String) {
+        context.dataStore.edit { preferences ->
+            preferences[TOKEN_KEY] = token
+        }
+    }
+
+    suspend fun getToken(): String? {
+        return context.dataStore.data.map { preferences ->
+            preferences[TOKEN_KEY]
+        }.firstOrNull()
+    }
+
+    private suspend fun clearToken() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(TOKEN_KEY)
+        }
     }
 }

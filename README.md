@@ -2,57 +2,56 @@
 
 ### Authentication
 
-| Status | Fungsional              |
-| :----: | ----------------------- |
-|   🚧   | login                   |
-|   🚧   | register                |
-|   🚧   | logout                  |
+| Status | Fungsional |
+|:------:|------------|
+|   ✅    | login      |
+|   🚧   | register   |
+|   🚧   | logout     |
 
 ### Barcode Scanner
 
-| Status | Fungsional                                               |
-| :----: | -------------------------------------------------------- |
-|   ✅   | Scan Barcode |
-| ⬜ | print Barcode & connect to physcical print device |
+| Status | Fungsional                                        |
+|:------:|---------------------------------------------------|
+|   ✅    | Scan Barcode                                      |
+|   ⬜    | print Barcode & connect to physcical print device |
 
 ### Dashboard
 
-| Status | Fungsional                                               |
-| :----: | -------------------------------------------------------- |
-|   ⬜   | Statistik |
-|   ⬜   | Notif |
-
+| Status | Fungsional |
+|:------:|------------|
+|   ⬜    | Statistik  |
+|   ⬜    | Notif      |
 
 ### Profile
 
-| Status | Fungsional |
-| :----: | -------------------------------------------------------- |
-| 🚧 | Get Profile |
-| 🚧 | Update Profile |
+| Status | Fungsional     |
+|:------:|----------------|
+|   🚧   | Get Profile    |
+|   🚧   | Update Profile |
 
 ### Order
 
-| Status | Fungsional |
-| :----: | -------------------------------------------------------- |
-| ✅ | List Order |
-| ✅ | Create Order |
-| ✅ | Edit Order & Update Order Status |
-| ✅ | Filtering order |
-| ✅ | Searching order |
-| ✅ | Delete Order |
+| Status | Fungsional                       |
+|:------:|----------------------------------|
+|   ✅    | List Order                       |
+|   ✅    | Create Order                     |
+|   ✅    | Edit Order & Update Order Status |
+|   ✅    | Filtering order                  |
+|   ✅    | Searching order                  |
+|   ✅    | Delete Order                     |
 
 ### History Order
 
-| Status | Fungsional |
-| :----: | -------------------------------------------------------- |
-| ✅ | List Order yang sudah selesai |
-| ✅ | Filtering order |
+| Status | Fungsional                    |
+|:------:|-------------------------------|
+|   ✅    | List Order yang sudah selesai |
+|   ✅    | Filtering order               |
 
 ### Guest
 
-| Status | Fungsional |
-| :----: | -------------------------------------------------------- |
-| ⬜ | Cek status Order by customer guest/public |
+| Status | Fungsional                                |
+|:------:|-------------------------------------------|
+|   ⬜    | Cek status Order by customer guest/public |
 
 ---
 
