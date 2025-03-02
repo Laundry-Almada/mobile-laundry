@@ -1,9 +1,8 @@
 package com.almalaundry.featured.home.presentation.screen
 
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -53,10 +52,18 @@ fun HomeNavGraph(
     NavHost(navController = navController,
         startDestination = HomeRoutes.Dashboard.route,
         modifier = modifier,
-        enterTransition = { fadeIn() + slideInVertically() },
-        popEnterTransition = { fadeIn() + slideInVertically() },
-        exitTransition = { fadeOut() + slideOutVertically() },
-        popExitTransition = { fadeOut() + slideOutVertically() }) {
+        enterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 200))
+        },
+        popEnterTransition = {
+            fadeIn(animationSpec = tween(durationMillis = 200))
+        },
+        exitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 200))
+        },
+        popExitTransition = {
+            fadeOut(animationSpec = tween(durationMillis = 200))
+        }) {
         composable(HomeRoutes.Dashboard.route) {
             DashboardUser()
         }

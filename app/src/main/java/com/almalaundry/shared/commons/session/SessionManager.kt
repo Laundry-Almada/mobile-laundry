@@ -24,6 +24,7 @@ class SessionManager @Inject constructor(
 ) {
     companion object {
         private val SESSION_KEY = stringPreferencesKey("session")
+        private const val TAG = "SessionManager"
     }
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -31,7 +32,7 @@ class SessionManager @Inject constructor(
     suspend fun saveSession(session: Session) {
         context.dataStore.edit { preferences ->
             preferences[SESSION_KEY] = json.encodeToString(Session.serializer(), session)
-            Log.d("SessionManager", "Session saved: $session")
+            Log.d(TAG, "Session saved: $session")
         }
     }
 
@@ -39,14 +40,12 @@ class SessionManager @Inject constructor(
         val session = context.dataStore.data.map { preferences ->
             preferences[SESSION_KEY]?.let { json.decodeFromString(Session.serializer(), it) }
         }.firstOrNull()
-        Log.d("SessionManager", "Session retrieved: $session")
+        Log.d(TAG, "Session retrieved: $session")
         return session
     }
 
     val sessionFlow: Flow<Session?> = context.dataStore.data.map { preferences ->
         preferences[SESSION_KEY]?.let { json.decodeFromString(Session.serializer(), it) }
-    }.also {
-        Log.d("SessionManager", "Session flow initialized")
     }
 
     suspend fun getToken(): String? = getSession()?.token
@@ -58,7 +57,7 @@ class SessionManager @Inject constructor(
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->
             preferences.remove(SESSION_KEY)
-            Log.d("SessionManager", "Session cleared")
+            Log.d(TAG, "Session cleared")
         }
     }
 

@@ -1,7 +1,10 @@
 package com.almalaundry.shared.commons
 
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,25 +35,43 @@ fun ApplicationNavigationGraph(
     navController: NavHostController, modifier: Modifier = Modifier
 ) {
     val authViewModel = hiltViewModel<AuthViewModel>()
-    var startDestination by remember { mutableStateOf<String?>(null) }
+    var isLoading by remember { mutableStateOf(true) }
+    var startDestination by remember { mutableStateOf(AuthRoutes.Login.route) }
 
     LaunchedEffect(Unit) {
-        val session = authViewModel.sessionManager.getSession() // Pengecekan awal
+        val session = authViewModel.sessionManager.getSession()
         startDestination = if (session != null) HomeRoutes.Index.route else AuthRoutes.Login.route
+        isLoading = false
     }
 
-    if (startDestination == null) {
+    if (isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
         }
     } else {
         NavHost(navController = navController,
-            startDestination = startDestination!!,
+            startDestination = startDestination,
             modifier = modifier,
-            enterTransition = { slideInVertically { it } },
-            popEnterTransition = { slideInVertically { -it } },
-            exitTransition = { slideOutVertically { -it } },
-            popExitTransition = { slideOutVertically { it } }) {
+            enterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { it }, animationSpec = tween(durationMillis = 300)
+                ) + fadeIn(animationSpec = tween(300))
+            },
+            popEnterTransition = {
+                slideInHorizontally(
+                    initialOffsetX = { -it }, animationSpec = tween(durationMillis = 300)
+                ) + fadeIn(animationSpec = tween(300))
+            },
+            exitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { -it }, animationSpec = tween(durationMillis = 300)
+                ) + fadeOut(animationSpec = tween(300))
+            },
+            popExitTransition = {
+                slideOutHorizontally(
+                    targetOffsetX = { it }, animationSpec = tween(durationMillis = 300)
+                ) + fadeOut(animationSpec = tween(300))
+            }) {
             authNavigation()
             homeNavigation()
             orderNavigation()

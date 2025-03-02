@@ -6,11 +6,12 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Provider
 import javax.inject.Singleton
 
 @Module
@@ -18,15 +19,18 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(sessionManagerProvider: Provider<SessionManager>): OkHttpClient {
+    fun provideOkHttpClient(sessionManager: SessionManager): OkHttpClient {
+        var currentToken: String? = null
+        CoroutineScope(Dispatchers.IO).launch {
+            sessionManager.sessionFlow.collect { session ->
+                currentToken = session?.token
+            }
+        }
         return OkHttpClient.Builder().addInterceptor { chain ->
-            val sessionManager = sessionManagerProvider.get()
-            val token = runBlocking { sessionManager.getToken() }
-            val request =
-                chain.request().newBuilder().addHeader("Content-Type", "application/json")
-                    .addHeader("Accept", "application/json").apply {
-                        token?.let { addHeader("Authorization", "Bearer $it") }
-                    }.build()
+            val request = chain.request().newBuilder().addHeader("Content-Type", "application/json")
+                .addHeader("Accept", "application/json").apply {
+                    currentToken?.let { addHeader("Authorization", "Bearer $it") }
+                }.build()
             chain.proceed(request)
         }.build()
     }
@@ -47,3 +51,21 @@ object NetworkModule {
         }
     }
 }
+//    @Provides
+//    @Singleton
+//    fun provideOkHttpClient(sessionManagerProvider: Provider<SessionManager>): OkHttpClient {
+//        return OkHttpClient.Builder().addInterceptor { chain ->
+//            val sessionManager = sessionManagerProvider.get()
+//            val token = runBlocking { sessionManager.getToken() }
+//            val request =
+//                chain.request().newBuilder().addHeader("Content-Type", "application/json")
+//                    .addHeader("Accept", "application/json").apply {
+//                        token?.let { addHeader("Authorization", "Bearer $it") }
+//                    }.build()
+//            chain.proceed(request)
+//        }.authenticator { route, response ->
+//            val sessionManager = sessionManagerProvider.get()
+//            val token = runBlocking { sessionManager.getToken() }
+//            response.request.newBuilder().header("Authorization", "Bearer $token").build()
+//        }.build()
+//    }
