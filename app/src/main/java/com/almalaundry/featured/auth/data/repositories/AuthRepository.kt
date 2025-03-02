@@ -1,42 +1,32 @@
 package com.almalaundry.featured.auth.data.repositories
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+import android.util.Log
 import com.almalaundry.featured.auth.data.dtos.AuthData
 import com.almalaundry.featured.auth.data.dtos.LoginRequest
 import com.almalaundry.featured.auth.data.dtos.RegisterRequest
 import com.almalaundry.featured.auth.data.source.AuthApi
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.firstOrNull
-import kotlinx.coroutines.flow.map
+import com.almalaundry.shared.commons.session.SessionManager
 import javax.inject.Inject
 import javax.inject.Singleton
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
-
 @Singleton
 class AuthRepository @Inject constructor(
-    private val api: AuthApi, @ApplicationContext private val context: Context
+    private val api: AuthApi, private val sessionManager: SessionManager
 ) {
-    companion object {
-        private val TOKEN_KEY = stringPreferencesKey("auth_token")
-    }
-
     suspend fun login(request: LoginRequest): Result<AuthData> {
         return try {
             val response = api.login(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 val authData = response.body()!!.data
-                saveToken(authData.token)
+                sessionManager.saveSession(authData.toSession())
+                Log.d("AuthRepository", "Login successful: $authData")
                 Result.success(authData)
             } else {
+                Log.e("AuthRepository", "Login failed: ${response.body()?.message}")
                 Result.failure(Exception(response.body()?.message ?: "Login failed"))
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Login exception: ${e.message}")
             Result.failure(e)
         }
     }
@@ -46,12 +36,15 @@ class AuthRepository @Inject constructor(
             val response = api.register(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 val authData = response.body()!!.data
-                saveToken(authData.token)
+                sessionManager.saveSession(authData.toSession())
+                Log.d("AuthRepository", "Register successful: $authData")
                 Result.success(authData)
             } else {
+                Log.e("AuthRepository", "Register failed: ${response.body()?.message}")
                 Result.failure(Exception(response.body()?.message ?: "Registration failed"))
             }
         } catch (e: Exception) {
+            Log.e("AuthRepository", "Register exception: ${e.message}")
             Result.failure(e)
         }
     }
@@ -60,34 +53,16 @@ class AuthRepository @Inject constructor(
         return try {
             val response = api.logout()
             if (response.isSuccessful && response.body()?.success == true) {
-                clearToken()
+                sessionManager.clearSession()
+                Log.d("AuthRepository", "Logout successful")
                 Result.success(Unit)
             } else {
-                val errorBody = response.errorBody()?.string() ?: "No error body"
-                println("Logout failed: ${response.code()} - $errorBody - ${response.body()?.message}")
-                Result.failure(Exception(response.body()?.message ?: "Logout failed: $errorBody"))
+                Log.e("AuthRepository", "Logout failed: ${response.body()?.message}")
+                Result.failure(Exception(response.body()?.message ?: "Logout failed"))
             }
         } catch (e: Exception) {
-            println("Logout exception: ${e.message}")
+            Log.e("AuthRepository", "Logout exception: ${e.message}")
             Result.failure(e)
-        }
-    }
-
-    private suspend fun saveToken(token: String) {
-        context.dataStore.edit { preferences ->
-            preferences[TOKEN_KEY] = token
-        }
-    }
-
-    suspend fun getToken(): String? {
-        return context.dataStore.data.map { preferences ->
-            preferences[TOKEN_KEY]
-        }.firstOrNull()
-    }
-
-    private suspend fun clearToken() {
-        context.dataStore.edit { preferences ->
-            preferences.remove(TOKEN_KEY)
         }
     }
 }

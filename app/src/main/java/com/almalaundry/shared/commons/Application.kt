@@ -12,7 +12,6 @@ fun Application() {
     AlmaLaundryTheme {
         Surface {
             val navController = rememberNavController()
-
             CompositionLocalProvider(LocalNavController provides navController) {
                 ApplicationNavigationGraph(
                     navController = navController

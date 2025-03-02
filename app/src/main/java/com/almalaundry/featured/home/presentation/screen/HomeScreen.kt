@@ -1,5 +1,9 @@
 package com.almalaundry.featured.home.presentation.screen
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.only
@@ -24,18 +28,14 @@ import com.almalaundry.shared.commons.compositional.LocalHomeNavController
 import com.almalaundry.shared.presentation.components.BottomNavigation
 
 @Composable
-fun HomeScreen(
-//    viewModel: HomeViewModel = hiltViewModel()
-) {
+fun HomeScreen() {
     val homeNavController = rememberNavController()
-//    val state by viewModel.state.collectAsState()
 
     CompositionLocalProvider(LocalHomeNavController provides homeNavController) {
-        Scaffold(contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(
-            sides = WindowInsetsSides.Bottom
-        ), bottomBar = {
-            BottomNavigation(navController = homeNavController)
-        }) { paddingValues ->
+        Scaffold(contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(sides = WindowInsetsSides.Bottom),
+            bottomBar = {
+                BottomNavigation(navController = homeNavController)
+            }) { paddingValues ->
             HomeNavGraph(
                 navController = homeNavController,
                 modifier = Modifier
@@ -50,11 +50,13 @@ fun HomeScreen(
 fun HomeNavGraph(
     navController: NavHostController, modifier: Modifier = Modifier
 ) {
-    NavHost(
-        navController = navController,
+    NavHost(navController = navController,
         startDestination = HomeRoutes.Dashboard.route,
-        modifier = modifier
-    ) {
+        modifier = modifier,
+        enterTransition = { fadeIn() + slideInVertically() },
+        popEnterTransition = { fadeIn() + slideInVertically() },
+        exitTransition = { fadeOut() + slideOutVertically() },
+        popExitTransition = { fadeOut() + slideOutVertically() }) {
         composable(HomeRoutes.Dashboard.route) {
             DashboardUser()
         }

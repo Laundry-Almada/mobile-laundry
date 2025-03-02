@@ -46,6 +46,7 @@ class OrderViewModel @Inject constructor(
                     search = filter.search,
                     sortBy = filter.sortBy,
                     sortDirection = filter.sortDirection,
+                    perPage = state.value.perPage,
                     page = if (isLoadMore) _state.value.currentPage + 1 else 1
                 )
 
@@ -53,8 +54,7 @@ class OrderViewModel @Inject constructor(
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
-                        orders = if (isLoadMore) _state.value.orders + response.data
-                        else response.data,
+                        orders = if (isLoadMore) _state.value.orders + response.data else response.data,
                         totalOrders = response.meta.totalOrders,
                         currentPage = response.meta.currentPage,
                         totalPages = response.meta.totalPages,

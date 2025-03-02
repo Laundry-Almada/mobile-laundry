@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -38,8 +37,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.composables.icons.lucide.Focus
 import com.composables.icons.lucide.Lucide
@@ -57,25 +56,21 @@ fun BottomNavigation(
         NavigationBar(
             modifier = Modifier
                 .height(56.dp)
-                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
-            tonalElevation = 0.dp,
-            windowInsets = WindowInsets(0, 0, 0, 0)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)), tonalElevation = 0.dp
         ) {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route
 
             items.forEachIndexed { index, item ->
                 val isSelected = currentRoute == item.route
-                if (index == 2) {
+                if (index == 2) { // Placeholder untuk FAB
                     NavigationBarItem(
-                        icon = { },
-                        label = { },
+                        icon = {},
+                        label = {},
                         selected = false,
-                        onClick = { },
+                        onClick = {},
                         modifier = Modifier.width(72.dp),
-                        colors = NavigationBarItemDefaults.colors(
-                            indicatorColor = Color.Transparent
-                        )
+                        colors = NavigationBarItemDefaults.colors(indicatorColor = Color.Transparent)
                     )
                 } else {
                     NavigationBarItem(icon = {
@@ -115,9 +110,10 @@ fun BottomNavigation(
                             )
                         }
                     }, selected = isSelected, onClick = {
+
                         item.route?.let { route ->
                             navController.navigate(route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
+                                popUpTo(HomeRoutes.Dashboard.route) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -127,6 +123,7 @@ fun BottomNavigation(
                     }, colors = NavigationBarItemDefaults.colors(
                         indicatorColor = Color.Transparent
                     ), modifier = Modifier.offset(y = 4.dp)
+
                     )
                 }
             }
@@ -136,23 +133,23 @@ fun BottomNavigation(
             onClick = {
                 navController.navigate(OrderRoutes.Scan.route) {
                     launchSingleTop = true
+                    restoreState = true
                 }
             },
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .offset(y = (-20).dp)
-                .size(60.dp),
+                .offset(y = (-28).dp) // Sedikit lebih tinggi untuk estetika
+                .size(64.dp),
             containerColor = MaterialTheme.colorScheme.primary,
             shape = CircleShape,
-            elevation = FloatingActionButtonDefaults.elevation()
+            elevation = FloatingActionButtonDefaults.elevation(8.dp)
         ) {
             Icon(
                 imageVector = Lucide.Focus,
                 contentDescription = "Scan",
                 tint = MaterialTheme.colorScheme.onPrimary,
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier.size(32.dp)
             )
         }
     }
 }
-

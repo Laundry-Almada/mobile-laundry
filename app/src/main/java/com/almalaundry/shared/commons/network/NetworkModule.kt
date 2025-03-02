@@ -1,7 +1,7 @@
 package com.almalaundry.shared.commons.network
 
-import com.almalaundry.featured.auth.data.repositories.AuthRepository
 import com.almalaundry.shared.commons.config.BuildConfig
+import com.almalaundry.shared.commons.session.SessionManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,16 +18,14 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
-    fun provideOkHttpClient(authRepositoryProvider: Provider<AuthRepository>): OkHttpClient {
+    fun provideOkHttpClient(sessionManagerProvider: Provider<SessionManager>): OkHttpClient {
         return OkHttpClient.Builder().addInterceptor { chain ->
-            val authRepository = authRepositoryProvider.get() // Ambil instance saat runtime
-            val token = runBlocking { authRepository.getToken() } // Ambil token
+            val sessionManager = sessionManagerProvider.get()
+            val token = runBlocking { sessionManager.getToken() }
             val request =
                 chain.request().newBuilder().addHeader("Content-Type", "application/json")
                     .addHeader("Accept", "application/json").apply {
-                        if (token != null) {
-                            addHeader("Authorization", "Bearer $token")
-                        }
+                        token?.let { addHeader("Authorization", "Bearer $it") }
                     }.build()
             chain.proceed(request)
         }.build()

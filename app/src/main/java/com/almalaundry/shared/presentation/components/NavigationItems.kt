@@ -15,18 +15,16 @@ object NavigationItems {
     val items = listOf(
         NavigationItem(
             route = HomeRoutes.Dashboard.route, icon = Lucide.LayoutDashboard, label = "Home"
-        ), NavigationItem(
+        ),
+        NavigationItem(
             route = OrderRoutes.Index.route, icon = Lucide.ShoppingBag, label = "Orders"
-        ), NavigationItem(
-            route = null, icon = Lucide.Focus, label = "Scan"
-        ), NavigationItem(
-            route = OrderRoutes.History.route, icon = Lucide.History, label = "History"
-        ), NavigationItem(
-            route = ProfileRoutes.Index.route, icon = Lucide.User, label = "Profile"
-        )
+        ),
+        NavigationItem(route = null, icon = Lucide.Focus, label = "Scan"), // Untuk FAB
+        NavigationItem(route = OrderRoutes.History.route, icon = Lucide.History, label = "History"),
+        NavigationItem(route = ProfileRoutes.Index.route, icon = Lucide.User, label = "Profile")
     )
 }
 
 data class NavigationItem(
-    val route: String? = null, val icon: ImageVector, val label: String
+    val route: String?, val icon: ImageVector, val label: String
 )

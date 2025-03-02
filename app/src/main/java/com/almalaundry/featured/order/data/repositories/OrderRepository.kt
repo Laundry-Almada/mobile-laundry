@@ -7,11 +7,14 @@ import com.almalaundry.featured.order.data.dtos.OrderResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
+import com.almalaundry.shared.commons.session.SessionManager
 import org.json.JSONObject
 import javax.inject.Inject
+import javax.inject.Singleton
 
+@Singleton
 class OrderRepository @Inject constructor(
-    private val api: OrderApi
+    private val api: OrderApi, private val sessionManager: SessionManager
 ) {
     suspend fun getOrders(
         status: String? = null,
@@ -25,6 +28,9 @@ class OrderRepository @Inject constructor(
         page: Int = 1
     ): Result<OrderResponse> {
         return try {
+            if (!sessionManager.isLoggedIn()) {
+                throw Exception("User not logged in")
+            }
             val response = api.getOrders(
                 status = status,
                 type = type,
