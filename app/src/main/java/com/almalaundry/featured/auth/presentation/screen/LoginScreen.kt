@@ -1,6 +1,8 @@
 package com.almalaundry.featured.auth.presentation.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,9 +22,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.almalaundry.R
 import com.almalaundry.featured.auth.commons.AuthRoutes
 import com.almalaundry.featured.auth.presentation.viewmodels.LoginViewModel
 import com.almalaundry.featured.home.commons.HomeRoutes
@@ -44,18 +49,27 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = "Login",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 32.dp)
+        Image(
+            painter = painterResource(id = R.drawable.laundry),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = "Login",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
 
         OutlinedTextField(
             value = state.email,
@@ -81,28 +95,29 @@ fun LoginScreen(
                 modifier = Modifier.padding(top = 8.dp)
             )
         }
-
-        Button(
-            onClick = viewModel::login,
-            enabled = !state.isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp)
-        ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Login")
+            Button(
+                onClick = viewModel::login,
+                enabled = !state.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp)
+            ) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Login")
+                }
             }
-        }
 
-        TextButton(
-            onClick = { navController.navigate(AuthRoutes.Register.route) },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("Don't have an account? Register")
+            TextButton(
+                onClick = { navController.navigate(AuthRoutes.Register.route) },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Don't have an account? Register")
+            }
         }
     }
 }
