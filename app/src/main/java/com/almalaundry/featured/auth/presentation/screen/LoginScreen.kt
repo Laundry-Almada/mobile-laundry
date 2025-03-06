@@ -40,7 +40,6 @@ fun LoginScreen(
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
 
-    // Navigate to home screen when login is successful
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
             navController.navigate(HomeRoutes.Index.route) {
@@ -71,30 +70,32 @@ fun LoginScreen(
                 modifier = Modifier.padding(bottom = 32.dp)
             )
 
-        OutlinedTextField(
-            value = state.email,
-            onValueChange = viewModel::onEmailChange,
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
+            OutlinedTextField(
+                value = state.username,
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.password,
-            onValueChange = viewModel::onPasswordChange,
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (state.error != null) {
-            Text(
-                text = state.error!!,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 8.dp)
+                onValueChange = viewModel::onUsernameChange,
+                label = { Text("Username") },
+                modifier = Modifier.fillMaxWidth()
             )
-        }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = viewModel::onPasswordChange,
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (state.error != null) {
+                Text(
+                    text = state.error!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
             Button(
                 onClick = viewModel::login,
                 enabled = !state.isLoading,

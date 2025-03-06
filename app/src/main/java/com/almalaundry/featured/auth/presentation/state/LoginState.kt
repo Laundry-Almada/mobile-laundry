@@ -1,11 +1,9 @@
 package com.almalaundry.featured.auth.presentation.state
 
 data class LoginState(
-    val email: String = "",
-    val password: String = "",
+    val username: String = "admin",
+    val password: String = "admin",
     val isLoading: Boolean = false,
     val isSuccess: Boolean = false,
-    val token: String? = null,
-    val name: String? = null,
     val error: String? = null
 )
