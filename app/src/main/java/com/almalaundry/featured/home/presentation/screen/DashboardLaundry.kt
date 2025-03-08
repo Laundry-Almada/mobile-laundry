@@ -104,10 +104,7 @@ fun DashboardUser(
     )
 
     //font nunito
-    val NunitoFont = FontFamily(
-        Font(R.font.nunito_regular, FontWeight.Normal),
-        //Font(R.font.nunito_bold, FontWeight.Bold)
-    )
+    val NunitoFont = FontFamily(Font(R.font.nunito_regular, FontWeight.Normal))
 
     //auto scroll
     LaunchedEffect(Unit) {
