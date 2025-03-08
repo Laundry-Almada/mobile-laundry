@@ -321,7 +321,7 @@ fun DetailOrderScreen(
                                         modifier = Modifier.size(24.dp)
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text("Cetak Barcode")
+                                    Text("Cetak QR Code")
                                 }
                             }
                         }
