@@ -1,6 +1,8 @@
 package com.almalaundry.featured.auth.presentation.screen
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,9 +22,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.almalaundry.R
 import com.almalaundry.featured.auth.commons.AuthRoutes
 import com.almalaundry.featured.auth.presentation.viewmodels.LoginViewModel
 import com.almalaundry.featured.home.commons.HomeRoutes
@@ -35,7 +40,6 @@ fun LoginScreen(
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
 
-    // Navigate to home screen when login is successful
     LaunchedEffect(state.isSuccess) {
         if (state.isSuccess) {
             navController.navigate(HomeRoutes.Index.route) {
@@ -44,65 +48,76 @@ fun LoginScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+    Box(
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = "Login",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = 32.dp)
+        Image(
+            painter = painterResource(id = R.drawable.laundry),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
-
-        OutlinedTextField(
-            value = state.email,
-            onValueChange = viewModel::onEmailChange,
-            label = { Text("Email") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        OutlinedTextField(
-            value = state.password,
-            onValueChange = viewModel::onPasswordChange,
-            label = { Text("Password") },
-            visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (state.error != null) {
-            Text(
-                text = state.error!!,
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(top = 8.dp)
-            )
-        }
-
-        Button(
-            onClick = viewModel::login,
-            enabled = !state.isLoading,
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp)
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            if (state.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Login")
-            }
-        }
+            Text(
+                text = "Login",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 32.dp)
+            )
 
-        TextButton(
-            onClick = { navController.navigate(AuthRoutes.Register.route) },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("Don't have an account? Register")
+            OutlinedTextField(
+                value = state.email,
+                onValueChange = viewModel::onEmailChange,
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = state.password,
+                onValueChange = viewModel::onPasswordChange,
+                label = { Text("Password") },
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            if (state.error != null) {
+                Text(
+                    text = state.error!!,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
+            }
+
+            Button(
+                onClick = viewModel::login,
+                enabled = !state.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp)
+            ) {
+                if (state.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                } else {
+                    Text("Login")
+                }
+            }
+
+            TextButton(
+                onClick = { navController.navigate(AuthRoutes.Register.route) },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Don't have an account? Register")
+            }
         }
     }
 }
