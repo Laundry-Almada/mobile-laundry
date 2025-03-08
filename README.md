@@ -14,14 +14,14 @@
 |:------:|---------------------------------------------------|
 |   ✅    | Scan Barcode                                      |
 |   ✅    | Get Barcode Information                           |
-|   ⬜    | print Barcode & connect to physcical print device |
+|   ✅    | print Barcode & connect to physcical print device |
 
 ### Dashboard
 
 | Status | Fungsional |
 |:------:|------------|
-|   ⬜    | Statistik  |
-|   ⬜    | Notif      |
+|   🚧    | Statistik  |
+|   🚧    | Notif      |
 
 ### Profile
 
@@ -53,7 +53,7 @@
 
 | Status | Fungsional                                |
 |:------:|-------------------------------------------|
-|   ⬜    | Cek status Order by customer guest/public |
+|   🚧    | Cek status Order by customer guest/public |
 
 ---
 
