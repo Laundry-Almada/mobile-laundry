@@ -28,8 +28,6 @@ import kotlin.math.absoluteValue
 import androidx.compose.material3.Card
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.res.stringResource
@@ -38,18 +36,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import com.almalaundry.shared.presentation.ui.theme.onBackgroundDarkMediumContrast
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryContainerLight
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryLight
 import com.almalaundry.shared.presentation.ui.theme.primaryContainerDarkMediumContrast
@@ -57,6 +55,38 @@ import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.HorizontalPagerIndicator
+import com.almalaundry.featured.order.commons.OrderRoutes
+import com.almalaundry.shared.presentation.ui.theme.primaryContainerLight
+import com.almalaundry.shared.presentation.ui.theme.primaryLight
+import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
+import com.patrykandpatrick.vico.core.cartesian.axis.Axis
+import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
+import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shapeComponent
+import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
+import com.patrykandpatrick.vico.compose.common.vicoTheme
+import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
+import com.patrykandpatrick.vico.core.common.LegendItem
+import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
+import com.patrykandpatrick.vico.core.common.shape.CorneredShape
+
 
 @Composable
 fun DashboardUser(
@@ -76,7 +106,7 @@ fun DashboardUser(
     //font nunito
     val NunitoFont = FontFamily(
         Font(R.font.nunito_regular, FontWeight.Normal),
-        Font(R.font.nunito_bold, FontWeight.Bold)
+        //Font(R.font.nunito_bold, FontWeight.Bold)
     )
 
     //auto scroll
@@ -102,7 +132,18 @@ fun DashboardUser(
                ),
                windowInsets = WindowInsets(0.dp)
            )
+        },
+
+        //floatingActionButton
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { navController.navigate(OrderRoutes.Create.route)}
+                ) {
+                Icon(Lucide.Plus, contentDescription = "Create Order")
+            }
         }
+
+
     ){ paddingValues ->
         Box(
             modifier = Modifier
@@ -121,13 +162,22 @@ fun DashboardUser(
                     ),
                 contentAlignment = Alignment.Center
             ){
-                Text(
-                    text = "Welcome,Almada Laundry!",
-                    fontFamily = NunitoFont,
-                    fontWeight =FontWeight.Bold,
-                    fontSize = 46.sp,
-                    modifier = Modifier.padding(bottom = 10.dp)
-                )
+                Column(
+                    horizontalAlignment = Alignment.Start
+                ) {
+                    Text(
+                        text = "Welcome",
+                        fontFamily = NunitoFont,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 40.sp
+                    )
+                    Text(
+                        text = "Almada Laundry!",
+                        fontFamily = NunitoFont,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 40.sp
+                    )
+                }
             }
 
             Column(
@@ -138,68 +188,30 @@ fun DashboardUser(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                //row total tipe laundry dan total layanan
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ){
-                    //total type laundry
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ){
-
-                        Box(
-                            contentAlignment = Alignment.TopStart,
-                            modifier =Modifier
-                                .width(184.dp)
-                                .height(152.dp)
-                                .background(primaryContainerDarkMediumContrast, RoundedCornerShape(20.dp))
-                        ){
-                            Text(
-                                text = "Total Tipe Laundry",
-                                fontFamily = NunitoFont,
-                                fontWeight =FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            //chart
-                        }
-                    }
-
-                    Spacer(modifier = Modifier.width(16.dp))
-
-                    //total layanan
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ){
-
-                        Box(
-                            contentAlignment = Alignment.TopStart,
-                            modifier =Modifier
-                                .width(184.dp)
-                                .height(152.dp)
-                                .background(primaryContainerDarkMediumContrast, RoundedCornerShape(20.dp))
-                        ){
-                            Text(
-                                text = "Total Layanan",
-                                fontFamily = NunitoFont,
-                                fontWeight =FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            //chart
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Total Pendapatan Section
-
+                //tipe laundry
                 Box(
                     contentAlignment = Alignment.TopCenter,
                     modifier = Modifier
+                        .padding(16.dp)
+                        .width(383.dp)
+                        .height(152.dp)
+                        .background(primaryContainerDarkMediumContrast, RoundedCornerShape(20.dp))
+                ) {
+                    Text(
+                        text = "Total Tipe Laundry",
+                        fontFamily = NunitoFont,
+                        fontWeight =FontWeight.Bold,
+                        fontSize = 14.sp,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    LaundryTypeChart()
+                }
+
+                // total pendapatan
+                Box(
+                    contentAlignment = Alignment.TopCenter,
+                    modifier = Modifier
+                        .padding(16.dp)
                         .width(383.dp)
                         .height(152.dp)
                         .background(primaryContainerDarkMediumContrast, RoundedCornerShape(20.dp))
@@ -211,13 +223,10 @@ fun DashboardUser(
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    //chart
+                    RevenueChart()
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Spacer to push the image slider to the bottom
-                Spacer(modifier = Modifier.weight(1f))
 
                 //image slider
                 HorizontalPager(
@@ -265,27 +274,139 @@ fun DashboardUser(
                         .align(Alignment.CenterHorizontally)
                         .padding(16.dp)
                 )
-
-                //ikon add
-                Box(
-                    modifier = Modifier.fillMaxSize()
-                ){
-                    FloatingActionButton(
-                        onClick = {/*TODO:*/},
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(16.dp)
-                            .background(onBackgroundDarkMediumContrast)
-                    ){
-                        Icon(
-                            imageVector = Lucide.Plus,
-                            contentDescription = "Add",
-                            tint = Color.Black,
-                            modifier = Modifier.size(34.dp)
-                        )
-                    }
-                }
             }
         }
+    }
+}
+
+@Composable
+fun LaundryTypeChart(modifier: Modifier = Modifier) {
+    val modelProducer = remember { CartesianChartModelProducer() }
+    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val laundryTypes = listOf("Cuci Setrika", "Cuci Lipat", "Cuci Kering")
+    val columnColors = listOf(primaryLight, onPrimaryContainerLight, primaryContainerLight)
+    val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
+
+    LaunchedEffect(Unit) {
+        modelProducer.runTransaction {
+            columnSeries {
+                series(50, 80, 100, 70, 90, 60, 85, 95, 75, 110, 120, 90) // Cuci Setrika
+                series(30, 50, 20, 40, 60, 30, 55, 65, 45, 80, 85, 70)  // Cuci Lipat
+                series(20, 40, 50, 30, 40, 20, 35, 50, 25, 60, 70, 55)  // Cuci Kering
+            }
+        }
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                rememberColumnCartesianLayer(
+                    ColumnCartesianLayer.ColumnProvider.series(
+                        columnColors.map { color ->
+                            rememberLineComponent(fill = fill(color), thickness = 8.dp)
+                        }
+                    )
+                ),
+                startAxis = VerticalAxis.rememberStart(),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = object : CartesianValueFormatter {
+                        override fun format(
+                            context: CartesianMeasuringContext,
+                            value: Double,
+                            verticalAxisPosition: Axis.Position.Vertical?
+                        ): String {
+                            val index = value.toInt().coerceIn(months.indices)
+                            return months[index]
+                        }
+                    }
+                ),
+                legend = rememberHorizontalLegend(
+                    items = {
+                        laundryTypes.forEachIndexed { index, label ->
+                            add(
+                                LegendItem(
+                                    shapeComponent(fill(columnColors[index]), CorneredShape.Pill),
+                                    legendItemLabelComponent,
+                                    label,
+                                )
+                            )
+                        }
+                    },
+                    padding = insets(top = 5.dp)
+                )
+            ),
+            modelProducer = modelProducer,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .offset(x = (-8).dp)
+        )
+    }
+}
+
+
+@Composable
+fun RevenueChart(
+    modifier: Modifier = Modifier,
+    lineColor: Color = primaryLight
+) {
+    val modelProducer = remember { CartesianChartModelProducer() }
+    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+    LaunchedEffect(Unit) {
+        modelProducer.runTransaction {
+            lineSeries {
+                series(listOf(250, 750, 500, 600, 1050, 1000, 950, 200, 800, 850, 780, 550))
+            }
+        }
+    }
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CartesianChartHost(
+            chart = rememberCartesianChart(
+                rememberLineCartesianLayer(
+                    lineProvider = LineCartesianLayer.LineProvider.series(
+                        LineCartesianLayer.rememberLine(
+                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                            areaFill = LineCartesianLayer.AreaFill.single(
+                                fill(
+                                    ShaderProvider.verticalGradient(
+                                        arrayOf(lineColor.copy(alpha = 0.3f), Color.Transparent)
+                                    )
+                                )
+                            ),
+                        )
+                    )
+                ),
+                startAxis = VerticalAxis.rememberStart(),
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = object : CartesianValueFormatter {
+                        override fun format(
+                            context: CartesianMeasuringContext,
+                            value: Double,
+                            verticalAxisPosition: Axis.Position.Vertical?
+                        ): String {
+                            val index = value.toInt().coerceIn(months.indices)
+                            return months[index]
+                        }
+                    }
+                ),
+            ),
+            modelProducer = modelProducer,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(250.dp)
+                .offset(x = (-8).dp)
+        )
     }
 }
