@@ -4,8 +4,9 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Session(
-    val token: String,
-    val name: String,
-    val role: String, // "owner" atau "staff"
-    val laundryId: String
+    val token: String? = null,
+    val name: String? = null,
+    val role: String? = null, // "owner" atau "staff"
+    val laundryId: String? = null,
+    val printerAddress: String? = null
 )

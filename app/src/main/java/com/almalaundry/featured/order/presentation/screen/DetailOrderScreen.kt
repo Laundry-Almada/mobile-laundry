@@ -45,11 +45,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.presentation.components.StatusChip
 import com.almalaundry.featured.order.presentation.viewmodels.DetailOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
-import com.almalaundry.shared.utils.barcode.generateBarcode
-import com.almalaundry.shared.utils.barcode.printBarcode
 import com.almalaundry.shared.utils.openWhatsApp
 import com.composables.icons.lucide.ArrowLeft
 import com.composables.icons.lucide.ChevronDown
@@ -289,20 +288,25 @@ fun DetailOrderScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
                                 onClick = {
-                                    state.order?.barcode?.let { barcode ->
-                                        val barcodeBitmap = generateBarcode(barcode)
-                                        barcodeBitmap?.let {
-                                            // Ganti "deviceAddress" dengan MAC address printer
-                                            printBarcode(context, it, "00:11:22:33:44:55")
-                                        } ?: Toast.makeText(
-                                            context, "Gagal generate barcode", Toast.LENGTH_SHORT
-                                        ).show()
+                                    state.order?.let { order ->
+                                        // Passing customerName dan barcode ke PrintScreen
+                                        navController.navigate(
+                                            OrderRoutes.Print(
+                                                barcode = order.barcode,
+                                                customerName = order.customer.name,
+                                                type = order.type,
+                                                weight = order.weight,
+                                                totalPrice = order.totalPrice,
+                                                createdAt = order.createdAt
+                                            )
+                                        )
                                     }
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = ButtonDefaults.buttonColors(
-                                    containerColor = Color(0xFF1976D2), // Warna biru untuk print
-                                    contentColor = Color.White
+                                    containerColor = Color(
+                                        0xFF1976D2
+                                    )
                                 ),
                                 shape = RoundedCornerShape(8.dp)
                             ) {

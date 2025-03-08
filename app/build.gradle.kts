@@ -102,6 +102,8 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
 
+    implementation(libs.core)
+
     // Coil
     implementation(libs.coil.compose)
 
@@ -129,7 +131,7 @@ dependencies {
     //image slider
     implementation(libs.accompanist.pager)
     implementation(libs.accompanist.pager.indicators)
-    implementation(libs.androidx.foundation)
+//    implementation(libs.androidx.foundation)
 
     //chart
     implementation(libs.vico.compose)

@@ -54,6 +54,8 @@ class SessionManager @Inject constructor(
 
     suspend fun getRole(): String? = getSession()?.role
 
+    suspend fun getPrinterAddress(): String? = getSession()?.printerAddress
+
     suspend fun clearSession() {
         context.dataStore.edit { preferences ->
             preferences.remove(SESSION_KEY)

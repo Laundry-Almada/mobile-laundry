@@ -23,7 +23,7 @@ class CreateOrderViewModel @Inject constructor(
         viewModelScope.launch {
             val session = sessionManager.getSession()
             if (session != null) {
-                _state.value = _state.value.copy(laundryId = session.laundryId)
+                _state.value = _state.value.copy(laundryId = session.laundryId.toString())
             }
         }
     }

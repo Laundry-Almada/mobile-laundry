@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.almalaundry.featured.auth.commons.AuthRoutes
 import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.presentation.screen.SplashScreen
 import com.almalaundry.shared.presentation.state.SplashState
 import com.almalaundry.shared.presentation.ui.theme.AlmaLaundryTheme
@@ -25,6 +26,7 @@ fun Application() {
         Surface {
             val navController = rememberNavController()
             val authViewModel = hiltViewModel<AuthViewModel>()
+            val sessionManager = authViewModel.sessionManager
             var splashState by remember { mutableStateOf<SplashState>(SplashState.Loading) }
 
             LaunchedEffect(Unit) {
@@ -40,7 +42,10 @@ fun Application() {
             when (splashState) {
                 SplashState.Loading -> SplashScreen()
                 is SplashState.NavigateToDashboard -> {
-                    CompositionLocalProvider(LocalNavController provides navController) {
+                    CompositionLocalProvider(
+                        LocalNavController provides navController,
+                        LocalSessionManager provides sessionManager
+                    ) {
                         ApplicationNavigationGraph(
                             navController = navController, startDestination = HomeRoutes.Index.route
                         )
@@ -48,7 +53,10 @@ fun Application() {
                 }
 
                 is SplashState.NavigateToLogin -> {
-                    CompositionLocalProvider(LocalNavController provides navController) {
+                    CompositionLocalProvider(
+                        LocalNavController provides navController,
+                        LocalSessionManager provides sessionManager
+                    ) {
                         ApplicationNavigationGraph(
                             navController = navController, startDestination = AuthRoutes.Login.route
                         )

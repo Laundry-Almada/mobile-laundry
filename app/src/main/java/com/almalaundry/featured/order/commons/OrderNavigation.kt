@@ -7,6 +7,7 @@ import com.almalaundry.featured.order.presentation.screen.CreateOrderScreen
 import com.almalaundry.featured.order.presentation.screen.DetailOrderScreen
 import com.almalaundry.featured.order.presentation.screen.HistoryOrderScreen
 import com.almalaundry.featured.order.presentation.screen.OrderScreen
+import com.almalaundry.featured.order.presentation.screen.PrintScreen
 import com.almalaundry.featured.order.presentation.screen.ScanScreen
 
 fun NavGraphBuilder.orderNavigation() {
@@ -19,6 +20,17 @@ fun NavGraphBuilder.orderNavigation() {
     composable<OrderRoutes.Detail> {
         val data = it.toRoute<OrderRoutes.Detail>()
         DetailOrderScreen(orderId = data.orderId)
+    }
+    composable<OrderRoutes.Print> {
+        val data = it.toRoute<OrderRoutes.Print>()
+        PrintScreen(
+            barcode = data.barcode,
+            customerName = data.customerName,
+            type = data.type,
+            weight = data.weight,
+            totalPrice = data.totalPrice,
+            createdAt = data.createdAt
+        )
     }
     composable(OrderRoutes.Scan.route) {
         ScanScreen()
