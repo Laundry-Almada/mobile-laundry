@@ -7,6 +7,9 @@ import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Typeface
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -15,6 +18,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -25,7 +29,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -43,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
@@ -54,6 +56,7 @@ import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.commons.session.SessionManager
 import com.almalaundry.shared.domain.models.Session
+import com.almalaundry.shared.utils.formatDateToIndonesian
 import com.composables.icons.lucide.ArrowLeft
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Printer
@@ -92,6 +95,7 @@ fun PrintScreen(
     var isConnecting by remember { mutableStateOf(false) }
     var isPrinting by remember { mutableStateOf(false) }
     var showDeviceDialog by remember { mutableStateOf(false) }
+    val formattedDate = formatDateToIndonesian(order.createdAt)
 
     // Launcher untuk meminta izin Bluetooth
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -224,13 +228,78 @@ fun PrintScreen(
         return bytes.toByteArray()
     }
 
+    fun createPrintBitmap(order: Order, qrCodeBitmap: Bitmap): Bitmap {
+        val qrCodeSize = qrCodeBitmap.width // Ukuran QR code = 160 piksel
+        val textPaint = Paint().apply {
+            color = android.graphics.Color.BLACK
+            textSize = 17f // Ukuran teks kecil agar muat
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
+        }
+
+        // Lebar bitmap = 384 piksel (58 mm pada 203 DPI)
+        val bitmapWidth = 384
+        val qrX = 1f // Margin kiri untuk QR code
+        val textX = qrCodeSize + 5f // Jarak dari QR code
+        val maxTextWidth = bitmapWidth - textX - 10f // Lebar maksimum untuk teks
+        val lineHeight =
+            textPaint.fontMetrics.bottom - textPaint.fontMetrics.top + 1f // Jarak antar baris
+
+        // Daftar teks
+        val textLines = listOf(
+            order.customer.name,
+            "Tipe: ${order.type}",
+            "Berat: ${order.weight} kg",
+            "Harga: Rp${order.totalPrice}",
+            "Tgl Order: $formattedDate"
+        )
+
+        // Hitung teks yang terpotong dan lanjutkan di bawah
+        val wrappedLines = mutableListOf<String>()
+        textLines.forEach { line ->
+            if (textPaint.measureText(line) <= maxTextWidth) {
+                wrappedLines.add(line)
+            } else {
+                val words = line.split(" ")
+                var currentLine = ""
+                words.forEach { word ->
+                    val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
+                    if (textPaint.measureText(testLine) <= maxTextWidth) {
+                        currentLine = testLine
+                    } else {
+                        if (currentLine.isNotEmpty()) wrappedLines.add(currentLine)
+                        currentLine = word
+                    }
+                }
+                if (currentLine.isNotEmpty()) wrappedLines.add(currentLine)
+            }
+        }
+
+        // Hitung tinggi bitmap
+        val textHeight = lineHeight * wrappedLines.size
+        val bitmapHeight = maxOf(qrCodeSize, textHeight.toInt()) + 20 // Margin bawah kecil
+
+        // Buat bitmap
+        val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(android.graphics.Color.WHITE)
+
+        // Gambar QR code di kiri atas
+        canvas.drawBitmap(qrCodeBitmap, qrX, 0f, null)
+
+        // Gambar teks di kanan dan lanjutkan di bawah jika perlu
+        var y = lineHeight // Mulai dari atas, sejajar dengan QR code
+        wrappedLines.forEach { line ->
+            canvas.drawText(line, textX, y, textPaint)
+            y += lineHeight
+        }
+
+        return bitmap
+    }
+
     // Fungsi untuk mencetak QR code dan detail order
     suspend fun printQRCode(
         outputStream: OutputStream, context: Context, order: Order
     ) {
-        val esc = 0x1B.toByte()
-        val lf = 0x0A.toByte()
-
         try {
             val qrCodeBitmap = QRCodeUtils.generateQRCode(order.barcode, 160)
             if (qrCodeBitmap == null) {
@@ -240,37 +309,15 @@ fun PrintScreen(
                 return
             }
 
-            val qrCodeBytes = bitmapToBytes(qrCodeBitmap)
+            // Buat bitmap cetakan
+            val printBitmap = createPrintBitmap(order, qrCodeBitmap)
+            val printBytes = bitmapToBytes(printBitmap)
 
             withContext(Dispatchers.IO) {
-                outputStream.write(byteArrayOf(esc, 0x40)) // Inisialisasi printer
-                outputStream.flush()
-
-                // Cetak detail order di kiri
-                outputStream.write(byteArrayOf(esc, 0x61, 0x00)) // Align left
-                outputStream.write(order.customer.name.toByteArray())
-                outputStream.write(byteArrayOf(lf))
-                outputStream.write("Tipe: ${order.type}".toByteArray())
-                outputStream.write(byteArrayOf(lf))
-                outputStream.write("Berat: ${order.weight}".toByteArray())
-                outputStream.write(byteArrayOf(lf))
-                outputStream.write("Harga: ${order.totalPrice}".toByteArray())
-                outputStream.write(byteArrayOf(lf))
-                outputStream.write("Tgl Order: ${order.createdAt}".toByteArray())
-                outputStream.write(byteArrayOf(lf))
-                outputStream.flush()
-
-                // Cetak QR code di tengah
-                outputStream.write(byteArrayOf(esc, 0x61, 0x01)) // Align center
-                outputStream.write(qrCodeBytes)
-                outputStream.flush()
-
-                // Tambahkan margin minimal sebelum potong (hanya satu LF)
-                outputStream.write(byteArrayOf(lf, lf, lf))
-                outputStream.flush()
-
-                // Potong kertas
-                outputStream.write(byteArrayOf(0x1D, 0x56, 0x01))
+                outputStream.write(byteArrayOf(0x1B, 0x40)) // Inisialisasi printer
+                outputStream.write(printBytes) // Cetak bitmap
+                outputStream.write(byteArrayOf(0x0A, 0x0A)) // Satu baris kosong untuk margin
+                outputStream.write(byteArrayOf(0x1D, 0x56, 0x01)) // Potong kertas
                 outputStream.flush()
             }
         } catch (e: Exception) {
@@ -317,42 +364,25 @@ fun PrintScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.Start
         ) {
-            // Detail order di kiri
-            Text(
-                text = order.customer.name,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Tipe: ${order.type}", style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Berat: ${order.weight}", style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Harga: ${order.totalPrice}", style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Tgl Order: ${order.createdAt}", style = MaterialTheme.typography.bodyMedium
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            // QR Code di tengah
-            val qrCodeBitmap = QRCodeUtils.generateQRCode(order.barcode, 150)
-            qrCodeBitmap?.let {
+            // Preview bitmap
+            val qrCodeBitmap =
+                QRCodeUtils.generateQRCode(order.barcode, 160) // Sesuaikan dengan ukuran cetak
+            if (qrCodeBitmap != null) {
+                val printBitmap = createPrintBitmap(order, qrCodeBitmap)
                 Image(
-                    bitmap = it.asImageBitmap(),
-                    contentDescription = "QR Code",
+                    bitmap = printBitmap.asImageBitmap(),
+                    contentDescription = "Preview Cetakan",
                     modifier = Modifier
-                        .size(150.dp)
-                        .align(Alignment.CenterHorizontally)
+                        .fillMaxWidth()
+                        .aspectRatio(printBitmap.width.toFloat() / printBitmap.height)
                 )
-            } ?: Text(
-                text = "Gagal generate QR code",
-                color = Color.Red,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            } else {
+                Text(
+                    text = "Gagal generate QR code",
+                    color = Color.Red,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
 
             Spacer(modifier = Modifier.height(16.dp))
 

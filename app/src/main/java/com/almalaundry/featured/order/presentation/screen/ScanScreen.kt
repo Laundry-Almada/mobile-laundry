@@ -8,6 +8,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -28,6 +29,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.commons.barcode.extractOrderId
 import com.almalaundry.featured.order.presentation.components.BarcodeScanner
+import com.almalaundry.featured.order.presentation.components.ScanOverlay
 import com.almalaundry.featured.order.presentation.viewmodels.ScanViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import kotlinx.coroutines.launch
@@ -74,38 +76,44 @@ fun ScanScreen(
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
+        modifier = Modifier.fillMaxSize()
     ) {
         if (state.hasPermission && state.isScanning) {
-            BarcodeScanner(onBarcodeDetected = { barcode ->
-                if (!isProcessingBarcode && !state.isNavigating) {
-                    isProcessingBarcode = true
-                    viewModel.onBarcodeDetected(barcode)
+            BarcodeScanner(
+                onBarcodeDetected = { barcode ->
+                    if (!isProcessingBarcode && !state.isNavigating) {
+                        isProcessingBarcode = true
+                        viewModel.onBarcodeDetected(barcode)
 
-                    val orderId = extractOrderId(barcode)
+                        val orderId = extractOrderId(barcode)
 
-                    if (orderId != null) {
-                        scope.launch {
-                            viewModel.processBarcodeResult(orderId).fold(onSuccess = { order ->
-                                navController.navigate(OrderRoutes.Detail(order.id)) {
-//                                        popUpTo(navController.graph.startDestinationId)
-                                    launchSingleTop = true
-                                }
-                            }, onFailure = { error ->
-                                viewModel.setError("Order tidak ditemukan: ${error.message}")
-                            })
-                            isProcessingBarcode = false
-                            viewModel.setNavigating(false)
+                        if (orderId != null) {
+                            scope.launch {
+                                viewModel.processBarcodeResult(orderId).fold(
+                                    onSuccess = { order ->
+                                        navController.navigate(OrderRoutes.Detail(order.id)) {
+                                            launchSingleTop = true
+                                        }
+                                    },
+                                    onFailure = { error ->
+                                        viewModel.setError("Order tidak ditemukan: ${error.message}")
+                                    }
+                                )
+                                isProcessingBarcode = false
+                                viewModel.setNavigating(false)
+                            }
                         }
                     }
-                }
-            }, onError = { error ->
-                viewModel.setError(error)
-                navController.popBackStack()
-            }, modifier = Modifier.fillMaxSize()
+                },
+                onError = { error ->
+                    viewModel.setError(error)
+                    navController.popBackStack()
+                },
+                modifier = Modifier.fillMaxSize()
             )
+
+            // Overlay dengan kotak transparan dan sudut-sudut
+            ScanOverlay(cornerColor = MaterialTheme.colorScheme.primary)
         }
 
         // Tampilkan error jika ada
@@ -117,25 +125,11 @@ fun ScanScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = state.error!!, color = Color.Red, modifier = Modifier.padding(16.dp)
+                    text = state.error!!,
+                    color = Color.Red,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
     }
 }
-
-// Tampilkan hasil scan
-//        if (state.barcodeValue.isNotEmpty()) {
-//            Box(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .background(Color.Black.copy(alpha = 0.7f)),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                Text(
-//                    text = "Barcode terdeteksi: ${state.barcodeValue}",
-//                    color = Color.White,
-//                    modifier = Modifier.padding(16.dp)
-//                )
-//            }
-//        }
