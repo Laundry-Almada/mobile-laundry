@@ -213,9 +213,31 @@ class RegisterViewModel @Inject constructor(
 
     fun register() {
         val currentState = _state.value
-        if (currentState.password != currentState.confirmPassword) {
-            _state.update { it.copy(error = "Password dan Confirm Password harus sama!") }
-            return
+        when {
+            currentState.username.isBlank() -> {
+                _state.update { it.copy(error = "Username tidak boleh kosong!") }
+                return
+            }
+            currentState.email.isBlank() -> {
+                _state.update { it.copy(error = "Email tidak boleh kosong!") }
+                return
+            }
+            currentState.password.isBlank() -> {
+                _state.update {it.copy(error = "Password tidak boleh kosong")}
+                return
+            }
+            currentState.password != currentState.confirmPassword -> {
+                _state.update { it.copy(error = "Password dan Confirm Password harus sama!") }
+                return
+            }
+            currentState.role == "Owner" && currentState.laundryName.isBlank() -> {
+                _state.update {it.copy(error = "Nama laundry tidak boleh kosong!")}
+                return
+            }
+            currentState.role == "Staff" && currentState.selectedLaundry.isBlank() -> {
+                _state.update { it.copy(error = "Silakan pilih laundry") }
+                return
+            }
         }
 
         viewModelScope.launch {

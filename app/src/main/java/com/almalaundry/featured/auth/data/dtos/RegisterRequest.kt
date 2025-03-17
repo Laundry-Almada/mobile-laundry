@@ -6,7 +6,11 @@ data class RegisterRequest(
     val name: String,
     val email: String,
     val password: String,
-    @SerializedName("c_password") val cPassword: String,
+    @SerializedName("c_password")
+    val cPassword: String,
     val role: String,
-    @SerializedName("laundry_id") val laundryId: String
+    @SerializedName("laundry_name")
+    val laundryName: String? = null,
+    @SerializedName("laundry_id")
+    val laundryId: String? = null
 )
