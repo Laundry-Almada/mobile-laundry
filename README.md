@@ -1,5 +1,7 @@
 # Dokumentasi Aplikasi Android: AlmaLaundry
 
+![androidlaundry2](https://github.com/user-attachments/assets/bf30cc82-c9fd-4c24-84f8-ce0bb61a809f)
+
 ## Deskripsi Umum
 **AlmaLaundry** adalah aplikasi Android yang dikembangkan menggunakan Android Studio Ladybug dengan Jetpack Compose sebagai UI framework utama. Aplikasi ini dirancang untuk mendukung fitur modern seperti navigasi, pengelolaan data lokal, integrasi API, pemindaian barcode, dan visualisasi data dengan chart. Proyek ini menggunakan bahasa pemrograman Kotlin dan memanfaatkan berbagai library populer untuk mempercepat pengembangan.
 
