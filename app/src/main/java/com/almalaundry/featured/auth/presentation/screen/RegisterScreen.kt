@@ -11,10 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -34,15 +32,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
 //import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -60,7 +55,6 @@ import com.almalaundry.shared.commons.compositional.LocalNavController
 fun RegisterScreen(
     viewModel: RegisterViewModel = hiltViewModel()
 ) {
-    val dactiveColor = colorResource(id = R.color.dactive)
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
     var isPasswordVisible by remember { mutableStateOf(false) }
@@ -75,7 +69,9 @@ fun RegisterScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
         Image(
             painter = painterResource(id = R.drawable.laundry),
             contentDescription = null,
@@ -92,29 +88,28 @@ fun RegisterScreen(
                 .align(Alignment.Center)
         ) {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+//                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
                     text = "Register",
-                    style = MaterialTheme.typography.headlineMedium.copy(color = dactiveColor),
+                    style = MaterialTheme.typography.headlineMedium,
                     modifier = Modifier.padding(bottom = 32.dp)
+                        .align(Alignment.CenterHorizontally)
                 )
 
                 OutlinedTextField(
                     value = state.username,
                     onValueChange = viewModel::onUsernameChange,
-                    label = { Text("Username", color = dactiveColor) },
-                    textStyle = TextStyle(color = dactiveColor),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = dactiveColor,
-                        unfocusedBorderColor = dactiveColor,
-                        cursorColor = dactiveColor
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text(
+                            text = "Username",
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp) // Supaya paddingnya tidak mepet
+                                .fillMaxWidth()
+                        )
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -122,14 +117,14 @@ fun RegisterScreen(
                 OutlinedTextField(
                     value = state.email,
                     onValueChange = viewModel::onEmailChange,
-                    label = { Text("Email", color = dactiveColor) },
-                    textStyle = TextStyle(color = dactiveColor),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = dactiveColor,
-                        unfocusedBorderColor = dactiveColor,
-                        cursorColor = dactiveColor
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text(
+                            text = "Email",
+                            modifier = Modifier
+//                                .padding(horizontal = 4.dp) // Supaya paddingnya tidak mepet
+                                .fillMaxWidth()
+                        )
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -138,14 +133,14 @@ fun RegisterScreen(
                     value = state.password,
                     onValueChange = viewModel::onPasswordChange,
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    label = { Text("Password", color = dactiveColor) },
-                    textStyle = TextStyle(color = dactiveColor),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = dactiveColor,
-                        unfocusedBorderColor = dactiveColor,
-                        cursorColor = dactiveColor
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text(
+                            text = "Password",
+                            modifier = Modifier
+//                                .padding(horizontal = 4.dp) // Supaya paddingnya tidak mepet
+                                .fillMaxWidth()
+                        )
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -154,14 +149,14 @@ fun RegisterScreen(
                     value = state.confirmPassword,
                     onValueChange = viewModel::onConfirmPasswordChange,
                     visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    label = { Text("Confirm Password", color = dactiveColor) },
-                    textStyle = TextStyle(color = dactiveColor),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = dactiveColor,
-                        unfocusedBorderColor = dactiveColor,
-                        cursorColor = dactiveColor
-                    ),
-                    modifier = Modifier.fillMaxWidth()
+                    label = {
+                        Text(
+                            text = "Confirm Password",
+                            modifier = Modifier
+//                                .padding(horizontal = 4.dp) // Supaya paddingnya tidak mepet
+                                .fillMaxWidth()
+                        )
+                    },
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -173,15 +168,14 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = state.role,
                         onValueChange = { },
-                        label = { Text("Role", color = dactiveColor) },
-                        textStyle = TextStyle(color = dactiveColor),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = dactiveColor,
-                            unfocusedBorderColor = dactiveColor,
-                            cursorColor = dactiveColor
-                        ),
+                        label = {
+                            Text(
+                                text = "Role",
+                            )
+                        },
                         readOnly = true,
                         modifier = Modifier
+//                            .padding(horizontal = 4.dp)
                             .fillMaxWidth()
                             .menuAnchor(),
                         trailingIcon = {
@@ -210,14 +204,14 @@ fun RegisterScreen(
                     OutlinedTextField(
                         value = state.laundryName,
                         onValueChange = viewModel::onLaundryNameChange,
-                        label = { Text("Nama Laundry", color = dactiveColor) },
-                        textStyle = TextStyle(color = dactiveColor),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = dactiveColor,
-                            unfocusedBorderColor = dactiveColor,
-                            cursorColor = dactiveColor
-                        ),
-                        modifier = Modifier.fillMaxWidth()
+                        label = {
+                            Text(
+                                text = "Nama Laundry",
+                                modifier = Modifier
+//                                    .padding(horizontal = 4.dp) // Supaya paddingnya tidak mepet
+                                    .fillMaxWidth()
+                            )
+                        },
                     )
                 } else {
                     ExposedDropdownMenuBox(
@@ -227,17 +221,16 @@ fun RegisterScreen(
                         OutlinedTextField(
                             value = state.selectedLaundry,
                             onValueChange = { },
-                            label = { Text("Pilih Laundry", color = dactiveColor) },
-                            textStyle = TextStyle(color = dactiveColor),
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = dactiveColor,
-                                unfocusedBorderColor = dactiveColor,
-                                cursorColor = dactiveColor
-                            ),
+                            label = {
+                                Text(
+                                    text = "Pilih Laundry",
+                                    modifier = Modifier
+//                                        .padding(horizontal = 4.dp) // Supaya paddingnya tidak mepet
+                                        .fillMaxWidth()
+                                        .menuAnchor(),
+                                )
+                            },
                             readOnly = true,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
                             trailingIcon = {
                                 ExposedDropdownMenuDefaults.TrailingIcon(expanded = isLaundryExpanded)
                             }
@@ -270,10 +263,6 @@ fun RegisterScreen(
                 Button(
                     onClick = viewModel::register,
                     enabled = !state.isLoading,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = dactiveColor,
-                        contentColor = Color.White
-                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 24.dp)
@@ -281,7 +270,7 @@ fun RegisterScreen(
                     if (state.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     } else {
                         Text("Register")
@@ -292,7 +281,7 @@ fun RegisterScreen(
                     onClick = { navController.navigate(AuthRoutes.Login.route) },
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
-                    Text("Already have an account? Login", color = dactiveColor)
+                    Text("Already have an account? Login")
                 }
             }
         }
