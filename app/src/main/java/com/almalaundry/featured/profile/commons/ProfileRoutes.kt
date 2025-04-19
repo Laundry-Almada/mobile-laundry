@@ -6,4 +6,7 @@ import kotlinx.serialization.Serializable
 sealed class ProfileRoutes(val route: String) {
     @Serializable
     data object Index : ProfileRoutes("profile")
+
+    @Serializable
+    data object Edit : ProfileRoutes("edit-profile")
 }

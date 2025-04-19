@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.almalaundry.featured.profile.data.model.UpdateProfileRequest
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -44,6 +45,42 @@ class ProfileViewModel @Inject constructor(
                 },
                 onFailure = { error ->
                     _state.update { it.copy(isLoading = false, error = error.message) }
+                }
+            )
+        }
+    }
+
+    fun updateProfile(
+        name: String,
+        email: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+
+            val request = UpdateProfileRequest(
+                name = name,
+                email = email,
+                password = password.ifBlank { null }
+            )
+
+            profileRepository.updateProfile(request).fold(
+                onSuccess = { userResponse ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            name = userResponse.data.name,
+                            email = userResponse.data.email,
+                            role = userResponse.data.role
+                        )
+                    }
+                    onSuccess()
+                },
+                onFailure = { error ->
+                    _state.update { it.copy(isLoading = false, error = error.message) }
+                    onError(error.message ?: "Unknown error")
                 }
             )
         }

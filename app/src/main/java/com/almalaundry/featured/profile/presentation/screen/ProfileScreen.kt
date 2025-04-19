@@ -103,6 +103,12 @@ fun ProfileScreen(
                             modifier = Modifier.padding(top = 8.dp)
                         )
                     }
+
+                    Button(onClick = {
+                        navController.navigate("edit-profile")
+                    }) {
+                        Text("Edit Profile")
+                    }
                 }
             }
         }
