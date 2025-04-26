@@ -38,7 +38,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -48,6 +47,7 @@ import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.OrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
@@ -60,15 +60,21 @@ fun OrderScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
+    val sessionManager = LocalSessionManager.current
     val listState = rememberLazyListState()
     var showFilterDialog by remember { mutableStateOf(false) }
 
     // State untuk pull-to-refresh
     val isRefreshing by remember { derivedStateOf { state.isLoading } }
-    val pullRefreshState =
-        rememberPullRefreshState(refreshing = isRefreshing, onRefresh = { viewModel.loadOrders() })
+    val pullRefreshState = rememberPullRefreshState(
+        refreshing = isRefreshing,
+        onRefresh = { viewModel.loadOrders() }
+    )
 
-    LaunchedEffect(Unit) { viewModel.loadOrders() }
+    // Muat order saat pertama kali
+    LaunchedEffect(Unit) {
+        viewModel.loadOrders()
+    }
 
     // Load more saat hampir sampai akhir list
     LaunchedEffect(listState) {
@@ -76,36 +82,40 @@ fun OrderScreen(
             val layoutInfo = listState.layoutInfo
             val totalItemsNumber = layoutInfo.totalItemsCount
             val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
-
             lastVisibleItemIndex > 0 && lastVisibleItemIndex >= totalItemsNumber - 2
-        }.distinctUntilChanged().collect {
-            if (it && !state.isLoadingMore && !state.isLoading) {
+        }.distinctUntilChanged().collect { shouldLoadMore ->
+            if (shouldLoadMore && !state.isLoadingMore && !state.isLoading) {
                 viewModel.loadOrders(isLoadMore = true)
             }
         }
     }
 
-    Scaffold(contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top),
+    Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top),
         floatingActionButton = {
             FloatingActionButton(onClick = { navController.navigate(OrderRoutes.Create.route) }) {
-                Icon(Lucide.Plus, "Create Order")
+                Icon(Lucide.Plus, contentDescription = "Create Order")
             }
-        }) { paddingValues ->
+        }
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .pullRefresh(pullRefreshState) // pull-to-refresh
+                .pullRefresh(pullRefreshState)
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xFFF8F9FA))
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 // App Bar
                 Row(
                     modifier = Modifier.padding(
-                        start = 16.dp, end = 16.dp, top = 16.dp, bottom = 16.dp
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 16.dp,
+                        bottom = 16.dp
                     ),
                     verticalAlignment = Alignment.Top,
                     horizontalArrangement = Arrangement.SpaceBetween
@@ -119,18 +129,17 @@ fun OrderScreen(
                         Text(
                             text = "Berikut adalah daftar order yang tersedia",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = Color.Gray
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                     Spacer(modifier = Modifier.width(16.dp))
-//                    Row {
                     IconButton(onClick = { showFilterDialog = true }) {
                         Icon(Lucide.Filter, "Filter")
                     }
-//                        IconButton(onClick = { viewModel.loadOrders() }) {
+//                        IconButton(onClick = { viewModel.loadHistories() }) {
 //                            Icon(
 //                                imageVector = Lucide.RefreshCcw,
-//                                contentDescription = "Refresh orders"
+//                                contentDescription = "Refresh histories"
 //                            )
 //                        }
 //                    }
@@ -150,10 +159,13 @@ fun OrderScreen(
 
                     state.error != null -> {
                         Box(
-                            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = state.error ?: "Unknown error occurred", color = Color.Red
+                                text = state.error ?: "Unknown error occurred",
+                                color = MaterialTheme.colorScheme.error, // Gunakan colorScheme
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
                     }
@@ -165,9 +177,10 @@ fun OrderScreen(
                             contentPadding = PaddingValues(vertical = 8.dp)
                         ) {
                             items(state.orders) { order ->
-                                OrderCard(order = order, onClick = {
-                                    navController.navigate(OrderRoutes.Detail(order.id))
-                                })
+                                OrderCard(
+                                    order = order,
+                                    onClick = { navController.navigate(OrderRoutes.Detail(order.id)) }
+                                )
                             }
 
                             // Show loading more indicator
@@ -197,10 +210,13 @@ fun OrderScreen(
         }
     }
 
-    FilterDialog(show = showFilterDialog,
+    FilterDialog(
+        show = showFilterDialog,
         currentFilter = state.filter,
         onDismiss = { showFilterDialog = false },
         onApply = { filter ->
             viewModel.applyFilter(filter)
-        })
+        },
+        sessionManager = sessionManager
+    )
 }

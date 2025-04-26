@@ -26,7 +26,7 @@ fun NavGraphBuilder.orderNavigation() {
         PrintScreen(
             barcode = data.barcode,
             customerName = data.customerName,
-            type = data.type,
+            serviceName = data.serviceName,
             weight = data.weight,
             totalPrice = data.totalPrice,
             createdAt = data.createdAt

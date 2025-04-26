@@ -52,6 +52,7 @@ import androidx.navigation.NavController
 import com.almalaundry.featured.order.commons.barcode.QRCodeUtils
 import com.almalaundry.featured.order.domain.models.Customer
 import com.almalaundry.featured.order.domain.models.Order
+import com.almalaundry.featured.order.domain.models.Service
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.commons.session.SessionManager
@@ -71,7 +72,7 @@ import java.util.UUID
 fun PrintScreen(
     barcode: String,
     customerName: String,
-    type: String,
+    serviceName: String,
     weight: String,
     totalPrice: String,
     createdAt: String,
@@ -81,7 +82,7 @@ fun PrintScreen(
     val order = Order(
         barcode = barcode,
         customer = Customer(name = customerName),
-        type = type,
+        service = Service(name = serviceName),
         weight = weight,
         totalPrice = totalPrice,
         createdAt = createdAt
@@ -247,7 +248,7 @@ fun PrintScreen(
         // Daftar teks
         val textLines = listOf(
             order.customer.name,
-            "Tipe: ${order.type}",
+            "Layanan: ${order.service.name}",
             "Berat: ${order.weight} kg",
             "Harga: Rp${order.totalPrice}",
             "Tgl Order: $formattedDate"

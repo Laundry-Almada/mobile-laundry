@@ -1,34 +1,49 @@
 package com.almalaundry.featured.order.presentation.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.domain.models.OrderFilter
+import com.almalaundry.featured.order.presentation.viewmodels.ServiceViewModel
+import com.almalaundry.shared.commons.session.SessionManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -36,13 +51,29 @@ import java.util.Locale
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun FilterDialogHistory(
-    show: Boolean, currentFilter: OrderFilter, onDismiss: () -> Unit, onApply: (OrderFilter) -> Unit
+    show: Boolean,
+    currentFilter: OrderFilter,
+    onDismiss: () -> Unit,
+    onApply: (OrderFilter) -> Unit,
+    serviceViewModel: ServiceViewModel = hiltViewModel(),
+    sessionManager: SessionManager
 ) {
     if (!show) return
 
     var filter by remember { mutableStateOf(currentFilter) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isStartDate by remember { mutableStateOf(true) }
+
+    // Ambil laundryId dari SessionManager
+    var laundryId by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(Unit) {
+        laundryId = sessionManager.getLaundryId()
+        laundryId?.let { serviceViewModel.fetchServices(it) }
+    }
+
+    val services = serviceViewModel.services.value
+    val isLoadingServices = serviceViewModel.isLoading.value
+    val serviceError = serviceViewModel.errorMessage.value
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -55,18 +86,24 @@ fun FilterDialogHistory(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    "Filter Orders",
-                    style = MaterialTheme.typography.titleLarge,
+                    text = "Filter Pesanan",
+                    style = MaterialTheme.typography.titleMedium, // Gunakan M3 titleMedium
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 // Status Filter
-                Text("Status", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    text = "Status",
+                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                )
                 FlowRow(
                     modifier = Modifier.padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf("completed", "cancelled").forEach { status ->
+                    listOf(
+                        "pending", "washed", "dried", "ironed",
+                        "ready_picked", "completed", "cancelled"
+                    ).forEach { status ->
                         FilterChip(
                             selected = filter.status.contains(status),
                             onClick = {
@@ -77,36 +114,106 @@ fun FilterDialogHistory(
                                 }
                             },
                             label = {
-                                Text(status.replaceFirstChar {
-                                    if (it.isLowerCase()) it.titlecase(Locale.getDefault())
-                                    else it.toString()
-                                })
+                                Text(
+                                    status.replaceFirstChar {
+                                        if (it.isLowerCase()) it.titlecase(Locale.getDefault())
+                                        else it.toString()
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                )
                             }
                         )
                     }
                 }
 
-                // Type Filter
-                Text("Type", style = MaterialTheme.typography.titleSmall)
-                FlowRow(
-                    modifier = Modifier.padding(vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    listOf("express", "regular", "kiloan", "satuan").forEach { type ->
-                        FilterChip(selected = filter.type == type, onClick = {
-                            filter = filter.copy(type = if (filter.type == type) null else type)
-                        }, label = {
-                            Text(type.replaceFirstChar {
-                                if (it.isLowerCase()) it.titlecase(
-                                    Locale.getDefault()
-                                ) else it.toString()
-                            })
-                        })
+                // Service Filter
+                if (laundryId == null) {
+                    Text(
+                        text = "Tidak dapat memuat layanan: Laundry tidak ditemukan",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium, // Gunakan M3 bodyMedium
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else if (isLoadingServices) {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .padding(vertical = 8.dp)
+                            .align(Alignment.CenterHorizontally)
+                    )
+                } else if (serviceError != null) {
+                    Text(
+                        text = serviceError,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    var expanded by remember { mutableStateOf(false) }
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = services.find { it.id == filter.serviceId }?.name
+                                ?: "Pilih Layanan",
+                            onValueChange = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            readOnly = true,
+                            label = {
+                                Text(
+                                    "Layanan",
+                                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                )
+                            },
+                            trailingIcon = {
+                                IconButton(onClick = { expanded = true }) {
+                                    Icon(
+                                        imageVector = Icons.Default.ArrowDropDown,
+                                        contentDescription = "Dropdown"
+                                    )
+                                }
+                            }
+                        )
+                        DropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            services.forEach { service ->
+                                DropdownMenuItem(
+                                    onClick = {
+                                        filter = filter.copy(serviceId = service.id)
+                                        expanded = false
+                                    }
+                                ) {
+                                    Text(
+                                        text = service.name,
+                                        style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                    )
+                                }
+                            }
+                            // Opsi untuk reset service
+                            DropdownMenuItem(
+                                onClick = {
+                                    filter = filter.copy(serviceId = null)
+                                    expanded = false
+                                }
+                            ) {
+                                Text(
+                                    text = "Semua Layanan",
+                                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                )
+                            }
+                        }
                     }
                 }
 
                 // Date Range
-                Text("Date Range", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    text = "Rentang Tanggal",
+                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -117,17 +224,25 @@ fun FilterDialogHistory(
                         onClick = {
                             isStartDate = true
                             showDatePicker = true
-                        }, modifier = Modifier.weight(1f)
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text(filter.startDate ?: "Start Date")
+                        Text(
+                            text = filter.startDate ?: "Tanggal Awal",
+                            style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                        )
                     }
                     OutlinedButton(
                         onClick = {
                             isStartDate = false
                             showDatePicker = true
-                        }, modifier = Modifier.weight(1f)
+                        },
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Text(filter.endDate ?: "End Date")
+                        Text(
+                            text = filter.endDate ?: "Tanggal Akhir",
+                            style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                        )
                     }
                 }
 
@@ -139,13 +254,20 @@ fun FilterDialogHistory(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text("Cancel")
+                        Text(
+                            text = "Batal",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
+                    Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = {
                         onApply(filter)
                         onDismiss()
                     }) {
-                        Text("Apply")
+                        Text(
+                            text = "Terapkan",
+                            style = MaterialTheme.typography.labelLarge
+                        )
                     }
                 }
             }
@@ -155,34 +277,49 @@ fun FilterDialogHistory(
     if (showDatePicker) {
         val dateRangePickerState = rememberDateRangePickerState()
 
-        DatePickerDialog(onDismissRequest = { showDatePicker = false }, confirmButton = {
-            TextButton(onClick = {
-                dateRangePickerState.selectedStartDateMillis?.let { startMillis ->
-                    val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
-                        Date(startMillis)
-                    )
-                    filter = filter.copy(startDate = startDate)
-                }
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    dateRangePickerState.selectedStartDateMillis?.let { startMillis ->
+                        val startDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
+                            Date(startMillis)
+                        )
+                        filter = filter.copy(startDate = startDate)
+                    }
 
-                dateRangePickerState.selectedEndDateMillis?.let { endMillis ->
-                    val endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
-                        Date(endMillis)
-                    )
-                    filter = filter.copy(endDate = endDate)
-                }
+                    dateRangePickerState.selectedEndDateMillis?.let { endMillis ->
+                        val endDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(
+                            Date(endMillis)
+                        )
+                        filter = filter.copy(endDate = endDate)
+                    }
 
-                showDatePicker = false
-            }) {
-                Text("OK")
+                    showDatePicker = false
+                }) {
+                    Text(
+                        text = "OK",
+                        style = MaterialTheme.typography.labelLarge // Gunakan M3 labelLarge
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text(
+                        text = "Batal",
+                        style = MaterialTheme.typography.labelLarge // Gunakan M3 labelLarge
+                    )
+                }
             }
-        }, dismissButton = {
-            TextButton(onClick = { showDatePicker = false }) {
-                Text("Cancel")
-            }
-        }) {
+        ) {
             DateRangePicker(
                 state = dateRangePickerState,
-                title = { Text("Select date range") },
+                title = {
+                    Text(
+                        text = "Pilih rentang tanggal",
+                        style = MaterialTheme.typography.titleMedium // Gunakan M3 titleMedium
+                    )
+                },
                 showModeToggle = false,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -192,4 +329,3 @@ fun FilterDialogHistory(
         }
     }
 }
-

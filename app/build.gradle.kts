@@ -121,6 +121,11 @@ dependencies {
     implementation(libs.androidx.material3)
 
     testImplementation(libs.junit)
+    testImplementation(libs.mockk) // Untuk mocking
+    testImplementation(libs.kotlinx.coroutines.test) // Untuk Coroutines Test
+    testImplementation(libs.androidx.core.testing) // Untuk InstantTaskExecutorRule
+    testImplementation(libs.hilt.android.testing) // Untuk Hilt testing
+    testAnnotationProcessor(libs.hilt.compiler)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

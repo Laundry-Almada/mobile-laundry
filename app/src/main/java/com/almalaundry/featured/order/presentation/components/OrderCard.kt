@@ -55,7 +55,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Tipe: ${order.type}",
+                    text = "Layanan: ${order.service.name}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.DarkGray
                 )

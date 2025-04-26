@@ -16,14 +16,22 @@ class AuthRepository @Inject constructor(
     suspend fun login(request: LoginRequest): Result<AuthData> {
         return try {
             val response = api.login(request)
+            Log.d("AuthRepository", "Response: ${response.body()}")
             if (response.isSuccessful && response.body()?.success == true) {
                 val authData = response.body()!!.data
+                    ?: return Result.failure(Exception("No auth data returned"))
                 sessionManager.saveSession(authData.toSession())
                 Log.d("AuthRepository", "Login successful: $authData")
                 Result.success(authData)
             } else {
-                Log.e("AuthRepository", "Login failed: ${response.body()?.message}")
-                Result.failure(Exception(response.body()?.message ?: "Login failed"))
+                val errorMessage = response.body()?.message
+                    ?: response.errorBody()?.string()
+                    ?: "Unknown error"
+                val errorDetail = response.body()?.message
+                    ?: response.errorBody()?.string()
+                    ?: "No error detail"
+                Log.e("AuthRepository", "Login failed: $errorMessage, Detail: $errorDetail")
+                Result.failure(Exception("$errorMessage: $errorDetail"))
             }
         } catch (e: Exception) {
             Log.e("AuthRepository", "Login exception: ${e.message}")

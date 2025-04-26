@@ -176,7 +176,7 @@ fun DetailOrderScreen(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             Text(text = "Barcode: ${state.order?.barcode}")
-                            Text(text = "Tipe: ${state.order?.type}")
+                            Text(text = "Layanan: ${state.order?.service?.name}")
                             Text(text = "Berat: ${state.order?.weight} kg")
                             Text(text = "Total: Rp ${state.order?.totalPrice}")
 
@@ -251,7 +251,7 @@ fun DetailOrderScreen(
                                             
                                             Detail Pesanan:
                                             - Barcode: ${order.barcode}
-                                            - Tipe: ${order.type}
+                                            - Layanan: ${order.service.name}
                                             - Berat: ${order.weight} kg
                                             - Total Harga: Rp ${order.totalPrice}
                                             - Catatan: ${order.note}
@@ -294,7 +294,7 @@ fun DetailOrderScreen(
                                             OrderRoutes.Print(
                                                 barcode = order.barcode,
                                                 customerName = order.customer.name,
-                                                type = order.type,
+                                                serviceName = order.service.name,
                                                 weight = order.weight,
                                                 totalPrice = order.totalPrice,
                                                 createdAt = order.createdAt

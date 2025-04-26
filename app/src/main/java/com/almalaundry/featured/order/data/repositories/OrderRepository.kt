@@ -4,6 +4,7 @@ import android.util.Log
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
+import com.almalaundry.featured.order.data.dtos.ServiceResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
@@ -18,7 +19,7 @@ class OrderRepository @Inject constructor(
 ) {
     suspend fun getOrders(
         status: String? = null,
-        type: String? = null,
+        serviceId: String? = null,
         startDate: String? = null,
         endDate: String? = null,
         search: String? = null,
@@ -33,7 +34,7 @@ class OrderRepository @Inject constructor(
             }
             val response = api.getOrders(
                 status = status,
-                type = type,
+                serviceId = serviceId,
                 startDate = startDate,
                 endDate = endDate,
                 search = search,
@@ -52,6 +53,26 @@ class OrderRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("OrderRepository", "Exception: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getServices(laundryId: String): Result<ServiceResponse> {
+        return try {
+            if (!sessionManager.isLoggedIn()) {
+                throw Exception("User not logged in")
+            }
+            val response = api.getServices(laundryId)
+            Log.d("OrderRepository", "Service Response: ${response.body()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Log.e("OrderRepository", "Service Error: ${response.errorBody()?.string()}")
+                Result.failure(Exception("Failed to fetch services: ${response.message()}"))
+            }
+        } catch (e: Exception) {
+            Log.e("OrderRepository", "Service Exception: ${e.message}")
             Result.failure(e)
         }
     }

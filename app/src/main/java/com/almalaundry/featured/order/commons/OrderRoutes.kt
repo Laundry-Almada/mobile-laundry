@@ -32,7 +32,7 @@ sealed class OrderRoutes(val route: String) {
     data class Print(
         val barcode: String,
         val customerName: String,
-        val type: String,
+        val serviceName: String,
         val weight: String,
         val totalPrice: String,
         val createdAt: String

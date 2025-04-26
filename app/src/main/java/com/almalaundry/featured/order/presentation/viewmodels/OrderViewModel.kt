@@ -40,14 +40,14 @@ class OrderViewModel @Inject constructor(
                 val filter = _state.value.filter
                 val result = repository.getOrders(
                     status = if (filter.status.isEmpty()) null else filter.status.joinToString(","),
-                    type = filter.type,
+                    serviceId = filter.serviceId,
                     startDate = filter.startDate,
                     endDate = filter.endDate,
                     search = filter.search,
                     sortBy = filter.sortBy,
                     sortDirection = filter.sortDirection,
                     perPage = state.value.perPage,
-                    page = if (isLoadMore) _state.value.currentPage + 1 else 1
+                    page = if (isLoadMore) _state.value.currentPage + 1 else 196
                 )
 
                 result.onSuccess { response ->

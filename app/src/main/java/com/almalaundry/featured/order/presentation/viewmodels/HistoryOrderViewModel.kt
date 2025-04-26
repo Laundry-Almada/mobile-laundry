@@ -41,7 +41,7 @@ class HistoryOrderViewModel @Inject constructor(
                 val result = repository.getOrders(
                     page = if (isLoadMore) _state.value.currentPage + 1 else 1,
                     status = filter.status.joinToString(","),
-                    type = filter.type,
+                    serviceId = filter.serviceId,
                     startDate = filter.startDate,
                     endDate = filter.endDate,
                     sortBy = "created_at",

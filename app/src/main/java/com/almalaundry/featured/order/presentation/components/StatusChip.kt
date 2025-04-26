@@ -13,13 +13,13 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun StatusChip(status: String) {
     val (backgroundColor, textColor, text) = when (status) {
-        "washed" -> Triple(Color(0xFFE3F2FD), Color(0xFF1976D2), "Dicuci")
-        "dried" -> Triple(Color(0xFFFFFDE7), Color(0xFFFBC02D), "Dikeringkan")
-        "ironed" -> Triple(Color(0xFFE8F5E9), Color(0xFF388E3C), "Disetrika")
-        "ready_picked" -> Triple(Color(0xFFE0F7FA), Color(0xFF0097A7), "Siap Diambil")
-        "completed" -> Triple(Color(0xFFF5F5F5), Color.DarkGray, "Selesai")
-        "cancelled" -> Triple(Color(0xFFFFEBEE), Color(0xFFD32F2F), "Dibatalkan")
-        else -> Triple(Color(0xFFF5F5F5), Color.DarkGray, "Menunggu") // untuk "pending"
+        "washed" -> Triple(Color(0xFFBBDEFB), Color(0xFF0D47A1), "Dicuci") // Soft blue
+        "dried" -> Triple(Color(0xFFFFF9C4), Color(0xFFF57F17), "Dikeringkan") // Soft yellow
+        "ironed" -> Triple(Color(0xFFC8E6C9), Color(0xFF1B5E20), "Disetrika") // Soft green
+        "ready_picked" -> Triple(Color(0xFFB2EBF2), Color(0xFF006064), "Siap Diambil") // Soft teal
+        "completed" -> Triple(Color(0xFFD7CCC8), Color(0xFF5D4037), "Selesai") // Warm gray-brown
+        "cancelled" -> Triple(Color(0xFFFFCDD2), Color(0xFFB71C1C), "Dibatalkan") // Soft red
+        else -> Triple(Color(0xFFE0E0E0), Color(0xFF424242), "Menunggu") // Neutral gray
     }
 
     Surface(
