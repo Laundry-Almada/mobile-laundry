@@ -22,6 +22,13 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+//        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000/api/\"")
+//        val properties = Properties()
+//        properties.load(rootProject.file(".env.development").inputStream())
+//        buildConfigField(
+//            "String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\""
+//        )
     }
 
     buildTypes {
