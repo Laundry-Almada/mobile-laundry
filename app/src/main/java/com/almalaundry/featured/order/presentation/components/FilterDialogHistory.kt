@@ -32,6 +32,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,11 @@ import com.almalaundry.shared.commons.session.SessionManager
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+private val statusTranslations = mapOf(
+    "completed" to "Selesai",
+    "cancelled" to "Dibatalkan"
+)
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -71,9 +77,10 @@ fun FilterDialogHistory(
         laundryId?.let { serviceViewModel.fetchServices(it) }
     }
 
-    val services = serviceViewModel.services.value
-    val isLoadingServices = serviceViewModel.isLoading.value
-    val serviceError = serviceViewModel.errorMessage.value
+    val serviceState by serviceViewModel.state.collectAsState()
+    val services = serviceState.services
+    val isLoadingServices = serviceState.isLoading
+    val serviceError = serviceState.errorMessage
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -87,39 +94,33 @@ fun FilterDialogHistory(
             ) {
                 Text(
                     text = "Filter Pesanan",
-                    style = MaterialTheme.typography.titleMedium, // Gunakan M3 titleMedium
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
 
                 // Status Filter
                 Text(
                     text = "Status",
-                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                    style = MaterialTheme.typography.bodyMedium
                 )
                 FlowRow(
                     modifier = Modifier.padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    listOf(
-                        "pending", "washed", "dried", "ironed",
-                        "ready_picked", "completed", "cancelled"
-                    ).forEach { status ->
+                    statusTranslations.forEach { (englishStatus, indonesianStatus) ->
                         FilterChip(
-                            selected = filter.status.contains(status),
+                            selected = filter.status.contains(englishStatus),
                             onClick = {
-                                filter = if (filter.status.contains(status)) {
-                                    filter.copy(status = filter.status - status)
+                                filter = if (filter.status.contains(englishStatus)) {
+                                    filter.copy(status = filter.status - englishStatus)
                                 } else {
-                                    filter.copy(status = filter.status + status)
+                                    filter.copy(status = filter.status + englishStatus)
                                 }
                             },
                             label = {
                                 Text(
-                                    status.replaceFirstChar {
-                                        if (it.isLowerCase()) it.titlecase(Locale.getDefault())
-                                        else it.toString()
-                                    },
-                                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                    text = indonesianStatus,
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                             }
                         )
@@ -131,7 +132,7 @@ fun FilterDialogHistory(
                     Text(
                         text = "Tidak dapat memuat layanan: Laundry tidak ditemukan",
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium, // Gunakan M3 bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier.padding(vertical = 8.dp)
                     )
                 } else if (isLoadingServices) {
@@ -163,14 +164,14 @@ fun FilterDialogHistory(
                             label = {
                                 Text(
                                     "Layanan",
-                                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                             },
                             trailingIcon = {
                                 IconButton(onClick = { expanded = true }) {
                                     Icon(
                                         imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "Dropdown"
+                                        contentDescription = "Pilih Layanan"
                                     )
                                 }
                             }
@@ -189,7 +190,7 @@ fun FilterDialogHistory(
                                 ) {
                                     Text(
                                         text = service.name,
-                                        style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                        style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
                             }
@@ -202,7 +203,7 @@ fun FilterDialogHistory(
                             ) {
                                 Text(
                                     text = "Semua Layanan",
-                                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                                    style = MaterialTheme.typography.bodyMedium
                                 )
                             }
                         }
@@ -212,7 +213,8 @@ fun FilterDialogHistory(
                 // Date Range
                 Text(
                     text = "Rentang Tanggal",
-                    style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
                 Row(
                     modifier = Modifier
@@ -229,7 +231,7 @@ fun FilterDialogHistory(
                     ) {
                         Text(
                             text = filter.startDate ?: "Tanggal Awal",
-                            style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                     OutlinedButton(
@@ -241,7 +243,7 @@ fun FilterDialogHistory(
                     ) {
                         Text(
                             text = filter.endDate ?: "Tanggal Akhir",
-                            style = MaterialTheme.typography.bodyMedium // Gunakan M3 bodyMedium
+                            style = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
@@ -254,20 +256,14 @@ fun FilterDialogHistory(
                     horizontalArrangement = Arrangement.End
                 ) {
                     TextButton(onClick = onDismiss) {
-                        Text(
-                            text = "Batal",
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        Text(text = "Batal", style = MaterialTheme.typography.labelLarge)
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     TextButton(onClick = {
                         onApply(filter)
                         onDismiss()
                     }) {
-                        Text(
-                            text = "Terapkan",
-                            style = MaterialTheme.typography.labelLarge
-                        )
+                        Text(text = "Terapkan", style = MaterialTheme.typography.labelLarge)
                     }
                 }
             }
@@ -297,18 +293,12 @@ fun FilterDialogHistory(
 
                     showDatePicker = false
                 }) {
-                    Text(
-                        text = "OK",
-                        style = MaterialTheme.typography.labelLarge // Gunakan M3 labelLarge
-                    )
+                    Text(text = "OK", style = MaterialTheme.typography.labelLarge)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showDatePicker = false }) {
-                    Text(
-                        text = "Batal",
-                        style = MaterialTheme.typography.labelLarge // Gunakan M3 labelLarge
-                    )
+                    Text(text = "Batal", style = MaterialTheme.typography.labelLarge)
                 }
             }
         ) {
@@ -317,7 +307,7 @@ fun FilterDialogHistory(
                 title = {
                     Text(
                         text = "Pilih rentang tanggal",
-                        style = MaterialTheme.typography.titleMedium // Gunakan M3 titleMedium
+                        style = MaterialTheme.typography.titleMedium
                     )
                 },
                 showModeToggle = false,

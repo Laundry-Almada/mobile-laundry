@@ -23,17 +23,19 @@ class OrderViewModel @Inject constructor(
     }
 
     fun applyFilter(filter: OrderFilter) {
-        _state.value = _state.value.copy(filter = filter)
+        _state.value = _state.value.copy(filter = filter, currentPage = 1, orders = emptyList())
         loadOrders()
     }
 
     fun loadOrders(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             if (isLoadMore) {
-                if (_state.value.currentPage >= _state.value.totalPages) return@launch
+                if (_state.value.currentPage >= _state.value.totalPages || !_state.value.hasMoreData) {
+                    return@launch
+                }
                 _state.value = _state.value.copy(isLoadingMore = true)
             } else {
-                _state.value = _state.value.copy(isLoading = true)
+                _state.value = _state.value.copy(isLoading = true, error = null)
             }
 
             try {
@@ -46,8 +48,8 @@ class OrderViewModel @Inject constructor(
                     search = filter.search,
                     sortBy = filter.sortBy,
                     sortDirection = filter.sortDirection,
-                    perPage = state.value.perPage,
-                    page = if (isLoadMore) _state.value.currentPage + 1 else 196
+                    perPage = _state.value.perPage,
+                    page = if (isLoadMore) _state.value.currentPage + 1 else 1
                 )
 
                 result.onSuccess { response ->
@@ -58,20 +60,21 @@ class OrderViewModel @Inject constructor(
                         totalOrders = response.meta.totalOrders,
                         currentPage = response.meta.currentPage,
                         totalPages = response.meta.totalPages,
+                        hasMoreData = response.meta.currentPage < response.meta.totalPages,
                         error = null
                     )
                 }.onFailure { exception ->
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
-                        error = exception.message ?: "Unknown error occurred"
+                        error = exception.message ?: "Gagal memuat order"
                     )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
                     isLoadingMore = false,
-                    error = e.message ?: "Unknown error occurred"
+                    error = e.message ?: "Gagal memuat order"
                 )
             }
         }

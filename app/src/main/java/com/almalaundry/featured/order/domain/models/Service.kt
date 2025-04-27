@@ -6,5 +6,7 @@ import kotlinx.serialization.Serializable
 data class Service(
     val id: String = "",
     val name: String = "",
-    val description: String? = null
+    val description: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null
 )

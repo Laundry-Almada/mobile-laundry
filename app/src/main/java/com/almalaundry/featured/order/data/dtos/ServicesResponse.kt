@@ -4,7 +4,8 @@ import com.almalaundry.featured.order.domain.models.Service
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ServiceResponse(
+data class ServicesResponse(
     val success: Boolean,
-    val data: List<Service>
+    val data: List<Service>,
+    val message: String? = null
 )

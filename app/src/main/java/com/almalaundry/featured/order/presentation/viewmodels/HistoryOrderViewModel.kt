@@ -40,7 +40,7 @@ class HistoryOrderViewModel @Inject constructor(
                 val filter = _state.value.filter
                 val result = repository.getOrders(
                     page = if (isLoadMore) _state.value.currentPage + 1 else 1,
-                    status = filter.status.joinToString(","),
+                    status = listOf("cancelled", "completed").joinToString(","),
                     serviceId = filter.serviceId,
                     startDate = filter.startDate,
                     endDate = filter.endDate,

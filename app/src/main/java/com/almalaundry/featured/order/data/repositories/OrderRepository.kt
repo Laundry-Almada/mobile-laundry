@@ -4,7 +4,7 @@ import android.util.Log
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
-import com.almalaundry.featured.order.data.dtos.ServiceResponse
+import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
@@ -53,26 +53,6 @@ class OrderRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("OrderRepository", "Exception: ${e.message}")
-            Result.failure(e)
-        }
-    }
-
-    suspend fun getServices(laundryId: String): Result<ServiceResponse> {
-        return try {
-            if (!sessionManager.isLoggedIn()) {
-                throw Exception("User not logged in")
-            }
-            val response = api.getServices(laundryId)
-            Log.d("OrderRepository", "Service Response: ${response.body()}")
-
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Log.e("OrderRepository", "Service Error: ${response.errorBody()?.string()}")
-                Result.failure(Exception("Failed to fetch services: ${response.message()}"))
-            }
-        } catch (e: Exception) {
-            Log.e("OrderRepository", "Service Exception: ${e.message}")
             Result.failure(e)
         }
     }
@@ -131,21 +111,49 @@ class OrderRepository @Inject constructor(
     suspend fun createOrder(request: CreateOrderRequest): Result<Order> {
         return try {
             val response = api.createOrder(request)
-            if (response.isSuccessful && response.body() != null) {
+            if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(response.body()!!.data)
             } else {
                 val errorBody = response.errorBody()?.string()
-                println(errorBody)
+                Log.e("OrderRepository", "Create order failed: $errorBody")
+                val errorMessage = try {
+                    val jsonObject = JSONObject(errorBody ?: "")
+                    val message = jsonObject.getString("message")
+                    val errorDetail = jsonObject.optString("error", "")
+                    if (errorDetail.isNotEmpty()) "$message: $errorDetail" else message
+                } catch (e: Exception) {
+                    "Failed to create order"
+                }
+                Result.failure(Exception(errorMessage))
+            }
+        } catch (e: Exception) {
+            Log.e("OrderRepository", "Create order exception: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getServices(laundryId: String): Result<ServicesResponse> {
+        return try {
+            if (!sessionManager.isLoggedIn()) {
+                throw Exception("User not logged in")
+            }
+            val response = api.getServices(laundryId)
+            Log.d("OrderRepository", "Service Response: ${response.body()}")
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(response.body()!!)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Service Error: $errorBody")
                 val errorMessage = try {
                     val jsonObject = JSONObject(errorBody ?: "")
                     jsonObject.getString("message")
                 } catch (e: Exception) {
-                    "Failed to create order"
+                    "Failed to fetch services"
                 }
-                println(errorMessage)
                 Result.failure(Exception(errorMessage))
             }
         } catch (e: Exception) {
+            Log.e("OrderRepository", "Service Exception: ${e.message}")
             Result.failure(e)
         }
     }

@@ -5,7 +5,7 @@ import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.DeleteOrderResponse
 import com.almalaundry.featured.order.data.dtos.OrderDetailResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
-import com.almalaundry.featured.order.data.dtos.ServiceResponse
+import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import retrofit2.Response
 import retrofit2.http.Body
@@ -51,5 +51,5 @@ interface OrderApi {
     suspend fun deleteOrder(@Path("orderId") orderId: String): Response<DeleteOrderResponse>
 
     @GET("laundries/{laundryId}/services")
-    suspend fun getServices(@Path("laundryId") laundryId: String): Response<ServiceResponse>
+    suspend fun getServices(@Path("laundryId") laundryId: String): Response<ServicesResponse>
 }

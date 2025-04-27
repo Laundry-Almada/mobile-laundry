@@ -1,5 +1,6 @@
 package com.almalaundry.featured.order.presentation.screen
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -25,6 +27,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -32,6 +38,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.presentation.viewmodels.CreateOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.composables.icons.lucide.ArrowLeft
+import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
 
 @Composable
@@ -48,13 +55,14 @@ fun CreateOrderScreen(
     }
 
     if (state.showNameDialog) {
-        AlertDialog(onDismissRequest = { viewModel.hideNameDialog() },
-            title = { Text("Input Nama Customer") },
+        AlertDialog(
+            onDismissRequest = { viewModel.hideNameDialog() },
+            title = { Text("Input Nama Customer", style = MaterialTheme.typography.titleMedium) },
             text = {
                 Column {
                     Text(
                         text = "Customer belum terdaftar di database, masukkan nama",
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -73,7 +81,8 @@ fun CreateOrderScreen(
                             viewModel.hideNameDialog()
                             viewModel.saveCustomerAndCreateOrder()
                         }
-                    }, enabled = state.name.isNotBlank()
+                    },
+                    enabled = state.name.isNotBlank()
                 ) {
                     Text("Simpan")
                 }
@@ -82,16 +91,22 @@ fun CreateOrderScreen(
                 TextButton(onClick = { viewModel.hideNameDialog() }) {
                     Text("Batal")
                 }
-            })
+            }
+        )
     }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Buat Order Baru") }, navigationIcon = {
-            IconButton(onClick = { navController.navigateUp() }) {
-                Icon(Lucide.ArrowLeft, "Back")
-            }
-        })
-    }) { paddingValues ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Buat Order Baru", style = MaterialTheme.typography.titleMedium) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(Lucide.ArrowLeft, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -109,13 +124,66 @@ fun CreateOrderScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Laundry ID disembunyikan karena otomatis
-//            Text(
-//                text = "ID Laundry: ${state.laundryId}",
-//                style = MaterialTheme.typography.bodyMedium,
-//                color = MaterialTheme.colorScheme.onSurfaceVariant
-//            )
-//            Spacer(modifier = Modifier.height(16.dp))
+            // Service Dropdown
+            if (state.isLoadingServices) {
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .align(Alignment.CenterHorizontally)
+                )
+            } else if (state.servicesError != null) {
+                Text(
+                    text = state.servicesError ?: "Gagal memuat layanan",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+            } else {
+                var expanded by remember { mutableStateOf(false) }
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    OutlinedTextField(
+                        value = state.services.find { it.id == state.serviceId }?.name
+                            ?: "Pilih Layanan",
+                        onValueChange = {},
+                        modifier = Modifier.fillMaxWidth(),
+                        readOnly = true,
+                        label = { Text("Layanan") },
+                        trailingIcon = {
+                            IconButton(onClick = { expanded = true }) {
+                                Icon(
+                                    imageVector = Lucide.ChevronDown,
+                                    contentDescription = "Dropdown"
+                                )
+                            }
+                        }
+                    )
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        state.services.forEach { service ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    viewModel.updateServiceId(service.id)
+                                    expanded = false
+                                }
+                            ) {
+                                Text(
+                                    text = service.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = state.weight,
@@ -154,7 +222,8 @@ fun CreateOrderScreen(
             ) {
                 if (state.isLoading) {
                     CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onPrimary
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
                     Text("Buat Order")
@@ -164,11 +233,22 @@ fun CreateOrderScreen(
             if (state.error != null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = state.error!!,
+                    text = state.error ?: "Terjadi kesalahan",
                     color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
     }
+}
+
+@Composable
+fun DropdownMenuItem(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    androidx.compose.material.DropdownMenuItem(
+        onClick = onClick,
+        content = { content() }
+    )
 }

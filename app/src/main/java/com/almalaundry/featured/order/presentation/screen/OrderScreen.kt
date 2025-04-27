@@ -39,6 +39,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
@@ -64,19 +65,19 @@ fun OrderScreen(
     val listState = rememberLazyListState()
     var showFilterDialog by remember { mutableStateOf(false) }
 
-    // State untuk pull-to-refresh
+    // State for pull-to-refresh
     val isRefreshing by remember { derivedStateOf { state.isLoading } }
     val pullRefreshState = rememberPullRefreshState(
         refreshing = isRefreshing,
         onRefresh = { viewModel.loadOrders() }
     )
 
-    // Muat order saat pertama kali
+    // Load orders on first launch
     LaunchedEffect(Unit) {
         viewModel.loadOrders()
     }
 
-    // Load more saat hampir sampai akhir list
+    // Load more when nearing the end of the list
     LaunchedEffect(listState) {
         snapshotFlow {
             val layoutInfo = listState.layoutInfo
@@ -84,7 +85,7 @@ fun OrderScreen(
             val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
             lastVisibleItemIndex > 0 && lastVisibleItemIndex >= totalItemsNumber - 2
         }.distinctUntilChanged().collect { shouldLoadMore ->
-            if (shouldLoadMore && !state.isLoadingMore && !state.isLoading) {
+            if (shouldLoadMore && !state.isLoadingMore && !state.isLoading && state.hasMoreData) {
                 viewModel.loadOrders(isLoadMore = true)
             }
         }
@@ -134,15 +135,8 @@ fun OrderScreen(
                     }
                     Spacer(modifier = Modifier.width(16.dp))
                     IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(Lucide.Filter, "Filter")
+                        Icon(Lucide.Filter, contentDescription = "Filter")
                     }
-//                        IconButton(onClick = { viewModel.loadHistories() }) {
-//                            Icon(
-//                                imageVector = Lucide.RefreshCcw,
-//                                contentDescription = "Refresh histories"
-//                            )
-//                        }
-//                    }
                 }
 
                 when {
@@ -163,9 +157,39 @@ fun OrderScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                text = state.error ?: "Unknown error occurred",
-                                color = MaterialTheme.colorScheme.error, // Gunakan colorScheme
+                                text = state.error ?: "Terjadi kesalahan saat memuat order",
+                                color = MaterialTheme.colorScheme.error,
                                 style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+
+                    state.orders.isEmpty() && state.totalOrders > 0 -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Tidak ada order di halaman ini. Coba ubah filter atau muat ulang.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp)
+                            )
+                        }
+                    }
+
+                    state.orders.isEmpty() -> {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Tidak ada order tersedia.",
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             )
                         }
                     }
@@ -201,7 +225,7 @@ fun OrderScreen(
                 }
             }
 
-            // Indikator pull-to-refresh
+            // Pull-to-refresh indicator
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,
@@ -214,9 +238,7 @@ fun OrderScreen(
         show = showFilterDialog,
         currentFilter = state.filter,
         onDismiss = { showFilterDialog = false },
-        onApply = { filter ->
-            viewModel.applyFilter(filter)
-        },
+        onApply = { filter -> viewModel.applyFilter(filter) },
         sessionManager = sessionManager
     )
 }
