@@ -163,7 +163,7 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 
 | Status | Fungsional                                |
 |:------:|-------------------------------------------|
-|   🚧    | Cek status Order by customer guest/public |
+|   ✅    | Cek status Order by customer guest/public |
 
 ---
 
