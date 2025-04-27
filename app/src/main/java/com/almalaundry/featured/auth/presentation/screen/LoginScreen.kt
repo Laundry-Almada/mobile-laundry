@@ -17,6 +17,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -25,6 +27,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,6 +38,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
@@ -40,6 +46,9 @@ import com.almalaundry.featured.auth.commons.AuthRoutes
 import com.almalaundry.featured.auth.presentation.viewmodels.LoginViewModel
 import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.composables.icons.lucide.Eye
+import com.composables.icons.lucide.EyeOff
+import com.composables.icons.lucide.Lucide
 
 @Composable
 fun LoginScreen(
@@ -47,6 +56,7 @@ fun LoginScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val dactiveColor = colorResource(id = R.color.dactive) // 🔥 warna dari colors.xml
 
@@ -107,7 +117,20 @@ fun LoginScreen(
                     onValueChange = viewModel::onPasswordChange,
                     label = { Text("Password", color = dactiveColor) },
                     textStyle = TextStyle(color = dactiveColor),
-                    visualTransformation = PasswordVisualTransformation(),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        val image =
+                            if (passwordVisible) Lucide.Eye else Lucide.EyeOff
+                        val description = if (passwordVisible) "Hide password" else "Show password"
+
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = image,
+                                contentDescription = description,
+                                tint = dactiveColor
+                            )
+                        }
+                    },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = dactiveColor,
                         unfocusedBorderColor = dactiveColor,
