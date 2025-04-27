@@ -6,6 +6,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -13,17 +14,15 @@ import javax.inject.Singleton
 object OrderModule {
     @Provides
     @Singleton
-    fun provideOrderApi(networkApi: NetworkApi): OrderApi {
+    @Named("Authenticated")
+    fun provideAuthenticatedOrderApi(@Named("Authenticated") networkApi: NetworkApi): OrderApi {
+        return networkApi.retrofit.create(OrderApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    @Named("Public")
+    fun providePublicOrderApi(@Named("Public") networkApi: NetworkApi): OrderApi {
         return networkApi.retrofit.create(OrderApi::class.java)
     }
 }
-//    @Provides
-//    @Singleton
-//    fun provideOrderRepository(
-//        orderApi: OrderApi
-//    ): OrderRepository {
-//        return OrderRepositoryImpl(orderApi)
-//    }
-
-
-//retrofit.create(OrderApi::class.java)

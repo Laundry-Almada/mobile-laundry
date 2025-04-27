@@ -14,25 +14,36 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -49,6 +60,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.almalaundry.R
 import com.almalaundry.featured.order.commons.barcode.QRCodeUtils
 import com.almalaundry.featured.order.domain.models.Customer
 import com.almalaundry.featured.order.domain.models.Order
@@ -57,8 +69,8 @@ import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.commons.session.SessionManager
 import com.almalaundry.shared.domain.models.Session
+import com.almalaundry.shared.presentation.components.BannerHeader
 import com.almalaundry.shared.utils.formatDateToIndonesian
-import com.composables.icons.lucide.ArrowLeft
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Printer
 import kotlinx.coroutines.Dispatchers
@@ -351,105 +363,149 @@ fun PrintScreen(
             })
     }
 
-    Scaffold(topBar = {
-        TopAppBar(title = { Text("Print QR Code") }, navigationIcon = {
-            IconButton(onClick = navController::popBackStack) {
-                Icon(Lucide.ArrowLeft, "Back")
-            }
-        })
-    }) { paddingValues ->
-        Column(
+    Scaffold(
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top)
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.Start
         ) {
-            // Preview bitmap
-            val qrCodeBitmap =
-                QRCodeUtils.generateQRCode(order.barcode, 160) // Sesuaikan dengan ukuran cetak
-            if (qrCodeBitmap != null) {
-                val printBitmap = createPrintBitmap(order, qrCodeBitmap)
-                Image(
-                    bitmap = printBitmap.asImageBitmap(),
-                    contentDescription = "Preview Cetakan",
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Banner Header
+                BannerHeader(
+                    title = "Print QR Code",
+                    subtitle = "Cetak QR code untuk order",
+                    imageResId = R.drawable.header_basic2,
+                    onBackClick = { navController.popBackStack() },
+                    titleAlignment = Alignment.Start
+                )
+
+                // LazyColumn untuk konten
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(printBitmap.width.toFloat() / printBitmap.height)
-                )
-            } else {
-                Text(
-                    text = "Gagal generate QR code",
-                    color = Color.Red,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
-            }
+                        .fillMaxSize()
+                        .offset(y = (-40).dp) // Menutupi sebagian banner
+                        .background(Color.Transparent),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                horizontalAlignment = Alignment.Start
+                            ) {
+                                // Preview bitmap
+                                val qrCodeBitmap = QRCodeUtils.generateQRCode(order.barcode, 160)
+                                if (qrCodeBitmap != null) {
+                                    val printBitmap = createPrintBitmap(order, qrCodeBitmap)
+                                    Image(
+                                        bitmap = printBitmap.asImageBitmap(),
+                                        contentDescription = "Preview Cetakan",
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .aspectRatio(printBitmap.width.toFloat() / printBitmap.height)
+                                    )
+                                } else {
+                                    Text(
+                                        text = "Gagal generate QR code",
+                                        color = Color.Red,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    )
+                                }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-            // Status koneksi
-            Text(
-                text = when {
-                    isConnecting -> "Menyambungkan..."
-                    bluetoothSocket?.isConnected == true -> "Terhubung ke ${selectedDevice?.name}"
-                    else -> "Tidak terhubung"
-                },
-                color = if (bluetoothSocket?.isConnected == true) Color.Green else Color.Red,
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+                                // Status koneksi
+                                Text(
+                                    text = when {
+                                        isConnecting -> "Menyambungkan..."
+                                        bluetoothSocket?.isConnected == true -> "Terhubung ke ${selectedDevice?.name}"
+                                        else -> "Tidak terhubung"
+                                    },
+                                    color = if (bluetoothSocket?.isConnected == true) Color.Green else Color.Red,
+                                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                                )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(16.dp))
 
-            // Tombol Print
-            Button(
-                onClick = {
-                    if (bluetoothAdapter == null) {
-                        Toast.makeText(context, "Bluetooth tidak didukung", Toast.LENGTH_SHORT)
-                            .show()
-                        return@Button
-                    }
-                    if (!bluetoothAdapter.isEnabled) {
-                        Toast.makeText(
-                            context, "Hidupkan Bluetooth terlebih dahulu", Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
-                    }
-                    if (bluetoothSocket?.isConnected == true) {
-                        scope.launch(Dispatchers.IO) {
-                            isPrinting = true
-                            bluetoothSocket?.outputStream?.let { outputStream ->
-                                printQRCode(outputStream, context, order)
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(context, "Mencetak...", Toast.LENGTH_SHORT)
-                                        .show()
+                                // Tombol Print
+                                Button(
+                                    onClick = {
+                                        if (bluetoothAdapter == null) {
+                                            Toast.makeText(
+                                                context,
+                                                "Bluetooth tidak didukung",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@Button
+                                        }
+                                        if (!bluetoothAdapter.isEnabled) {
+                                            Toast.makeText(
+                                                context,
+                                                "Hidupkan Bluetooth terlebih dahulu",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                            return@Button
+                                        }
+                                        if (bluetoothSocket?.isConnected == true) {
+                                            scope.launch(Dispatchers.IO) {
+                                                isPrinting = true
+                                                bluetoothSocket?.outputStream?.let { outputStream ->
+                                                    printQRCode(outputStream, context, order)
+                                                    withContext(Dispatchers.Main) {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Mencetak...",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                }
+                                                isPrinting = false
+                                            }
+                                        } else {
+                                            checkAndRequestBluetoothPermissions()
+                                        }
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .align(Alignment.CenterHorizontally),
+                                    enabled = !isConnecting && !isPrinting,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = Color(
+                                            0xFF1976D2
+                                        )
+                                    )
+                                ) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.Center
+                                    ) {
+                                        Icon(
+                                            imageVector = Lucide.Printer,
+                                            contentDescription = "Print",
+                                            tint = Color.White,
+                                            modifier = Modifier.size(24.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = if (isPrinting) "Mencetak..." else "Cetak",
+                                            color = Color.White
+                                        )
+                                    }
                                 }
                             }
-                            isPrinting = false
                         }
-                    } else {
-                        checkAndRequestBluetoothPermissions()
                     }
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.CenterHorizontally),
-                enabled = !isConnecting && !isPrinting,
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1976D2))
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Icon(
-                        imageVector = Lucide.Printer,
-                        contentDescription = "Print",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = if (isPrinting) "Mencetak..." else "Cetak", color = Color.White
-                    )
                 }
             }
         }

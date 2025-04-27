@@ -7,15 +7,17 @@ import com.almalaundry.featured.auth.data.dtos.RegisterRequest
 import com.almalaundry.featured.auth.data.source.AuthApi
 import com.almalaundry.shared.commons.session.SessionManager
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class AuthRepository @Inject constructor(
-    private val api: AuthApi, private val sessionManager: SessionManager
+    @Named("Authenticated") private val authenticatedApi: AuthApi,
+    private val sessionManager: SessionManager
 ) {
     suspend fun login(request: LoginRequest): Result<AuthData> {
         return try {
-            val response = api.login(request)
+            val response = authenticatedApi.login(request)
             Log.d("AuthRepository", "Response: ${response.body()}")
             if (response.isSuccessful && response.body()?.success == true) {
                 val authData = response.body()!!.data
@@ -41,7 +43,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun register(request: RegisterRequest): Result<AuthData> {
         return try {
-            val response = api.register(request)
+            val response = authenticatedApi.register(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 val authData = response.body()!!.data
                 sessionManager.saveSession(authData.toSession())
@@ -59,7 +61,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun logout(): Result<Unit> {
         return try {
-            val response = api.logout()
+            val response = authenticatedApi.logout()
             if (response.isSuccessful && response.body()?.success == true) {
                 sessionManager.clearSession()
                 Log.d("AuthRepository", "Logout successful")

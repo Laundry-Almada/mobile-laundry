@@ -14,7 +14,7 @@ import com.composables.icons.lucide.User
 object NavigationItems {
     val items = listOf(
         NavigationItem(
-            route = HomeRoutes.Dashboard.route, icon = Lucide.LayoutDashboard, label = "Home"
+            route = HomeRoutes.LaundryDashboard.route, icon = Lucide.LayoutDashboard, label = "Home"
         ),
         NavigationItem(
             route = OrderRoutes.Index.route, icon = Lucide.ShoppingBag, label = "Orders"

@@ -1,7 +1,6 @@
 package com.almalaundry.featured.order.presentation.screen
 
 import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,10 +57,10 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
 import com.almalaundry.featured.order.commons.OrderRoutes
-import com.almalaundry.featured.order.presentation.components.BannerHeader
 import com.almalaundry.featured.order.presentation.components.StatusChip
 import com.almalaundry.featured.order.presentation.viewmodels.DetailOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.almalaundry.shared.presentation.components.BannerHeader
 import com.almalaundry.shared.utils.openWhatsApp
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
@@ -135,7 +134,9 @@ fun DetailOrderScreen(
                 .pullRefresh(pullRefreshState)
         ) {
             Column(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.background)
             ) {
                 // Banner Header
                 BannerHeader(
@@ -143,7 +144,7 @@ fun DetailOrderScreen(
                     // subtitle = "Informasi detail order",
                     imageResId = R.drawable.header_basic2,
                     onBackClick = { navController.popBackStack() },
-                    titleAlignment = Alignment.CenterHorizontally,
+                    titleAlignment = Alignment.Start,
                     actionButtons = {
                         IconButton(onClick = { showDeleteDialog = true }) {
                             Icon(
@@ -198,8 +199,13 @@ fun DetailOrderScreen(
                                 Card(
                                     modifier = Modifier
                                         .fillMaxWidth(),
-                                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                                    border = BorderStroke(1.dp, Color.LightGray)
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                    elevation = CardDefaults.cardElevation(
+                                        defaultElevation = 2.dp
+                                    )
                                 ) {
                                     Column(modifier = Modifier.padding(16.dp)) {
                                         // Customer Info
@@ -251,7 +257,10 @@ fun DetailOrderScreen(
                                                     verticalAlignment = Alignment.CenterVertically,
                                                     modifier = Modifier.padding(end = 8.dp)
                                                 ) {
-                                                    StatusChip(status = selectedStatus)
+                                                    StatusChip(
+                                                        status = selectedStatus,
+                                                        modifier = Modifier.align(Alignment.CenterVertically)
+                                                    )
                                                     Spacer(modifier = Modifier.width(8.dp))
                                                     Icon(
                                                         imageVector = Lucide.ChevronDown,

@@ -1,18 +1,25 @@
 package com.almalaundry.featured.order.presentation.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
@@ -20,9 +27,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,12 +39,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.almalaundry.R
 import com.almalaundry.featured.order.presentation.viewmodels.CreateOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
-import com.composables.icons.lucide.ArrowLeft
+import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
 
@@ -96,147 +105,179 @@ fun CreateOrderScreen(
     }
 
     Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Buat Order Baru", style = MaterialTheme.typography.titleMedium) },
-                navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
-                        Icon(Lucide.ArrowLeft, contentDescription = "Back")
-                    }
-                }
-            )
-        }
+        contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top)
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
         ) {
-            OutlinedTextField(
-                value = state.phone,
-                onValueChange = { viewModel.updatePhone(it) },
-                label = { Text("Nomor Telepon") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Service Dropdown
-            if (state.isLoadingServices) {
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .padding(vertical = 8.dp)
-                        .align(Alignment.CenterHorizontally)
+            Column(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                // Banner Header
+                BannerHeader(
+                    title = "Buat Order Baru",
+                    subtitle = "Masukkan detail order baru",
+                    imageResId = R.drawable.header_basic2,
+                    onBackClick = { navController.navigateUp() },
+                    titleAlignment = Alignment.Start
                 )
-            } else if (state.servicesError != null) {
-                Text(
-                    text = state.servicesError ?: "Gagal memuat layanan",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-            } else {
-                var expanded by remember { mutableStateOf(false) }
-                Box(
+
+                // LazyColumn untuk konten
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
+                        .fillMaxSize()
+                        .offset(y = (-40).dp) // Menutupi sebagian banner
+                        .background(Color.Transparent),
+                    contentPadding = PaddingValues(16.dp)
                 ) {
-                    OutlinedTextField(
-                        value = state.services.find { it.id == state.serviceId }?.name
-                            ?: "Pilih Layanan",
-                        onValueChange = {},
-                        modifier = Modifier.fillMaxWidth(),
-                        readOnly = true,
-                        label = { Text("Layanan") },
-                        trailingIcon = {
-                            IconButton(onClick = { expanded = true }) {
-                                Icon(
-                                    imageVector = Lucide.ChevronDown,
-                                    contentDescription = "Dropdown"
-                                )
-                            }
-                        }
-                    )
-                    DropdownMenu(
-                        expanded = expanded,
-                        onDismissRequest = { expanded = false },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        state.services.forEach { service ->
-                            DropdownMenuItem(
-                                onClick = {
-                                    viewModel.updateServiceId(service.id)
-                                    expanded = false
-                                }
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            ),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
                             ) {
-                                Text(
-                                    text = service.name,
-                                    style = MaterialTheme.typography.bodyMedium
+                                // Nomor Telepon
+                                OutlinedTextField(
+                                    value = state.phone,
+                                    onValueChange = { viewModel.updatePhone(it) },
+                                    label = { Text("Nomor Telepon") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
                                 )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Service Dropdown
+                                if (state.isLoadingServices) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .padding(vertical = 8.dp)
+                                            .align(Alignment.CenterHorizontally)
+                                    )
+                                } else if (state.servicesError != null) {
+                                    Text(
+                                        text = state.servicesError ?: "Gagal memuat layanan",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        modifier = Modifier.padding(vertical = 8.dp)
+                                    )
+                                } else {
+                                    var expanded by remember { mutableStateOf(false) }
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 8.dp)
+                                    ) {
+                                        OutlinedTextField(
+                                            value = state.services.find { it.id == state.serviceId }?.name
+                                                ?: "Pilih Layanan",
+                                            onValueChange = {},
+                                            modifier = Modifier.fillMaxWidth(),
+                                            readOnly = true,
+                                            label = { Text("Layanan") },
+                                            trailingIcon = {
+                                                IconButton(onClick = { expanded = true }) {
+                                                    Icon(
+                                                        imageVector = Lucide.ChevronDown,
+                                                        contentDescription = "Dropdown"
+                                                    )
+                                                }
+                                            }
+                                        )
+                                        DropdownMenu(
+                                            expanded = expanded,
+                                            onDismissRequest = { expanded = false },
+                                            modifier = Modifier.fillMaxWidth()
+                                        ) {
+                                            state.services.forEach { service ->
+                                                DropdownMenuItem(
+                                                    onClick = {
+                                                        viewModel.updateServiceId(service.id)
+                                                        expanded = false
+                                                    }
+                                                ) {
+                                                    Text(
+                                                        text = service.name,
+                                                        style = MaterialTheme.typography.bodyMedium
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Berat
+                                OutlinedTextField(
+                                    value = state.weight,
+                                    onValueChange = { viewModel.updateWeight(it) },
+                                    label = { Text("Berat (kg)") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Total Harga
+                                OutlinedTextField(
+                                    value = state.totalPrice,
+                                    onValueChange = { viewModel.updateTotalPrice(it) },
+                                    label = { Text("Total Harga") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                                )
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Catatan
+                                OutlinedTextField(
+                                    value = state.note,
+                                    onValueChange = { viewModel.updateNote(it) },
+                                    label = { Text("Catatan") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    minLines = 3
+                                )
+
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // Tombol Buat Order
+                                Button(
+                                    onClick = { viewModel.createOrder() },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    enabled = !state.isLoading
+                                ) {
+                                    if (state.isLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    } else {
+                                        Text("Buat Order")
+                                    }
+                                }
+
+                                // Pesan Error
+                                if (state.error != null) {
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Text(
+                                        text = state.error ?: "Terjadi kesalahan",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = state.weight,
-                onValueChange = { viewModel.updateWeight(it) },
-                label = { Text("Berat (kg)") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = state.totalPrice,
-                onValueChange = { viewModel.updateTotalPrice(it) },
-                label = { Text("Total Harga") },
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            OutlinedTextField(
-                value = state.note,
-                onValueChange = { viewModel.updateNote(it) },
-                label = { Text("Catatan") },
-                modifier = Modifier.fillMaxWidth(),
-                minLines = 3
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = { viewModel.createOrder() },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isLoading
-            ) {
-                if (state.isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                } else {
-                    Text("Buat Order")
-                }
-            }
-
-            if (state.error != null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = state.error ?: "Terjadi kesalahan",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
             }
         }
     }

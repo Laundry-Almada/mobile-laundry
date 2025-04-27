@@ -50,7 +50,7 @@ fun HomeNavGraph(
     navController: NavHostController, modifier: Modifier = Modifier
 ) {
     NavHost(navController = navController,
-        startDestination = HomeRoutes.Dashboard.route,
+        startDestination = HomeRoutes.LaundryDashboard.route,
         modifier = modifier,
         enterTransition = {
             fadeIn(animationSpec = tween(durationMillis = 200))
@@ -64,8 +64,8 @@ fun HomeNavGraph(
         popExitTransition = {
             fadeOut(animationSpec = tween(durationMillis = 200))
         }) {
-        composable(HomeRoutes.Dashboard.route) {
-            DashboardUser()
+        composable(HomeRoutes.LaundryDashboard.route) {
+            LaundryDashboard()
         }
         composable(OrderRoutes.Index.route) {
             OrderScreen()

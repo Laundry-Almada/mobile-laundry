@@ -11,7 +11,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun StatusChip(status: String) {
+fun StatusChip(
+    status: String, modifier: Modifier = Modifier
+) {
     val (backgroundColor, textColor, text) = when (status) {
         "washed" -> Triple(Color(0xFFBBDEFB), Color(0xFF0D47A1), "Dicuci") // Soft blue
         "dried" -> Triple(Color(0xFFFFF9C4), Color(0xFFF57F17), "Dikeringkan") // Soft yellow
@@ -23,6 +25,8 @@ fun StatusChip(status: String) {
     }
 
     Surface(
+
+        modifier = modifier,
         shape = RoundedCornerShape(16.dp),
         color = backgroundColor,
     ) {

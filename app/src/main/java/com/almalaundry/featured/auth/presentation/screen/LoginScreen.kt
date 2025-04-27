@@ -2,6 +2,7 @@ package com.almalaundry.featured.auth.presentation.screen
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +21,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,8 +29,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -145,14 +145,27 @@ fun LoginScreen(
                     }
                 }
 
-                TextButton(
-                    onClick = { navController.navigate(AuthRoutes.Register.route) },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text(
-                        "Don't have an account? Register",
-                        color = dactiveColor)
-                }
+                Text(
+                    text = "Masuk sebagai Customer",
+                    color = dactiveColor,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .padding(top = 8.dp, bottom = 4.dp, start = 8.dp, end = 8.dp)
+                        .clickable {
+                            navController.navigate(HomeRoutes.CustomerDashboard.route)
+                        }
+                )
+
+                Text(
+                    text = "Belum punya akun? Daftar",
+                    color = dactiveColor,
+                    style = MaterialTheme.typography.bodySmall,
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                        .clickable {
+                            navController.navigate(AuthRoutes.Register.route)
+                        }
+                )
             }
         }
     }

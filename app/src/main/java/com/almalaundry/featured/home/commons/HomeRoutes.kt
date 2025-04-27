@@ -8,5 +8,8 @@ sealed class HomeRoutes(val route: String) {
     data object Index : HomeRoutes("home")
 
     @Serializable
-    data object Dashboard : HomeRoutes("dashboard")
+    data object LaundryDashboard : HomeRoutes("laundry_dashboard")
+
+    @Serializable
+    data object CustomerDashboard : HomeRoutes("customer_dashboard")
 }

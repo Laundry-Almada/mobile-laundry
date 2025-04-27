@@ -12,13 +12,10 @@ package com.almalaundry.featured.auth.presentation.viewmodels
 //import kotlinx.coroutines.launch
 //import javax.inject.Inject
 
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.almalaundry.featured.auth.data.dtos.RegisterDto
-import com.almalaundry.featured.auth.domain.models.AuthRepository
+import com.almalaundry.featured.auth.data.dtos.RegisterRequest
+import com.almalaundry.featured.auth.data.repositories.AuthRepository
 import com.almalaundry.featured.auth.presentation.state.RegisterState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -196,7 +193,10 @@ class RegisterViewModel @Inject constructor(
         _state.update {
             it.copy(
                 role = value,
-                availableLaundries = if (value == "Staff") listOf("Laundry Almada", "Laundry Balmada") else emptyList(),
+                availableLaundries = if (value == "Staff") listOf(
+                    "Laundry Almada",
+                    "Laundry Balmada"
+                ) else emptyList(),
                 selectedLaundry = if (value == "Staff") "" else it.selectedLaundry,
                 laundryName = if (value == "Owner") "" else it.laundryName
             )
@@ -218,22 +218,27 @@ class RegisterViewModel @Inject constructor(
                 _state.update { it.copy(error = "Username tidak boleh kosong!") }
                 return
             }
+
             currentState.email.isBlank() -> {
                 _state.update { it.copy(error = "Email tidak boleh kosong!") }
                 return
             }
+
             currentState.password.isBlank() -> {
-                _state.update {it.copy(error = "Password tidak boleh kosong")}
+                _state.update { it.copy(error = "Password tidak boleh kosong") }
                 return
             }
+
             currentState.password != currentState.confirmPassword -> {
                 _state.update { it.copy(error = "Password dan Confirm Password harus sama!") }
                 return
             }
+
             currentState.role == "Owner" && currentState.laundryName.isBlank() -> {
-                _state.update {it.copy(error = "Nama laundry tidak boleh kosong!")}
+                _state.update { it.copy(error = "Nama laundry tidak boleh kosong!") }
                 return
             }
+
             currentState.role == "Staff" && currentState.selectedLaundry.isBlank() -> {
                 _state.update { it.copy(error = "Silakan pilih laundry") }
                 return
@@ -244,14 +249,14 @@ class RegisterViewModel @Inject constructor(
             _state.update { it.copy(isLoading = true) }
 
             val result = authRepository.register(
-                RegisterDto(
-                    username = currentState.username,
-                    password = currentState.password,
+                RegisterRequest(
+                    name = currentState.username,
                     email = currentState.email,
-                    confirmPassword = currentState.confirmPassword,
+                    password = currentState.password,
+                    cPassword = currentState.confirmPassword,
                     role = currentState.role,
                     laundryName = if (currentState.role == "Owner") currentState.laundryName else null,
-                    selectedLaundry = if (currentState.role == "Staff") currentState.selectedLaundry else null
+                    laundryId = if (currentState.role == "Staff") currentState.selectedLaundry else null
                 )
             )
 

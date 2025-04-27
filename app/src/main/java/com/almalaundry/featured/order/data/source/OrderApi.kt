@@ -39,6 +39,13 @@ interface OrderApi {
     @GET("customers/check/{phone}")
     suspend fun checkCustomer(@Path("phone") phone: String): Response<CustomerResponse>
 
+    @GET("customers/{phone}/orders")
+    suspend fun getCustomerOrders(
+        @Path("phone") phone: String,
+        @Query("per_page") perPage: Int = 10,
+        @Query("page") page: Int = 1
+    ): Response<OrderResponse>
+
     @POST("orders")
     suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderDetailResponse>
 

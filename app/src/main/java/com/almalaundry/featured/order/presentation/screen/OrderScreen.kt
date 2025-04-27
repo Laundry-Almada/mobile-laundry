@@ -46,13 +46,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
 import com.almalaundry.featured.order.commons.OrderRoutes
-import com.almalaundry.featured.order.presentation.components.BannerHeader
 import com.almalaundry.featured.order.presentation.components.FilterDialog
 import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.OrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
+import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
@@ -122,7 +122,7 @@ fun OrderScreen(
                 // Banner Header
                 BannerHeader(
                     title = "Daftar Order",
-                    subtitle = "Order yang masih dalam proses",
+                    subtitle = "Order yang diproses dan selesai",
                     imageResId = R.drawable.header_basic2,
 //                    onBackClick = { navController.popBackStack() }, // Tombol back
                     actionButtons = {

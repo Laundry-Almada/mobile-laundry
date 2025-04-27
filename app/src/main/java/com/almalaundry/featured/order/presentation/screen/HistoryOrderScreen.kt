@@ -45,13 +45,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
 import com.almalaundry.featured.order.commons.OrderRoutes
-import com.almalaundry.featured.order.presentation.components.BannerHeader
 import com.almalaundry.featured.order.presentation.components.FilterDialogHistory
 import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
 import com.almalaundry.featured.order.presentation.viewmodels.HistoryOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
+import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
 import kotlinx.coroutines.FlowPreview

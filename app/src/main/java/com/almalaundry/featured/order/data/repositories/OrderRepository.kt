@@ -3,6 +3,7 @@ package com.almalaundry.featured.order.data.repositories
 import android.util.Log
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
+import com.almalaundry.featured.order.data.dtos.OrderMeta
 import com.almalaundry.featured.order.data.dtos.OrderResponse
 import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
@@ -11,11 +12,14 @@ import com.almalaundry.featured.order.domain.models.Order
 import com.almalaundry.shared.commons.session.SessionManager
 import org.json.JSONObject
 import javax.inject.Inject
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
 class OrderRepository @Inject constructor(
-    private val api: OrderApi, private val sessionManager: SessionManager
+    @Named("Authenticated") private val authenticatedApi: OrderApi,
+    @Named("Public") private val publicApi: OrderApi,
+    private val sessionManager: SessionManager
 ) {
     suspend fun getOrders(
         status: String? = null,
@@ -32,7 +36,7 @@ class OrderRepository @Inject constructor(
             if (!sessionManager.isLoggedIn()) {
                 throw Exception("User not logged in")
             }
-            val response = api.getOrders(
+            val response = authenticatedApi.getOrders(
                 status = status,
                 serviceId = serviceId,
                 startDate = startDate,
@@ -57,10 +61,51 @@ class OrderRepository @Inject constructor(
         }
     }
 
+    suspend fun getCustomerOrders(
+        phone: String,
+        perPage: Int = 10,
+        page: Int = 1
+    ): Result<OrderResponse> {
+        return try {
+            val response = publicApi.getCustomerOrders(
+                phone = phone,
+                perPage = perPage,
+                page = page
+            )
+            Log.d("OrderRepository", "Customer Orders Response: ${response.body()}")
+
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                if (response.code() == 404) {
+                    // Jika 404 (Customer tidak ditemukan), return sukses dengan data kosong
+                    Result.success(
+                        OrderResponse(
+                            success = false,
+                            data = emptyList(),
+                            meta = OrderMeta(
+                                totalOrders = 0,
+                                totalPages = 0,
+                                currentPage = 1,
+                                perPage = perPage
+                            )
+                        )
+                    )
+                } else {
+                    Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
+                    Result.failure(Exception("Failed to fetch customer orders: ${response.message()}"))
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("OrderRepository", "Exception: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
     suspend fun getOrderDetail(orderId: String): Result<Order> {
         return try {
             Log.d("OrderRepository", "Fetching order detail: $orderId")
-            val response = api.getOrderDetail(orderId)
+            val response = authenticatedApi.getOrderDetail(orderId)
             Log.d("OrderRepository", "Response code: ${response.code()}")
             Log.d("OrderRepository", "Response body: ${response.body()}")
             Log.d("OrderRepository", "Error body: ${response.errorBody()?.string()}")
@@ -80,7 +125,7 @@ class OrderRepository @Inject constructor(
     suspend fun getOrderByBarcode(barcode: String): Result<Order> {
         return try {
             Log.d("OrderRepository", "Fetching order with barcode: $barcode")
-            val response = api.getOrderByBarcode(barcode)
+            val response = authenticatedApi.getOrderByBarcode(barcode)
             Log.d("OrderRepository", "Response: ${response.code()}")
 
             if (response.isSuccessful && response.body() != null) {
@@ -97,7 +142,7 @@ class OrderRepository @Inject constructor(
 
     suspend fun checkCustomer(phone: String): Result<CustomerResponse> {
         return try {
-            val response = api.checkCustomer(phone)
+            val response = authenticatedApi.checkCustomer(phone)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
@@ -110,7 +155,7 @@ class OrderRepository @Inject constructor(
 
     suspend fun createOrder(request: CreateOrderRequest): Result<Order> {
         return try {
-            val response = api.createOrder(request)
+            val response = authenticatedApi.createOrder(request)
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(response.body()!!.data)
             } else {
@@ -137,7 +182,7 @@ class OrderRepository @Inject constructor(
             if (!sessionManager.isLoggedIn()) {
                 throw Exception("User not logged in")
             }
-            val response = api.getServices(laundryId)
+            val response = authenticatedApi.getServices(laundryId)
             Log.d("OrderRepository", "Service Response: ${response.body()}")
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(response.body()!!)
@@ -160,7 +205,7 @@ class OrderRepository @Inject constructor(
 
     suspend fun updateOrderStatus(orderId: String, status: String): Result<Order> {
         return try {
-            val response = api.updateOrderStatus(orderId, UpdateStatusRequest(status))
+            val response = authenticatedApi.updateOrderStatus(orderId, UpdateStatusRequest(status))
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
@@ -173,7 +218,7 @@ class OrderRepository @Inject constructor(
 
     suspend fun deleteOrder(orderId: String): Result<Boolean> {
         return try {
-            val response = api.deleteOrder(orderId)
+            val response = authenticatedApi.deleteOrder(orderId)
             if (response.isSuccessful && response.body() != null) {
                 val body = response.body()!!
                 if (body.success) {

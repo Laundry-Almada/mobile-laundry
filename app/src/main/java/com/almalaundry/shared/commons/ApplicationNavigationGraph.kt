@@ -9,8 +9,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
 import com.almalaundry.featured.auth.commons.authNavigation
+import com.almalaundry.featured.home.commons.HomeRoutes
 import com.almalaundry.featured.home.commons.homeNavigation
+import com.almalaundry.featured.home.presentation.screen.CustomerDashboardScreen
 import com.almalaundry.featured.order.commons.orderNavigation
 import com.almalaundry.featured.profile.commons.profileNavigation
 
@@ -51,6 +54,9 @@ fun ApplicationNavigationGraph(
     ) {
         authNavigation()
         homeNavigation()
+        composable(HomeRoutes.CustomerDashboard.route) {
+            CustomerDashboardScreen()
+        }
         orderNavigation()
         profileNavigation()
     }

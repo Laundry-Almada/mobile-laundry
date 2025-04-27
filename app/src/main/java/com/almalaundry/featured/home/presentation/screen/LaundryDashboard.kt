@@ -1,65 +1,72 @@
 package com.almalaundry.featured.home.presentation.screen
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.almalaundry.R
-import com.almalaundry.featured.home.presentation.viewmodels.HomeViewModel
-import com.almalaundry.shared.commons.compositional.LocalNavController
-import com.google.accompanist.pager.rememberPagerState
-import androidx.compose.runtime.LaunchedEffect
-import kotlinx.coroutines.delay
-import com.google.accompanist.pager.*
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.util.lerp
-import kotlin.math.absoluteValue
-import androidx.compose.material3.Card
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.util.lerp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.almalaundry.R
+import com.almalaundry.featured.home.presentation.viewmodels.HomeViewModel
+import com.almalaundry.featured.order.commons.OrderRoutes
+import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryContainerLight
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryLight
+import com.almalaundry.shared.presentation.ui.theme.primaryLight
+import com.almalaundry.shared.presentation.ui.theme.secondaryLight
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
 import com.google.accompanist.pager.HorizontalPager
-import com.almalaundry.featured.order.commons.OrderRoutes
-import com.almalaundry.shared.presentation.ui.theme.primaryLight
-import com.almalaundry.shared.presentation.ui.theme.secondaryLight
+import com.google.accompanist.pager.calculateCurrentOffsetForPage
+import com.google.accompanist.pager.rememberPagerState
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottom
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberStart
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberColumnCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
+import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
+import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
+import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
+import com.patrykandpatrick.vico.compose.common.component.shapeComponent
+import com.patrykandpatrick.vico.compose.common.fill
+import com.patrykandpatrick.vico.compose.common.insets
+import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
+import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
+import com.patrykandpatrick.vico.compose.common.vicoTheme
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.axis.Axis
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
@@ -67,25 +74,18 @@ import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianChartModelProducer
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
-import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
-import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
-import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
-import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.common.component.shapeComponent
-import com.patrykandpatrick.vico.compose.common.insets
-import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
-import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
-import com.patrykandpatrick.vico.compose.common.vicoTheme
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
+import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.patrykandpatrick.vico.core.common.shape.CorneredShape
+import kotlinx.coroutines.delay
+import kotlin.math.absoluteValue
 
 
 @Composable
-fun DashboardUser(
+fun LaundryDashboard(
     viewModel: HomeViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -115,26 +115,26 @@ fun DashboardUser(
             .background(onPrimaryLight),
 
         topBar = {
-           CenterAlignedTopAppBar(
-               title = {},
-               colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                   containerColor = onPrimaryContainerLight
-               ),
-               windowInsets = WindowInsets(0.dp)
-           )
+            CenterAlignedTopAppBar(
+                title = {},
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = onPrimaryContainerLight
+                ),
+                windowInsets = WindowInsets(0.dp)
+            )
         },
 
         //floatingActionButton
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate(OrderRoutes.Create.route)}
-                ) {
+                onClick = { navController.navigate(OrderRoutes.Create.route) }
+            ) {
                 Icon(Lucide.Plus, contentDescription = "Create Order")
             }
         }
 
 
-    ){ paddingValues ->
+    ) { paddingValues ->
         Box(
             modifier = Modifier
                 .padding(paddingValues)
@@ -151,7 +151,7 @@ fun DashboardUser(
                         shape = RoundedCornerShape(bottomStart = 45.dp, bottomEnd = 45.dp)
                     ),
                 contentAlignment = Alignment.Center
-            ){
+            ) {
                 Column(
                     horizontalAlignment = Alignment.Start
                 ) {
@@ -188,7 +188,7 @@ fun DashboardUser(
                 ) {
                     Text(
                         text = "Total Tipe Laundry",
-                        fontWeight =FontWeight.Bold,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -207,7 +207,7 @@ fun DashboardUser(
                 ) {
                     Text(
                         text = "Total Pendapatan",
-                        fontWeight =FontWeight.Bold,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
@@ -224,10 +224,10 @@ fun DashboardUser(
                     modifier = Modifier
                         .height(152.dp)
                         .fillMaxWidth()
-                ){page ->
+                ) { page ->
                     Card(
                         shape = RoundedCornerShape(12.dp),
-                        modifier = Modifier.graphicsLayer{
+                        modifier = Modifier.graphicsLayer {
                             val pageOffset = calculateCurrentOffsetForPage(page).absoluteValue
 
                             lerp(
@@ -245,7 +245,7 @@ fun DashboardUser(
                                 fraction = 1f - pageOffset.coerceIn(0f, 1f)
                             )
                         }
-                    ){
+                    ) {
                         Image(
                             painter = imageSlider[page],
                             contentDescription = stringResource(R.string.image_slider),
@@ -262,7 +262,8 @@ fun DashboardUser(
 @Composable
 fun LaundryTypeChart(modifier: Modifier = Modifier) {
     val modelProducer = remember { CartesianChartModelProducer() }
-    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val months =
+        listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
     val laundryTypes = listOf("Cuci Setrika", "Cuci Lipat", "Cuci Kering")
     val columnColors = listOf(primaryLight, onPrimaryContainerLight, secondaryLight)
     val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
@@ -336,7 +337,8 @@ fun RevenueChart(
     lineColor: Color = primaryLight
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
-    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+    val months =
+        listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 
     LaunchedEffect(Unit) {
         modelProducer.runTransaction {
