@@ -1,18 +1,18 @@
 package com.almalaundry.featured.order.presentation.screen
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -20,6 +20,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -38,11 +40,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.almalaundry.R
 import com.almalaundry.featured.order.commons.OrderRoutes
+import com.almalaundry.featured.order.presentation.components.BannerHeader
 import com.almalaundry.featured.order.presentation.components.FilterDialog
 import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
@@ -52,9 +56,11 @@ import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-@OptIn(ExperimentalMaterialApi::class)
+@OptIn(ExperimentalMaterialApi::class, FlowPreview::class)
 @Composable
 fun OrderScreen(
     viewModel: OrderViewModel = hiltViewModel()
@@ -84,11 +90,14 @@ fun OrderScreen(
             val totalItemsNumber = layoutInfo.totalItemsCount
             val lastVisibleItemIndex = (layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0) + 1
             lastVisibleItemIndex > 0 && lastVisibleItemIndex >= totalItemsNumber - 2
-        }.distinctUntilChanged().collect { shouldLoadMore ->
-            if (shouldLoadMore && !state.isLoadingMore && !state.isLoading && state.hasMoreData) {
-                viewModel.loadOrders(isLoadMore = true)
-            }
         }
+            .debounce(300)
+            .distinctUntilChanged()
+            .collect { shouldLoadMore ->
+                if (shouldLoadMore && !state.isLoadingMore && !state.isLoading && state.hasMoreData) {
+                    viewModel.loadOrders(isLoadMore = true)
+                }
+            }
     }
 
     Scaffold(
@@ -110,113 +119,135 @@ fun OrderScreen(
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.background)
             ) {
-                // App Bar
-                Row(
-                    modifier = Modifier.padding(
-                        start = 16.dp,
-                        end = 16.dp,
-                        top = 16.dp,
-                        bottom = 16.dp
-                    ),
-                    verticalAlignment = Alignment.Top,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Daftar Order",
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "Berikut adalah daftar order yang tersedia",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                // Banner Header
+                BannerHeader(
+                    title = "Daftar Order",
+                    subtitle = "Order yang masih dalam proses",
+                    imageResId = R.drawable.header_basic2,
+//                    onBackClick = { navController.popBackStack() }, // Tombol back
+                    actionButtons = {
+                        // Tombol filter
+                        IconButton(onClick = { showFilterDialog = true }) {
+                            Icon(
+                                imageVector = Lucide.Filter,
+                                contentDescription = "Filter",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
                     }
-                    Spacer(modifier = Modifier.width(16.dp))
-                    IconButton(onClick = { showFilterDialog = true }) {
-                        Icon(Lucide.Filter, contentDescription = "Filter")
-                    }
-                }
+                )
 
-                when {
-                    state.isLoading && !state.isLoadingMore -> {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            items(3) {
-                                ShimmerOrderCard()
+                // LazyColumn dengan offset untuk menutupi banner
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .offset(y = (-40).dp)
+                        .background(Color.Transparent)
+                ) {
+                    when {
+                        state.isLoading && !state.isLoadingMore -> {
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(3) {
+                                    ShimmerOrderCard()
+                                }
                             }
                         }
-                    }
 
-                    state.error != null -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = state.error ?: "Terjadi kesalahan saat memuat order",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
+                        state.error != null -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                ) {
+                                    Text(
+                                        text = state.error ?: "Terjadi kesalahan saat memuat order",
+                                        color = MaterialTheme.colorScheme.error,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    TextButton(onClick = { viewModel.loadOrders() }) {
+                                        Text(
+                                            "Coba Lagi",
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
+                                }
+                            }
                         }
-                    }
 
-                    state.orders.isEmpty() && state.totalOrders > 0 -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Tidak ada order di halaman ini. Coba ubah filter atau muat ulang.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
+                        state.orders.isEmpty() && state.totalOrders > 0 -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
+                                ) {
+                                    Text(
+                                        text = "Tidak ada order di halaman ini. Coba ubah filter atau muat ulang.",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center
+                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    TextButton(onClick = { viewModel.loadOrders() }) {
+                                        Text(
+                                            "Muat Ulang",
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
+                                }
+                            }
                         }
-                    }
 
-                    state.orders.isEmpty() -> {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "Tidak ada order tersedia.",
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                style = MaterialTheme.typography.bodyMedium,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                        }
-                    }
-
-                    else -> {
-                        LazyColumn(
-                            state = listState,
-                            modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(vertical = 8.dp)
-                        ) {
-                            items(state.orders) { order ->
-                                OrderCard(
-                                    order = order,
-                                    onClick = { navController.navigate(OrderRoutes.Detail(order.id)) }
+                        state.orders.isEmpty() -> {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Tidak ada order tersedia.",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.padding(horizontal = 16.dp)
                                 )
                             }
+                        }
 
-                            // Show loading more indicator
-                            item {
-                                if (state.isLoadingMore) {
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        ShimmerOrderCard()
+                        else -> {
+                            LazyColumn(
+                                state = listState,
+                                modifier = Modifier.fillMaxSize(),
+                                contentPadding = PaddingValues(vertical = 8.dp)
+                            ) {
+                                items(state.orders) { order ->
+                                    OrderCard(
+                                        order = order,
+                                        onClick = { navController.navigate(OrderRoutes.Detail(order.id)) }
+                                    )
+                                }
+
+                                item {
+                                    if (state.isLoadingMore) {
+                                        Box(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(16.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                modifier = Modifier.size(24.dp)
+                                            )
+                                        }
                                     }
                                 }
                             }
@@ -225,7 +256,7 @@ fun OrderScreen(
                 }
             }
 
-            // Pull-to-refresh indicator
+            // Indikator pull-to-refresh
             PullRefreshIndicator(
                 refreshing = isRefreshing,
                 state = pullRefreshState,

@@ -29,7 +29,7 @@ fun OrderCard(order: Order, onClick: () -> Unit) {
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.surface
         ),
         border = BorderStroke(1.dp, Color.LightGray),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)

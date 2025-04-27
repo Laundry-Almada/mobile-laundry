@@ -35,7 +35,8 @@ class OrderViewModel @Inject constructor(
                 }
                 _state.value = _state.value.copy(isLoadingMore = true)
             } else {
-                _state.value = _state.value.copy(isLoading = true, error = null)
+                _state.value =
+                    _state.value.copy(isLoading = true, error = null, orders = emptyList())
             }
 
             try {
@@ -80,4 +81,3 @@ class OrderViewModel @Inject constructor(
         }
     }
 }
-

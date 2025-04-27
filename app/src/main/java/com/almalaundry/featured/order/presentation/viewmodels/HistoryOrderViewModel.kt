@@ -23,54 +23,59 @@ class HistoryOrderViewModel @Inject constructor(
     }
 
     fun applyFilter(filter: OrderFilter) {
-        _state.value = _state.value.copy(filter = filter)
+        _state.value = _state.value.copy(filter = filter, currentPage = 1, histories = emptyList())
         loadHistories()
     }
 
     fun loadHistories(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             if (isLoadMore) {
-                if (_state.value.currentPage >= _state.value.totalPages) return@launch
+                if (_state.value.currentPage >= _state.value.totalPages || !_state.value.hasMoreData) {
+                    return@launch
+                }
                 _state.value = _state.value.copy(isLoadingMore = true)
             } else {
-                _state.value = _state.value.copy(isLoading = true)
+                _state.value =
+                    _state.value.copy(isLoading = true, error = null, histories = emptyList())
             }
 
             try {
                 val filter = _state.value.filter
                 val result = repository.getOrders(
-                    page = if (isLoadMore) _state.value.currentPage + 1 else 1,
-                    status = listOf("cancelled", "completed").joinToString(","),
+                    status = listOf("completed", "cancelled").joinToString(","),
                     serviceId = filter.serviceId,
                     startDate = filter.startDate,
                     endDate = filter.endDate,
-                    sortBy = "created_at",
-                    sortDirection = "desc"
+                    search = filter.search,
+                    sortBy = filter.sortBy,
+                    sortDirection = filter.sortDirection,
+                    perPage = _state.value.perPage,
+                    page = if (isLoadMore) _state.value.currentPage + 1 else 1
                 )
 
                 result.onSuccess { response ->
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
-                        histories = if (isLoadMore) _state.value.histories + response.data
-                        else response.data,
+                        histories = if (isLoadMore) _state.value.histories + response.data else response.data,
                         totalHistories = response.meta.totalOrders,
                         currentPage = response.meta.currentPage,
                         totalPages = response.meta.totalPages,
+                        hasMoreData = response.meta.currentPage < response.meta.totalPages,
                         error = null
                     )
                 }.onFailure { exception ->
                     _state.value = _state.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
-                        error = exception.message ?: "Unknown error occurred"
+                        error = exception.message ?: "Gagal memuat order"
                     )
                 }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
                     isLoadingMore = false,
-                    error = e.message ?: "Unknown error occurred"
+                    error = e.message ?: "Gagal memuat order"
                 )
             }
         }
