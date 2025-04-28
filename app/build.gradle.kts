@@ -151,4 +151,6 @@ dependencies {
     implementation(libs.vico.compose.m3)
     implementation(libs.vico.views)
 
+    // utils
+    implementation(libs.kotlinx.datetime)
 }
