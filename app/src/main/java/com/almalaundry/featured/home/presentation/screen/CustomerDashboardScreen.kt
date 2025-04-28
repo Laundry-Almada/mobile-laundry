@@ -1,5 +1,6 @@
 package com.almalaundry.featured.home.presentation.screen
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,9 +45,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
+import com.almalaundry.featured.home.presentation.components.CustomerOrderCard
 import com.almalaundry.featured.home.presentation.viewmodels.CustomerDashboardViewModel
-import com.almalaundry.featured.order.commons.OrderRoutes
-import com.almalaundry.featured.order.presentation.components.OrderCard
 import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.components.BannerHeader
@@ -104,7 +104,7 @@ fun CustomerDashboardScreen(
                     state = listState,
                     modifier = Modifier
                         .fillMaxSize()
-                        .offset(y = (-40).dp) // Menutupi sebagian banner
+                        .offset(y = (-35).dp) // Menutupi sebagian banner
                         .background(Color.Transparent),
                     contentPadding = PaddingValues(16.dp)
                 ) {
@@ -218,10 +218,9 @@ fun CustomerDashboardScreen(
 
                         else -> {
                             items(state.orders) { order ->
-                                OrderCard(
-                                    order = order,
-                                    onClick = { navController.navigate(OrderRoutes.Detail(order.id)) }
-                                )
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                    CustomerOrderCard(order = order)
+                                }
                             }
 
                             // Loading more indicator
