@@ -52,8 +52,6 @@ import com.composables.icons.lucide.Wind
 import compose.icons.FontAwesomeIcons
 import compose.icons.fontawesomeicons.Brands
 import compose.icons.fontawesomeicons.brands.Whatsapp
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -63,18 +61,6 @@ fun CustomerOrderCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    // Format tanggal order_date
-    val orderDateFormatted = order.orderDate?.let { date ->
-        try {
-            val inputFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-            val outputFormat = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm")
-            val parsedDate = LocalDateTime.parse(date, inputFormat)
-            parsedDate.format(outputFormat)
-        } catch (e: Exception) {
-            date
-        }
-    } ?: "-"
 
     // Ikon berdasarkan status
     val icon = when (order.status) {
@@ -123,7 +109,9 @@ fun CustomerOrderCard(
                     )
                     // Tanggal order
                     Text(
-                        text = orderDateFormatted,
+                        text = order.orderDate?.let { date ->
+                            formatTimestamp(date, "yyyy-MM-dd HH:mm:ss")
+                        } ?: "-",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,
