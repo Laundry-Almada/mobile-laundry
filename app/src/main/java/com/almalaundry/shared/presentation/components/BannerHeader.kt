@@ -29,12 +29,12 @@ import com.composables.icons.lucide.Lucide
 @Composable
 fun BannerHeader(
     title: String,
-    subtitle: String = "",
     imageResId: Int,
+    modifier: Modifier = Modifier,
+    subtitle: String = "",
     onBackClick: (() -> Unit)? = null, // Tombol back opsional
     actionButtons: @Composable () -> Unit = {}, // Slot untuk tombol aksi
     titleAlignment: Alignment.Horizontal = Alignment.Start, // Posisi horizontal: Start (kiri) atau Center
-    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
