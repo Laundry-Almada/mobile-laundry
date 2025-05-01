@@ -1,6 +1,6 @@
-package com.almalaundry.featured.auth.commons
+package com.almalaundry.featured.home.commons
 
-import com.almalaundry.featured.auth.data.source.AuthApi
+import com.almalaundry.featured.home.data.sources.HomeApi
 import com.almalaundry.shared.commons.network.NetworkApi
 import dagger.Module
 import dagger.Provides
@@ -11,11 +11,11 @@ import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
-object AuthModule {
+object HomeModule {
     @Provides
     @Singleton
     @Named("Authenticated")
-    fun provideAuthenticatedAuthApi(@Named("Authenticated") networkApi: NetworkApi): AuthApi {
-        return networkApi.retrofit.create(AuthApi::class.java)
+    fun provideAuthenticatedHomeApi(@Named("Authenticated") networkApi: NetworkApi): HomeApi {
+        return networkApi.retrofit.create(HomeApi::class.java)
     }
 }

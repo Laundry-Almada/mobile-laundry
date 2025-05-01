@@ -41,7 +41,7 @@ import androidx.compose.ui.util.lerp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
 import com.almalaundry.featured.home.data.models.MonthlyStatistic
-import com.almalaundry.featured.home.presentation.viewmodels.DashboardLaundryViewModel
+import com.almalaundry.featured.home.presentation.viewmodels.LaundryDashboardViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryContainerLight
@@ -89,7 +89,7 @@ import kotlin.math.absoluteValue
 
 @Composable
 fun LaundryDashboard(
-    viewModel: DashboardLaundryViewModel = hiltViewModel()
+    viewModel: LaundryDashboardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current

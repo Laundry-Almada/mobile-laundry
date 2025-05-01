@@ -5,14 +5,16 @@ import androidx.lifecycle.viewModelScope
 import com.almalaundry.featured.home.data.sources.HomeApi
 import com.almalaundry.featured.home.presentation.state.DashboardLaundryState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
+import javax.inject.Named
 
 @HiltViewModel
-class DashboardLaundryViewModel @Inject constructor(private val homeApi: HomeApi) : ViewModel() {
+class LaundryDashboardViewModel @Inject constructor(@Named("Authenticated") private val homeApi: HomeApi) :
+    ViewModel() {
     private val _state = MutableStateFlow(DashboardLaundryState())
     val state: StateFlow<DashboardLaundryState> = _state
 
@@ -56,17 +58,17 @@ class DashboardLaundryViewModel @Inject constructor(private val homeApi: HomeApi
                 val response = homeApi.getMonthlyStatistics(months = 12)
                 _state.update {
                     it.copy(
-                            monthlyData = if (response.success) response.data else emptyList(),
-                            isLoading = false,
-                            errorMessage =
-                                    if (!response.success) "Failed to load monthly data" else null
+                        monthlyData = if (response.success) response.data else emptyList(),
+                        isLoading = false,
+                        errorMessage =
+                        if (!response.success) "Failed to load monthly data" else null
                     )
                 }
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
-                            isLoading = false,
-                            errorMessage = "Network error: ${e.localizedMessage}"
+                        isLoading = false,
+                        errorMessage = "Network error: ${e.localizedMessage}"
                     )
                 }
             }
@@ -104,17 +106,17 @@ class DashboardLaundryViewModel @Inject constructor(private val homeApi: HomeApi
                 val response = homeApi.getDailyStatistics(days = 365)
                 _state.update {
                     it.copy(
-                            dailyData = if (response.success) response.data else emptyList(),
-                            isLoading = false,
-                            errorMessage =
-                                    if (!response.success) "Failed to load daily data" else null
+                        dailyData = if (response.success) response.data else emptyList(),
+                        isLoading = false,
+                        errorMessage =
+                        if (!response.success) "Failed to load daily data" else null
                     )
                 }
             } catch (e: Exception) {
                 _state.update {
                     it.copy(
-                            isLoading = false,
-                            errorMessage = "Network error: ${e.localizedMessage}"
+                        isLoading = false,
+                        errorMessage = "Network error: ${e.localizedMessage}"
                     )
                 }
             }
