@@ -31,6 +31,7 @@ retrofit = "2.11.0"
 shimmer = "0.5.0"
 navigationCompose = "2.8.9"
 vico = "2.0.2"
+playServicesCastFramework = "22.0.0"
 
 
 [libraries]
@@ -83,6 +84,7 @@ vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.
 vico-compose-m2 = { group = "com.patrykandpatrick.vico", name = "compose-m2", version.ref = "vico" }
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
 vico-views = { group = "com.patrykandpatrick.vico", name = "views", version.ref = "vico" }
+play-services-cast-framework = { group = "com.google.android.gms", name = "play-services-cast-framework", version.ref = "playServicesCastFramework" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

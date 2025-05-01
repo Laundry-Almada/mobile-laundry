@@ -73,6 +73,7 @@ android {
 dependencies {
 
     implementation(libs.androidx.espresso.core)
+    implementation(libs.play.services.cast.framework)
     //  implementation(libs.firebase.crashlytics.buildtools)
     //  Hilt dagger
     ksp(libs.dagger.compiler) // Dagger compiler
