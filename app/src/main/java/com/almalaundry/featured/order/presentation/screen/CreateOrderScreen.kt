@@ -87,7 +87,6 @@ fun CreateOrderScreen(
                 Button(
                     onClick = {
                         if (state.name.isNotBlank()) {
-                            viewModel.hideNameDialog()
                             viewModel.saveCustomerAndCreateOrder()
                         }
                     },
@@ -128,7 +127,7 @@ fun CreateOrderScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .offset(y = (-40).dp) // Menutupi sebagian banner
+                        .offset(y = (-40).dp)
                         .background(Color.Transparent),
                     contentPadding = PaddingValues(16.dp)
                 ) {
@@ -288,8 +287,8 @@ fun DropdownMenuItem(
     onClick: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    androidx.compose.material.DropdownMenuItem(
-        onClick = onClick,
-        content = { content() }
+    androidx.compose.material3.DropdownMenuItem(
+        text = { content() },
+        onClick = onClick
     )
 }

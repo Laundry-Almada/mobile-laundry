@@ -156,32 +156,34 @@ import com.almalaundry.featured.auth.data.dtos.RegisterRequest
 import com.almalaundry.featured.auth.data.source.AuthApi
 import com.almalaundry.featured.order.domain.models.Laundry
 import com.almalaundry.shared.commons.session.SessionManager
-import javax.inject.Inject
-import javax.inject.Singleton
 import retrofit2.Response
+import javax.inject.Inject
+import javax.inject.Named
+import javax.inject.Singleton
 
 @Singleton
-class AuthRepository
-@Inject
-constructor(private val api: AuthApi, private val sessionManager: SessionManager) {
+class OrderRepository @Inject constructor(
+    @Named("Authenticated") private val authenticatedApi: AuthApi,
+    private val sessionManager: SessionManager
+) {
     suspend fun login(request: LoginRequest): Result<AuthData> {
         return try {
             val response = authenticatedApi.login(request)
             Log.d("AuthRepository", "Response: ${response.body()}")
             if (response.isSuccessful && response.body()?.success == true) {
                 val authData =
-                        response.body()!!.data
-                                ?: return Result.failure(Exception("No auth data returned"))
+                    response.body()!!.data
+                        ?: return Result.failure(Exception("No auth data returned"))
                 sessionManager.saveSession(authData.toSession())
                 Log.d("AuthRepository", "Login successful: $authData")
                 Result.success(authData)
             } else {
                 val errorMessage =
-                        response.body()?.message
-                                ?: response.errorBody()?.string() ?: "Unknown error"
+                    response.body()?.message
+                        ?: response.errorBody()?.string() ?: "Unknown error"
                 val errorDetail =
-                        response.body()?.message
-                                ?: response.errorBody()?.string() ?: "No error detail"
+                    response.body()?.message
+                        ?: response.errorBody()?.string() ?: "No error detail"
                 Log.e("AuthRepository", "Login failed: $errorMessage, Detail: $errorDetail")
                 Result.failure(Exception("$errorMessage: $errorDetail"))
             }
@@ -281,28 +283,28 @@ constructor(private val api: AuthApi, private val sessionManager: SessionManager
         return try {
             // Pastikan laundryId tersedia
             val laundryId =
-                    when (dto.role) {
-                        "Owner" -> dto.laundryId // LaundryId sudah dibuat sebelumnya
-                        "Staff" ->
-                                dto.selectedLaundry // Laundry dipilih dari list yang sudah diambil
-                        else -> null
-                    }
+                when (dto.role) {
+                    "Owner" -> dto.laundryId // LaundryId sudah dibuat sebelumnya
+                    "Staff" ->
+                        dto.selectedLaundry // Laundry dipilih dari list yang sudah diambil
+                    else -> null
+                }
 
             if (laundryId.isNullOrBlank()) {
                 return Result.failure(Exception("Laundry ID tidak tersedia"))
             }
 
             val registerRequest =
-                    RegisterRequest(
-                            name = dto.username,
-                            email = dto.email,
-                            password = dto.password,
-                            confirmPassword = dto.confirmPassword,
-                            role = dto.role,
-                            laundryId = laundryId
-                    )
+                RegisterRequest(
+                    name = dto.username,
+                    email = dto.email,
+                    password = dto.password,
+                    confirmPassword = dto.confirmPassword,
+                    role = dto.role,
+                    laundryId = laundryId
+                )
 
-            val response = api.register(registerRequest)
+            val response = authenticatedApi.register(registerRequest)
             handleRegisterResponse(response)
         } catch (e: Exception) {
             Log.e("AuthRepository", "Register exception: ${e.message}")
@@ -312,7 +314,7 @@ constructor(private val api: AuthApi, private val sessionManager: SessionManager
 
     suspend fun getLaundries(): Result<List<Laundry>> {
         return try {
-            val response = api.getLaundries()
+            val response = authenticatedApi.getLaundries()
             if (response.isSuccessful && response.body()?.success == true) {
                 val laundries = response.body()?.data as? List<Laundry> ?: emptyList()
                 Result.success(laundries)

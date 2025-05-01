@@ -146,7 +146,14 @@ class OrderRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                Result.failure(Exception("Customer tidak ditemukan"))
+                // Tangani 404 atau error lainnya
+                Result.success(
+                    CustomerResponse(
+                        success = false,
+                        data = null,
+                        message = response.errorBody()?.string() ?: "Customer tidak ditemukan"
+                    )
+                )
             }
         } catch (e: Exception) {
             Result.failure(e)

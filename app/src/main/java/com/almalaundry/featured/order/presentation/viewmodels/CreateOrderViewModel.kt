@@ -121,12 +121,25 @@ class CreateOrderViewModel @Inject constructor(
                     return@launch
                 }
 
-                repository.checkCustomer(_state.value.phone).onSuccess {
-                    proceedCreateOrder()
-                }.onFailure {
+                repository.checkCustomer(_state.value.phone).onSuccess { response ->
+                    if (response.success && response.data != null) {
+                        // Customer ada, simpan nama dan lanjutkan membuat order
+                        _state.value = _state.value.copy(
+                            name = response.data.name,
+                            showNameDialog = false
+                        )
+                        proceedCreateOrder()
+                    } else {
+                        // Customer tidak ada, tampilkan dialog nama
+                        _state.value = _state.value.copy(
+                            isLoading = false,
+                            showNameDialog = true
+                        )
+                    }
+                }.onFailure { exception ->
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        showNameDialog = true
+                        error = exception.message ?: "Gagal memeriksa customer"
                     )
                 }
             } catch (e: Exception) {
@@ -142,7 +155,7 @@ class CreateOrderViewModel @Inject constructor(
         try {
             val request = CreateOrderRequest(
                 phone = _state.value.phone,
-                name = _state.value.name.takeIf { it.isNotBlank() },
+                name = _state.value.name.takeIf { it.isNotBlank() }, // Kirim nama hanya jika ada
                 laundryId = _state.value.laundryId,
                 serviceId = _state.value.serviceId,
                 weight = _state.value.weight.toDoubleOrNull() ?: 0.0,
