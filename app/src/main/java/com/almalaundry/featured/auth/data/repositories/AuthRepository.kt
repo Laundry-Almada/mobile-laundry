@@ -162,7 +162,7 @@ import javax.inject.Named
 import javax.inject.Singleton
 
 @Singleton
-class OrderRepository @Inject constructor(
+class AuthRepository @Inject constructor(
     @Named("Authenticated") private val authenticatedApi: AuthApi,
     private val sessionManager: SessionManager
 ) {

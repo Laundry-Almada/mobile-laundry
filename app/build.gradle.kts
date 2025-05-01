@@ -80,12 +80,15 @@ dependencies {
     ksp(libs.hilt.android.compiler)   // Hilt compiler
     implementation(libs.hilt.android)
     implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.coroutines.android)
 
     // compose
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.animation)
     // jetpack data store
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.datastore.preferences.core)
 
     // Retrofit
     implementation(libs.retrofit)
