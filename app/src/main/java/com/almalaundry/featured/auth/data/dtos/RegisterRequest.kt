@@ -7,7 +7,7 @@ data class RegisterRequest(
     val email: String,
     val password: String,
     @SerializedName("c_password")
-    val cPassword: String,
+    val confirmPassword: String,
     val role: String,
     @SerializedName("laundry_name")
     val laundryName: String? = null,

@@ -25,5 +25,6 @@ data class RegisterDto(
     val confirmPassword: String,
     val role: String,
     val laundryName: String? = null,
-    val selectedLaundry: String? = null
+    val selectedLaundry: String? = null,
+    val laundryId: String? = null
 )
