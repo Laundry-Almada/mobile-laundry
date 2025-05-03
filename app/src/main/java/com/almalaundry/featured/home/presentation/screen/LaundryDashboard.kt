@@ -48,7 +48,6 @@ import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryContainerLight
 import com.almalaundry.shared.presentation.ui.theme.onPrimaryLight
 import com.almalaundry.shared.presentation.ui.theme.primaryLight
-import com.almalaundry.shared.presentation.ui.theme.secondaryLight
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
 import com.google.accompanist.pager.HorizontalPager
@@ -62,13 +61,8 @@ import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLine
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.component.rememberLineComponent
-import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.common.component.shapeComponent
 import com.patrykandpatrick.vico.compose.common.fill
-import com.patrykandpatrick.vico.compose.common.insets
-import com.patrykandpatrick.vico.compose.common.rememberHorizontalLegend
 import com.patrykandpatrick.vico.compose.common.shader.verticalGradient
-import com.patrykandpatrick.vico.compose.common.vicoTheme
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasuringContext
 import com.patrykandpatrick.vico.core.cartesian.axis.Axis
 import com.patrykandpatrick.vico.core.cartesian.axis.HorizontalAxis
@@ -79,13 +73,13 @@ import com.patrykandpatrick.vico.core.cartesian.data.columnSeries
 import com.patrykandpatrick.vico.core.cartesian.data.lineSeries
 import com.patrykandpatrick.vico.core.cartesian.layer.ColumnCartesianLayer
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.common.LegendItem
 import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
-import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlin.math.absoluteValue
+import kotlin.math.roundToInt
 
 @Composable
 fun LaundryDashboard(
@@ -180,12 +174,15 @@ fun LaundryDashboard(
                         .background(onPrimaryLight, RoundedCornerShape(20.dp))
                 ) {
                     Text(
-                        text = "Total Tipe Laundry",
+                        text = "Total Laundry",
                         fontWeight = FontWeight.Bold,
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    LaundryTypeChart()
+                    LaundryTypeChart(
+                        monthlyStats = state.monthlyStats,
+                        dailyStats = state.dailyStats
+                    )
                 }
 
                 // total pendapatan
@@ -260,21 +257,60 @@ fun LaundryDashboard(
     }
 }
 
- @Composable
- fun LaundryTypeChart(modifier: Modifier = Modifier) {
+@Composable
+fun LaundryTypeChart(
+    modifier: Modifier = Modifier,
+    columnColor: Color = primaryLight,
+    monthlyStats: List<MonthlyStatistic>,
+    dailyStats: List<DailyStatistic>
+) {
     val modelProducer = remember { CartesianChartModelProducer() }
-    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
- "Nov", "Dec")
-    val laundryTypes = listOf("Cuci Setrika", "Cuci Lipat", "Cuci Kering")
-    val columnColors = listOf(primaryLight, onPrimaryContainerLight, secondaryLight)
-    val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
+    val currentMonth = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Date())
 
-    LaunchedEffect(Unit) {
+    // gabungkan dan filter data
+    val monthlyFromDaily = dailyStats.groupBy { it.date.substring(0, 7) }
+        .map { (month, stats) ->
+            MonthlyStatistic(
+                month = month,
+                count = stats.sumOf { it.count },
+                revenue = stats.sumOf { it.revenue }
+            )
+        }
+
+    val allStats = (monthlyFromDaily + monthlyStats)
+        .groupBy { it.month }
+        .map { (month, stats) -> stats.maxByOrNull { it.count } ?: stats.first() }
+
+    // ambil 4 bulan terakhir (3 bulan sebelumnya + bulan ini)
+    val last4Months = allStats
+        .sortedByDescending { it.month }
+        .takeWhile {
+            val monthsDiff = monthDifference(it.month, currentMonth)
+            monthsDiff in 0..3 // Ambil bulan ini + 3 bulan sebelumnya
+        }
+        .sortedBy { it.month } // Urutkan dari terlama ke terbaru
+
+    // format data dan label
+    val monthlyData = last4Months.map { it.count.toDouble() }
+    val monthlyLabels = last4Months.map {
+        try {
+            val (year, month) = it.month.split("-")
+            val date = SimpleDateFormat("yyyy-MM").parse("$year-${month.padStart(2, '0')}")!!
+            SimpleDateFormat("MMM yyyy", Locale("id", "ID")).format(date)
+        } catch (e: Exception) {
+            "Invalid"
+        }
+    }
+
+    // cek data kosong
+    val allDataEmpty = last4Months.isEmpty()
+
+    LaunchedEffect(monthlyStats, dailyStats) {
         modelProducer.runTransaction {
+            if (allDataEmpty) return@runTransaction
+
             columnSeries {
-                series(50, 80, 100, 70, 90, 60, 85, 95, 75, 110, 120, 90) // Cuci Setrika
-                series(30, 50, 20, 40, 60, 30, 55, 65, 45, 80, 85, 70)  // Cuci Lipat
-                series(20, 40, 50, 30, 40, 20, 35, 50, 25, 60, 70, 55)  // Cuci Kering
+                series(monthlyData)
             }
         }
     }
@@ -285,51 +321,44 @@ fun LaundryDashboard(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CartesianChartHost(
-            chart = rememberCartesianChart(
-                rememberColumnCartesianLayer(
-                    ColumnCartesianLayer.ColumnProvider.series(
-                        columnColors.map { color ->
-                            rememberLineComponent(fill = fill(color), thickness = 8.dp)
+        if (allDataEmpty) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Tidak ada data laundry tersedia", color = Color.Gray)
+            }
+        } else {
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    rememberColumnCartesianLayer(
+                        ColumnCartesianLayer.ColumnProvider.series(
+                            listOf(rememberLineComponent(fill = fill(columnColor), thickness = 8.dp))
+                        )
+                    ),
+                    startAxis = VerticalAxis.rememberStart(),
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = object : CartesianValueFormatter {
+                            override fun format(
+                                context: CartesianMeasuringContext,
+                                value: Double,
+                                verticalAxisPosition: Axis.Position.Vertical?
+                            ): String {
+                                return monthlyLabels.getOrNull(value.toInt()) ?: value.toString()
+                            }
                         }
                     )
                 ),
-                startAxis = VerticalAxis.rememberStart(),
-                bottomAxis = HorizontalAxis.rememberBottom(
-                    valueFormatter = object : CartesianValueFormatter {
-                        override fun format(
-                            context: CartesianMeasuringContext,
-                            value: Double,
-                            verticalAxisPosition: Axis.Position.Vertical?
-                        ): String {
-                            val index = value.toInt().coerceIn(months.indices)
-                            return months[index]
-                        }
-                    }
-                ),
-                legend = rememberHorizontalLegend(
-                    items = {
-                        laundryTypes.forEachIndexed { index, label ->
-                            add(
-                                LegendItem(
-                                    shapeComponent(fill(columnColors[index]), CorneredShape.Pill),
-                                    legendItemLabelComponent,
-                                    label,
-                                )
-                            )
-                        }
-                    },
-                    padding = insets(top = 5.dp)
-                )
-            ),
-            modelProducer = modelProducer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .offset(x = (-8).dp)
-        )
+                modelProducer = modelProducer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            )
+        }
     }
- }
+}
 
 @Composable
 fun RevenueChart(
@@ -339,8 +368,9 @@ fun RevenueChart(
     dailyStats: List<DailyStatistic>
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
+    val currentMonth = SimpleDateFormat("yyyy-MM", Locale.getDefault()).format(Date())
 
-    //gabungkan data harian -> data bulanan
+    // gabungkan data harian dan bulanan
     val monthlyFromDaily = dailyStats.groupBy { it.date.substring(0, 7) }
         .map { (month, stats) ->
             MonthlyStatistic(
@@ -349,21 +379,24 @@ fun RevenueChart(
                 revenue = stats.sumOf { it.revenue }
             )
         }
-        .sortedBy { it.month }
         .filter { it.revenue > 0 }
 
-    // gabungkan dg data bulanan
-    val effectiveMonthlyStats = (monthlyFromDaily + monthlyStats)
+    val allStats = (monthlyFromDaily + monthlyStats)
         .groupBy { it.month }
-        .map { (month, stats) ->
-            // Prioritaskan data dari daily, jika ada
-            stats.firstOrNull { it.count > 0 } ?: stats.first()
-        }
-        .sortedBy { it.month }
+        .map { (month, stats) -> stats.maxByOrNull { it.revenue } ?: stats.first() }
 
-    // format monthly data and labels
-    val monthlyData = effectiveMonthlyStats.map { it.revenue }
-    val monthlyLabels = effectiveMonthlyStats.map {
+    // ambil 4 bulan terakhir (3 bulan sebelumnya + bulan ini)
+    val last4Months = allStats
+        .sortedByDescending { it.month }
+        .takeWhile {
+            val monthsDiff = monthDifference(it.month, currentMonth)
+            monthsDiff in 0..3 // Ambil bulan ini + 3 bulan sebelumnya
+        }
+        .sortedBy { it.month } // Urutkan dari terlama ke terbaru
+
+    // format data dan label
+    val monthlyData = last4Months.map { it.revenue }
+    val monthlyLabels = last4Months.map {
         try {
             val (year, month) = it.month.split("-")
             val date = SimpleDateFormat("yyyy-MM").parse("$year-${month.padStart(2, '0')}")!!
@@ -373,10 +406,8 @@ fun RevenueChart(
         }
     }
 
-    // check for empty data state
-    val allDataEmpty = remember(monthlyStats, dailyStats) {
-        effectiveMonthlyStats.isEmpty()
-    }
+    // cek data kosong
+    val allDataEmpty = last4Months.isEmpty()
 
     LaunchedEffect(monthlyStats, dailyStats) {
         modelProducer.runTransaction {
@@ -401,7 +432,7 @@ fun RevenueChart(
                     .height(250.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Text("No revenue data available", color = Color.Gray)
+                Text("Tidak ada data pendapatan tersedia", color = Color.Gray)
             }
         } else {
             CartesianChartHost(
@@ -437,6 +468,22 @@ fun RevenueChart(
                     .height(250.dp)
             )
         }
+    }
+}
+
+
+// untuk menghitung selisih bulan
+fun monthDifference(month1: String, month2: String): Int {
+    return try {
+        val format = SimpleDateFormat("yyyy-MM")
+        val date1 = format.parse(month1)!!
+        val date2 = format.parse(month2)!!
+
+        val diff = (date2.time - date1.time).toDouble()
+        val months = diff / (30.44 * 24 * 60 * 60 * 1000)
+        months.roundToInt()
+    } catch (e: Exception) {
+        Int.MAX_VALUE
     }
 }
 
