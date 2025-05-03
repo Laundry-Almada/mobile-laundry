@@ -40,6 +40,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.R
+import com.almalaundry.featured.home.data.models.DailyStatistic
 import com.almalaundry.featured.home.data.models.MonthlyStatistic
 import com.almalaundry.featured.home.presentation.viewmodels.LaundryDashboardViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
@@ -83,7 +84,6 @@ import com.patrykandpatrick.vico.core.common.shader.ShaderProvider
 import com.patrykandpatrick.vico.core.common.shape.CorneredShape
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
-import java.util.Calendar
 import java.util.Locale
 import kotlin.math.absoluteValue
 
@@ -93,9 +93,6 @@ fun LaundryDashboard(
 ) {
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
-
-    // val viewModel: HomeViewModel = hiltViewModel()
-    // val viewModel: DashboardLaundryViewModel = hiltViewModel()
 
     // image slider
     val pagerState = rememberPagerState(initialPage = 0)
@@ -188,7 +185,7 @@ fun LaundryDashboard(
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    LaundryTypeChart(monthlyStats = state.monthlyData)
+                    LaundryTypeChart()
                 }
 
                 // total pendapatan
@@ -208,7 +205,10 @@ fun LaundryDashboard(
                         fontSize = 14.sp,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    RevenueChart(monthlyStats = state.monthlyData)
+                    RevenueChart(
+                        monthlyStats = state.monthlyStats,
+                        dailyStats = state.dailyStats
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -260,117 +260,21 @@ fun LaundryDashboard(
     }
 }
 
-// @Composable
-// fun LaundryTypeChart(modifier: Modifier = Modifier) {
-//    val modelProducer = remember { CartesianChartModelProducer() }
-//    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-// "Nov", "Dec")
-//    val laundryTypes = listOf("Cuci Setrika", "Cuci Lipat", "Cuci Kering")
-//    val columnColors = listOf(primaryLight, onPrimaryContainerLight, secondaryLight)
-//    val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
-//
-//    LaunchedEffect(Unit) {
-//        modelProducer.runTransaction {
-//            columnSeries {
-//                series(50, 80, 100, 70, 90, 60, 85, 95, 75, 110, 120, 90) // Cuci Setrika
-//                series(30, 50, 20, 40, 60, 30, 55, 65, 45, 80, 85, 70)  // Cuci Lipat
-//                series(20, 40, 50, 30, 40, 20, 35, 50, 25, 60, 70, 55)  // Cuci Kering
-//            }
-//        }
-//    }
-//
-//    Column(
-//        modifier = modifier
-//            .fillMaxWidth()
-//            .padding(16.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        CartesianChartHost(
-//            chart = rememberCartesianChart(
-//                rememberColumnCartesianLayer(
-//                    ColumnCartesianLayer.ColumnProvider.series(
-//                        columnColors.map { color ->
-//                            rememberLineComponent(fill = fill(color), thickness = 8.dp)
-//                        }
-//                    )
-//                ),
-//                startAxis = VerticalAxis.rememberStart(),
-//                bottomAxis = HorizontalAxis.rememberBottom(
-//                    valueFormatter = object : CartesianValueFormatter {
-//                        override fun format(
-//                            context: CartesianMeasuringContext,
-//                            value: Double,
-//                            verticalAxisPosition: Axis.Position.Vertical?
-//                        ): String {
-//                            val index = value.toInt().coerceIn(months.indices)
-//                            return months[index]
-//                        }
-//                    }
-//                ),
-//                legend = rememberHorizontalLegend(
-//                    items = {
-//                        laundryTypes.forEachIndexed { index, label ->
-//                            add(
-//                                LegendItem(
-//                                    shapeComponent(fill(columnColors[index]), CorneredShape.Pill),
-//                                    legendItemLabelComponent,
-//                                    label,
-//                                )
-//                            )
-//                        }
-//                    },
-//                    padding = insets(top = 5.dp)
-//                )
-//            ),
-//            modelProducer = modelProducer,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(250.dp)
-//                .offset(x = (-8).dp)
-//        )
-//    }
-// }
-
-@Composable
-fun LaundryTypeChart(monthlyStats: List<MonthlyStatistic>, modifier: Modifier = Modifier) {
+ @Composable
+ fun LaundryTypeChart(modifier: Modifier = Modifier) {
     val modelProducer = remember { CartesianChartModelProducer() }
-
-    //    val months = monthlyStats.map {
-    //        try {
-    //            LocalDate.parse(it.month + "-01", DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-    //                .month.getDisplayName(java.time.format.TextStyle.SHORT,
-    // java.util.Locale("id"))
-    //        } catch (e: Exception) {
-    //            it.month // fallback
-    //        }
-    //    }
-
-    val months =
-        monthlyStats.map {
-            try {
-                val parts = it.month.split("-")
-                val year = parts[0].toInt()
-                val month = parts[1].toInt()
-
-                val calendar = Calendar.getInstance()
-                calendar.set(year, month - 1, 1)
-
-                SimpleDateFormat("MMM", Locale("id")).format(calendar.time)
-            } catch (e: Exception) {
-                it.month // fallback
-            }
-        }
-
+    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
+ "Nov", "Dec")
     val laundryTypes = listOf("Cuci Setrika", "Cuci Lipat", "Cuci Kering")
     val columnColors = listOf(primaryLight, onPrimaryContainerLight, secondaryLight)
     val legendItemLabelComponent = rememberTextComponent(vicoTheme.textColor)
 
-    LaunchedEffect(monthlyStats) {
+    LaunchedEffect(Unit) {
         modelProducer.runTransaction {
             columnSeries {
-                series(monthlyStats.map { it.washIronCount.toFloat() }) // Cuci Setrika
-                series(monthlyStats.map { it.washFoldCount.toFloat() }) // Cuci Lipat
-                series(monthlyStats.map { it.dryCleanCount.toFloat() }) // Cuci Kering
+                series(50, 80, 100, 70, 90, 60, 85, 95, 75, 110, 120, 90) // Cuci Setrika
+                series(30, 50, 20, 40, 60, 30, 55, 65, 45, 80, 85, 70)  // Cuci Lipat
+                series(20, 40, 50, 30, 40, 20, 35, 50, 25, 60, 70, 55)  // Cuci Kering
             }
         }
     }
@@ -382,54 +286,33 @@ fun LaundryTypeChart(monthlyStats: List<MonthlyStatistic>, modifier: Modifier = 
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         CartesianChartHost(
-            chart =
-            rememberCartesianChart(
+            chart = rememberCartesianChart(
                 rememberColumnCartesianLayer(
                     ColumnCartesianLayer.ColumnProvider.series(
                         columnColors.map { color ->
-                            rememberLineComponent(
-                                fill = fill(color),
-                                thickness = 8.dp
-                            )
+                            rememberLineComponent(fill = fill(color), thickness = 8.dp)
                         }
                     )
                 ),
                 startAxis = VerticalAxis.rememberStart(),
-                bottomAxis =
-                HorizontalAxis.rememberBottom(
-                    valueFormatter =
-                    object : CartesianValueFormatter {
+                bottomAxis = HorizontalAxis.rememberBottom(
+                    valueFormatter = object : CartesianValueFormatter {
                         override fun format(
-                            context:
-                            CartesianMeasuringContext,
+                            context: CartesianMeasuringContext,
                             value: Double,
-                            verticalAxisPosition:
-                            Axis.Position.Vertical?
+                            verticalAxisPosition: Axis.Position.Vertical?
                         ): String {
-                            val index =
-                                value.toInt()
-                                    .coerceIn(
-                                        months.indices
-                                    )
-                            return months.getOrElse(index) {
-                                ""
-                            }
+                            val index = value.toInt().coerceIn(months.indices)
+                            return months[index]
                         }
                     }
                 ),
-                legend =
-                rememberHorizontalLegend(
+                legend = rememberHorizontalLegend(
                     items = {
                         laundryTypes.forEachIndexed { index, label ->
                             add(
                                 LegendItem(
-                                    shapeComponent(
-                                        fill(
-                                            columnColors[
-                                                index]
-                                        ),
-                                        CorneredShape.Pill
-                                    ),
+                                    shapeComponent(fill(columnColors[index]), CorneredShape.Pill),
                                     legendItemLabelComponent,
                                     label,
                                 )
@@ -446,95 +329,63 @@ fun LaundryTypeChart(monthlyStats: List<MonthlyStatistic>, modifier: Modifier = 
                 .offset(x = (-8).dp)
         )
     }
-}
-
-// @Composable
-// fun RevenueChart(
-//    modifier: Modifier = Modifier,
-//    lineColor: Color = primaryLight
-// ) {
-//    val modelProducer = remember { CartesianChartModelProducer() }
-//    val months = listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
-// "Nov", "Dec")
-//
-//    LaunchedEffect(Unit) {
-//        modelProducer.runTransaction {
-//            lineSeries {
-//                series(listOf(250, 750, 500, 600, 1050, 1000, 950, 200, 800, 850, 780, 550))
-//            }
-//        }
-//    }
-//
-//    Column(
-//        modifier = modifier
-//            .fillMaxWidth()
-//            .padding(16.dp),
-//        horizontalAlignment = Alignment.CenterHorizontally
-//    ) {
-//        CartesianChartHost(
-//            chart = rememberCartesianChart(
-//                rememberLineCartesianLayer(
-//                    lineProvider = LineCartesianLayer.LineProvider.series(
-//                        LineCartesianLayer.rememberLine(
-//                            fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
-//                            areaFill = LineCartesianLayer.AreaFill.single(
-//                                fill(
-//                                    ShaderProvider.verticalGradient(
-//                                        arrayOf(lineColor.copy(alpha = 0.3f), Color.Transparent)
-//                                    )
-//                                )
-//                            ),
-//                        )
-//                    )
-//                ),
-//                startAxis = VerticalAxis.rememberStart(),
-//                bottomAxis = HorizontalAxis.rememberBottom(
-//                    valueFormatter = object : CartesianValueFormatter {
-//                        override fun format(
-//                            context: CartesianMeasuringContext,
-//                            value: Double,
-//                            verticalAxisPosition: Axis.Position.Vertical?
-//                        ): String {
-//                            val index = value.toInt().coerceIn(months.indices)
-//                            return months[index]
-//                        }
-//                    }
-//                ),
-//            ),
-//            modelProducer = modelProducer,
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .height(250.dp)
-//                .offset(x = (-8).dp)
-//        )
-//    }
-// }
+ }
 
 @Composable
 fun RevenueChart(
-    monthlyStats: List<MonthlyStatistic>,
     modifier: Modifier = Modifier,
-    lineColor: Color = primaryLight
+    lineColor: Color = primaryLight,
+    monthlyStats: List<MonthlyStatistic>,
+    dailyStats: List<DailyStatistic>
 ) {
     val modelProducer = remember { CartesianChartModelProducer() }
 
-    // Konversi "2024-04" → "Apr" (bahasa Indonesia)
-    val months =
-        monthlyStats.map {
-            try {
-                val date =
-                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-                        .parse(it.month + "-01")
-                SimpleDateFormat("MMM", Locale("id")).format(date)
-            } catch (e: Exception) {
-                it.month // fallback
+    //gabungkan data harian -> data bulanan
+    val monthlyFromDaily = dailyStats.groupBy { it.date.substring(0, 7) }
+        .map { (month, stats) ->
+            MonthlyStatistic(
+                month = month,
+                count = stats.size,
+                revenue = stats.sumOf { it.revenue }
+            )
+        }
+        .sortedBy { it.month }
+        .filter { it.revenue > 0 }
+
+    // gabungkan dg data bulanan
+    val effectiveMonthlyStats = (monthlyFromDaily + monthlyStats)
+        .groupBy { it.month }
+        .map { (month, stats) ->
+            // Prioritaskan data dari daily, jika ada
+            stats.firstOrNull { it.count > 0 } ?: stats.first()
+        }
+        .sortedBy { it.month }
+
+    // format monthly data and labels
+    val monthlyData = effectiveMonthlyStats.map { it.revenue }
+    val monthlyLabels = effectiveMonthlyStats.map {
+        try {
+            val (year, month) = it.month.split("-")
+            val date = SimpleDateFormat("yyyy-MM").parse("$year-${month.padStart(2, '0')}")!!
+            SimpleDateFormat("MMM yyyy", Locale("id", "ID")).format(date)
+        } catch (e: Exception) {
+            "Invalid"
+        }
+    }
+
+    // check for empty data state
+    val allDataEmpty = remember(monthlyStats, dailyStats) {
+        effectiveMonthlyStats.isEmpty()
+    }
+
+    LaunchedEffect(monthlyStats, dailyStats) {
+        modelProducer.runTransaction {
+            if (allDataEmpty) return@runTransaction
+
+            lineSeries {
+                series(monthlyData)
             }
         }
-
-    val revenues = monthlyStats.map { it.revenue.toFloat() }
-
-    LaunchedEffect(monthlyStats) {
-        modelProducer.runTransaction { lineSeries { series(revenues) } }
     }
 
     Column(
@@ -543,69 +394,49 @@ fun RevenueChart(
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        CartesianChartHost(
-            chart =
-            rememberCartesianChart(
-                rememberLineCartesianLayer(
-                    lineProvider =
-                    LineCartesianLayer.LineProvider.series(
-                        LineCartesianLayer.rememberLine(
-                            fill =
-                            LineCartesianLayer.LineFill
-                                .single(
-                                    fill(
-                                        lineColor
-                                    )
-                                ),
-                            areaFill =
-                            LineCartesianLayer.AreaFill
-                                .single(
-                                    fill(
-                                        ShaderProvider
-                                            .verticalGradient(
-                                                arrayOf(
-                                                    lineColor
-                                                        .copy(
-                                                            alpha =
-                                                            0.3f
-                                                        ),
-                                                    Color.Transparent
-                                                )
-                                            )
-                                    )
-                                ),
+        if (allDataEmpty) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("No revenue data available", color = Color.Gray)
+            }
+        } else {
+            CartesianChartHost(
+                chart = rememberCartesianChart(
+                    rememberLineCartesianLayer(
+                        lineProvider = LineCartesianLayer.LineProvider.series(
+                            LineCartesianLayer.rememberLine(
+                                fill = LineCartesianLayer.LineFill.single(fill(lineColor)),
+                                areaFill = LineCartesianLayer.AreaFill.single(
+                                    fill(ShaderProvider.verticalGradient(
+                                        arrayOf(lineColor.copy(alpha = 0.3f), Color.Transparent)
+                                    ))
+                                )
+                            )
                         )
-                    )
-                ),
-                startAxis = VerticalAxis.rememberStart(),
-                bottomAxis =
-                HorizontalAxis.rememberBottom(
-                    valueFormatter =
-                    object : CartesianValueFormatter {
-                        override fun format(
-                            context:
-                            CartesianMeasuringContext,
-                            value: Double,
-                            verticalAxisPosition:
-                            Axis.Position.Vertical?
-                        ): String {
-                            val index =
-                                value.toInt()
-                                    .coerceIn(
-                                        months.indices
-                                    )
-                            return months.getOrElse(index) {
-                                ""
+                    ),
+                    startAxis = VerticalAxis.rememberStart(),
+                    bottomAxis = HorizontalAxis.rememberBottom(
+                        valueFormatter = object : CartesianValueFormatter {
+                            override fun format(
+                                context: CartesianMeasuringContext,
+                                value: Double,
+                                verticalAxisPosition: Axis.Position.Vertical?
+                            ): String {
+                                return monthlyLabels.getOrNull(value.toInt()) ?: value.toString()
                             }
                         }
-                    }
+                    )
                 ),
-            ),
-            modelProducer = modelProducer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(250.dp)
-                .offset(x = (-8).dp)
-        )
+                modelProducer = modelProducer,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(250.dp)
+            )
+        }
     }
 }
+
