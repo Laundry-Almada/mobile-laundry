@@ -7,18 +7,10 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 interface HomeApi {
-    @GET("/api/orders/statistics?period=daily")
-    suspend fun getDailyStatistics(
-        @Query("days") days: Int
-    ): ApiResponse<List<DailyStatistic>>
+    @GET("orders/statistics?period=daily")
+    suspend fun getDailyStatistics(): ApiResponse<List<DailyStatistic>>
 
-    @GET("/api/orders/statistics?period=monthly")
-    suspend fun getMonthlyStatistics(
-        @Query("months") months: Int
-    ): ApiResponse<List<MonthlyStatistic>>
+    @GET("orders/statistics?period=monthly&months=6")
+    suspend fun getMonthlyStatistics(): ApiResponse<List<MonthlyStatistic>>
 }
 
-//package com.almalaundry.featured.home.data.sources
-//
-//interface HomeApi {
-//}
