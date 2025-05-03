@@ -52,6 +52,8 @@ class SessionManager @Inject constructor(
 
     suspend fun getLaundryId(): String? = getSession()?.laundryId
 
+    suspend fun getLaundryName(): String? = getSession()?.laundryName
+
     suspend fun getRole(): String? = getSession()?.role
 
     suspend fun getPrinterAddress(): String? = getSession()?.printerAddress

@@ -2,7 +2,6 @@ package com.almalaundry.featured.order.data.repositories
 
 import android.util.Log
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
-import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderMeta
 import com.almalaundry.featured.order.data.dtos.OrderResponse
 import com.almalaundry.featured.order.data.dtos.SearchCustomersResponse
@@ -137,25 +136,6 @@ class OrderRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("OrderRepository", "Exception: ${e.message}")
-            Result.failure(e)
-        }
-    }
-
-    suspend fun checkCustomer(identifier: String): Result<CustomerResponse> {
-        return try {
-            val response = authenticatedApi.checkCustomer(identifier)
-            if (response.isSuccessful && response.body() != null) {
-                Result.success(response.body()!!)
-            } else {
-                Result.success(
-                    CustomerResponse(
-                        success = false,
-                        data = null,
-                        message = response.errorBody()?.string() ?: "Customer tidak ditemukan"
-                    )
-                )
-            }
-        } catch (e: Exception) {
             Result.failure(e)
         }
     }

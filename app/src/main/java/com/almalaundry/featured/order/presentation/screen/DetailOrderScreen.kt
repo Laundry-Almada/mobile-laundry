@@ -160,7 +160,7 @@ fun DetailOrderScreen(
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .offset(y = (-40).dp) // Menutupi sebagian banner
+                        .offset(y = (-40).dp)
                         .background(Color.Transparent),
                     contentPadding = PaddingValues(16.dp)
                 ) {

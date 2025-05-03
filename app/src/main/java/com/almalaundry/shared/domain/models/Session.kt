@@ -8,5 +8,6 @@ data class Session(
     val name: String? = null,
     val role: String? = null, // "owner" atau "staff"
     val laundryId: String? = null,
+    val laundryName: String? = null,
     val printerAddress: String? = null
 )

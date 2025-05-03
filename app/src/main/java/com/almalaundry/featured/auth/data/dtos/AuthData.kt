@@ -7,19 +7,14 @@ data class AuthData(
     val token: String,
     val name: String,
     val role: String,
-    @SerializedName("laundry_id") val laundryId: String
+    @SerializedName("laundry_id") val laundryId: String,
+    @SerializedName("laundry_name") val laundryName: String,
 ) {
-    val id: Nothing?
-        get() {
-            TODO()
-        }
-
-    fun toSession() = Session(token = token, name = name, role = role, laundryId = laundryId)
-//    fun isNullOrEmpty() {
-//
-//    }
-//
-//    fun firstOrNull(function: () -> Boolean) {
-//
-//    }
+    fun toSession() = Session(
+        token = token,
+        name = name,
+        role = role,
+        laundryId = laundryId,
+        laundryName = laundryName
+    )
 }
