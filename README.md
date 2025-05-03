@@ -115,8 +115,12 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 | Status | Fungsional |
 |:------:|------------|
 |   ✅    | login      |
-|   🚧   | register   |
+|   ✅   | register   |
 |   ✅    | logout     |
+|   ✅    | create laundry |
+|   ✅    | list laundry |
+
+
 
 ### Barcode Scanner
 
@@ -130,15 +134,15 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 
 | Status | Fungsional |
 |:------:|------------|
-|   🚧    | Statistik  |
-|   🚧    | Notif      |
+|   ✅    | Statistik  |
+|   -    | Notif      |
 
 ### Profile
 
 | Status | Fungsional     |
 |:------:|----------------|
-|   🚧   | Get Profile    |
-|   🚧   | Update Profile |
+|   ✅   | Get Profile    |
+|   ✅   | Update Profile |
 
 ### Order
 
