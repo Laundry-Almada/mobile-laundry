@@ -27,6 +27,17 @@ class OrderViewModel @Inject constructor(
         loadOrders()
     }
 
+    fun searchOrders(searchQuery: String) {
+        val trimmedQuery = searchQuery.trim()
+        val filter = if (trimmedQuery.length >= 3) {
+            _state.value.filter.copy(search = trimmedQuery)
+        } else {
+            _state.value.filter.copy(search = null) // Reset search jika kurang dari 3 huruf
+        }
+        _state.value = _state.value.copy(filter = filter, currentPage = 1, orders = emptyList())
+        loadOrders()
+    }
+
     fun loadOrders(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             if (isLoadMore) {

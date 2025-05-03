@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class CustomerDashboardState(
-    val phone: String = "",
+    val identifier: String = "",
     val isLoading: Boolean = false,
     val orders: List<Order> = emptyList(),
     val error: String? = null,

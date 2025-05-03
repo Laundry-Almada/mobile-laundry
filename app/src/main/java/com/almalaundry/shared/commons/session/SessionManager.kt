@@ -66,4 +66,9 @@ class SessionManager @Inject constructor(
     }
 
     suspend fun isLoggedIn(): Boolean = getToken() != null
+
+    suspend fun hasRole(vararg roles: String): Boolean {
+        val userRole = getRole()
+        return userRole != null && roles.contains(userRole)
+    }
 }

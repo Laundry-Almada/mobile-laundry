@@ -1,5 +1,7 @@
 package com.almalaundry.featured.profile.presentation.screen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,31 +15,26 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.auth.commons.AuthRoutes
 import com.almalaundry.featured.profile.commons.ProfileRoutes
 import com.almalaundry.featured.profile.presentation.viewmodels.ProfileViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
-
-//import androidx.compose.foundation.layout.*
-//import androidx.compose.material3.*
-//import androidx.compose.runtime.*
-//import androidx.compose.ui.Alignment
-//import androidx.compose.ui.Modifier
-//import androidx.compose.ui.unit.dp
-//import androidx.hilt.navigation.compose.hiltViewModel
-//import com.almalaundry.featured.auth.commons.AuthRoutes
-//import com.almalaundry.featured.profile.commons.ProfileRoutes
-//import com.almalaundry.featured.profile.presentation.viewmodels.ProfileViewModel
-//import com.almalaundry.shared.commons.compositional.LocalNavController
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
@@ -45,6 +42,9 @@ fun ProfileScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val navController = LocalNavController.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     // Navigasi ke layar login setelah logout berhasil
     LaunchedEffect(state.isLoggedOut) {
@@ -54,11 +54,29 @@ fun ProfileScreen(
             }
         }
     }
+    LaunchedEffect(state.updateMessage) {
+        state.updateMessage?.let { message ->
+            scope.launch {
+                val result = snackbarHostState.showSnackbar(
+                    message = message,
+                    actionLabel = if (state.isUpdateAvailable && state.updateApkUrl != null) "Unduh" else null,
+                    duration = SnackbarDuration.Long
+                )
+                if (result == SnackbarResult.ActionPerformed && state.updateApkUrl != null) {
+                    // Buka URL APK di browser
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(state.updateApkUrl))
+                    context.startActivity(intent)
+                }
+            }
+        }
+    }
 
     Scaffold { paddingValues ->
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .padding(paddingValues)) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
 
             if (state.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
@@ -84,6 +102,34 @@ fun ProfileScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Tombol Edit Profile
+                    Button(
+                        onClick = { navController.navigate("edit-profile") },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("Edit Profile")
+                    }
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    // Tombol Cek Pembaruan
+                    Button(
+                        onClick = { viewModel.checkForUpdate(context) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !state.isCheckingUpdate
+                    ) {
+                        if (state.isCheckingUpdate) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text("Cek Pembaruan")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
                     // Tombol Logout
                     Button(
                         onClick = { viewModel.logout() },
@@ -96,18 +142,13 @@ fun ProfileScreen(
                         Text("Logout")
                     }
 
+                    // Tampilkan error jika ada
                     if (state.error != null) {
                         Text(
                             text = state.error ?: "Unknown error",
                             color = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                    }
-
-                    Button(onClick = {
-                        navController.navigate("edit-profile")
-                    }) {
-                        Text("Edit Profile")
                     }
                 }
             }

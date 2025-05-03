@@ -63,6 +63,7 @@ import androidx.navigation.NavController
 import com.almalaundry.R
 import com.almalaundry.featured.order.commons.barcode.QRCodeUtils
 import com.almalaundry.featured.order.domain.models.Customer
+import com.almalaundry.featured.order.domain.models.Laundry
 import com.almalaundry.featured.order.domain.models.Order
 import com.almalaundry.featured.order.domain.models.Service
 import com.almalaundry.shared.commons.compositional.LocalNavController
@@ -84,7 +85,10 @@ import java.util.UUID
 fun PrintScreen(
     barcode: String,
     customerName: String,
+    customerPhone: String? = null,
+    customerUsername: String? = null,
     serviceName: String,
+    laundryName: String,
     weight: String,
     totalPrice: String,
     createdAt: String,
@@ -93,8 +97,13 @@ fun PrintScreen(
 ) {
     val order = Order(
         barcode = barcode,
-        customer = Customer(name = customerName),
+        customer = Customer(
+            name = customerName,
+            phone = customerPhone,
+            username = customerUsername
+        ),
         service = Service(name = serviceName),
+        laundry = Laundry(name = laundryName),
         weight = weight,
         totalPrice = totalPrice,
         createdAt = createdAt
@@ -242,28 +251,28 @@ fun PrintScreen(
     }
 
     fun createPrintBitmap(order: Order, qrCodeBitmap: Bitmap): Bitmap {
-        val qrCodeSize = qrCodeBitmap.width // Ukuran QR code = 160 piksel
+        val qrCodeSize = qrCodeBitmap.width // QR code size = 160 pixels
         val textPaint = Paint().apply {
             color = android.graphics.Color.BLACK
-            textSize = 17f // Ukuran teks kecil agar muat
+            textSize = 17f // Small text size to fit
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
         }
 
         val titlePaint = Paint().apply {
             color = android.graphics.Color.BLACK
-            textSize = 20f // Larger text size for the laundry name
+            textSize = 20f // Larger text size for laundry name
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
         }
 
-        // Lebar bitmap = 384 piksel (58 mm pada 203 DPI)
+        // Bitmap width = 384 pixels (58 mm at 203 DPI)
         val bitmapWidth = 384
-        val qrX = 1f // Margin kiri untuk QR code
-        val textX = qrCodeSize + 5f // Jarak dari QR code
-        val maxTextWidth = bitmapWidth - textX - 10f // Lebar maksimum untuk teks
+        val leftColumnWidth = qrCodeSize + 10f // Left column for QR code with margin
+        val textX = leftColumnWidth + 5f // Start of right column for text
+        val maxTextWidth = bitmapWidth - textX - 10f // Max width for text
         val lineHeight =
-            textPaint.fontMetrics.bottom - textPaint.fontMetrics.top + 1f // Jarak antar baris
+            textPaint.fontMetrics.bottom - textPaint.fontMetrics.top + 1f // Line spacing
 
-        // Daftar teks
+        // Text lines for details
         val textLines = listOf(
             order.customer.name,
             if (!order.customer.phone.isNullOrEmpty()) {
@@ -277,7 +286,7 @@ fun PrintScreen(
             "Tgl Order: $formattedDate"
         )
 
-        // Hitung teks yang terpotong dan lanjutkan di bawah
+        // Wrap text lines that exceed maxTextWidth
         val wrappedLines = mutableListOf<String>()
         textLines.forEach { line ->
             if (textPaint.measureText(line) <= maxTextWidth) {
@@ -298,28 +307,39 @@ fun PrintScreen(
             }
         }
 
-        // Hitung tinggi bitmap
+        // Calculate heights
+        val titleLineHeight = titlePaint.fontMetrics.bottom - titlePaint.fontMetrics.top + 1f
         val textHeight = lineHeight * wrappedLines.size
-        val bitmapHeight = maxOf(qrCodeSize, textHeight.toInt()) + 20 // Margin bawah kecil
+        val tearOffSpace = 50 // Extra space at the bottom for tear-off (adjustable)
+        // Bitmap height accommodates QR code, text, title, margins, and tear-off space
+        val bitmapHeight = maxOf(
+            qrCodeSize + titleLineHeight.toInt() + 20, // QR code height + title + margins
+            textHeight.toInt() + titleLineHeight.toInt() + 20 // Text height + title + margins
+        ) + tearOffSpace // Add tear-off space
 
-        // Buat bitmap
+        // Create bitmap
         val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         canvas.drawColor(android.graphics.Color.WHITE)
 
-        // Gambar QR code di kiri atas
-        canvas.drawBitmap(qrCodeBitmap, qrX, 0f, null)
+        // Draw laundry name at the top center
+        val laundryNameWidth = titlePaint.measureText(order.laundry.name)
+        val laundryNameX = (bitmapWidth - laundryNameWidth) / 2
+        val laundryNameY = titleLineHeight
+        canvas.drawText(order.laundry.name, laundryNameX, laundryNameY, titlePaint)
 
-        // Gambar teks di kanan dan lanjutkan di bawah jika perlu
-        var y = lineHeight // Mulai dari atas, sejajar dengan QR code
+        // Draw QR code at the bottom of the left column, above tear-off space
+        val qrX = 5f // Left margin
+        val qrY =
+            bitmapHeight - qrCodeSize - 5f - tearOffSpace // Bottom-aligned above tear-off space
+        canvas.drawBitmap(qrCodeBitmap, qrX, qrY, null)
+
+        // Draw text details in the right column, starting below laundry name
+        var y = laundryNameY + lineHeight + 5f
         wrappedLines.forEach { line ->
             canvas.drawText(line, textX, y, textPaint)
             y += lineHeight
         }
-        val laundryName = order.laundry.name
-        val laundryNameWidth = titlePaint.measureText(laundryName)
-        val laundryNameX = (bitmapWidth - laundryNameWidth) / 2
-        canvas.drawText(laundryName, laundryNameX, bitmapHeight - 10f, titlePaint)
 
         return bitmap
     }
@@ -496,9 +516,7 @@ fun PrintScreen(
                                         .align(Alignment.CenterHorizontally),
                                     enabled = !isConnecting && !isPrinting,
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = Color(
-                                            0xFF1976D2
-                                        )
+                                        containerColor = MaterialTheme.colorScheme.primary,
                                     )
                                 ) {
                                     Row(

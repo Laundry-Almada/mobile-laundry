@@ -201,13 +201,24 @@ fun CustomerOrderCard(
                         )
                     }
                     // Nomor telepon
-                    Text(
-                        text = order.customer.phone?.let { "No. Telepon: $it" }
-                            ?: "Username: ${order.customer.username}",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(top = 8.dp)
-                    )
+                    order.customer.phone?.let { phone ->
+                        Text(
+                            text = "No. Telepon: $phone",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
+                    // username
+                    order.customer.username?.takeIf { it.isNotBlank() }?.let { username ->
+                        Text(
+                            text = "Username: @$username",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(top = 4.dp)
+                        )
+                    }
                     // Layanan
                     Text(
                         text = "Layanan: ${order.service.name}",

@@ -357,7 +357,12 @@ fun DetailOrderScreen(
                                                         OrderRoutes.Print(
                                                             barcode = order.barcode,
                                                             customerName = order.customer.name,
+                                                            customerPhone = order.customer.phone
+                                                                ?: "",
+                                                            customerUsername = order.customer.username
+                                                                ?: "",
                                                             serviceName = order.service.name,
+                                                            laundryName = order.laundry.name,
                                                             weight = order.weight,
                                                             totalPrice = order.totalPrice,
                                                             createdAt = order.createdAt
@@ -367,7 +372,7 @@ fun DetailOrderScreen(
                                             },
                                             modifier = Modifier.fillMaxWidth(),
                                             colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFF1976D2)
+                                                containerColor = MaterialTheme.colorScheme.primary,
                                             ),
                                             shape = RoundedCornerShape(8.dp)
                                         ) {

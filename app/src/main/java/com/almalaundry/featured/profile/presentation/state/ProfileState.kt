@@ -8,5 +8,8 @@ data class ProfileState(
     val laundryName: String = "",
     val isLoggedOut: Boolean = false,
     val error: String? = null,
-    //  other state properties
+    val isCheckingUpdate: Boolean = false,
+    val updateMessage: String? = null,
+    val updateApkUrl: String? = null,
+    val isUpdateAvailable: Boolean = false
 )

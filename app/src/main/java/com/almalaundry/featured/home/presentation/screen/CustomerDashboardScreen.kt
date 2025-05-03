@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,8 +20,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -50,6 +49,8 @@ import com.almalaundry.featured.home.presentation.viewmodels.CustomerDashboardVi
 import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrderCard
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.components.BannerHeader
+import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.X
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -73,8 +74,8 @@ fun CustomerDashboardScreen(
             .debounce(300)
             .distinctUntilChanged()
             .collect { shouldLoadMore ->
-                if (shouldLoadMore && !state.isLoading && state.hasMoreData && state.phone.length >= 10) {
-                    viewModel.loadOrders(state.phone, isLoadMore = true)
+                if (shouldLoadMore && !state.isLoading && state.hasMoreData && state.identifier.length >= 3) {
+                    viewModel.loadOrders(state.identifier, isLoadMore = true)
                 }
             }
     }
@@ -90,7 +91,6 @@ fun CustomerDashboardScreen(
             Column(
                 modifier = Modifier.fillMaxSize()
             ) {
-                // Banner Header
                 BannerHeader(
                     title = "Dashboard Pelanggan",
                     subtitle = "Lacak pesanan Anda",
@@ -99,7 +99,6 @@ fun CustomerDashboardScreen(
                     titleAlignment = Alignment.Start
                 )
 
-                // LazyColumn untuk konten
                 LazyColumn(
                     state = listState,
                     modifier = Modifier
@@ -108,7 +107,7 @@ fun CustomerDashboardScreen(
                         .background(Color.Transparent),
                     contentPadding = PaddingValues(16.dp)
                 ) {
-                    // Input nomor telepon
+                    // Input nomor telepon atau username
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -122,21 +121,26 @@ fun CustomerDashboardScreen(
                                 modifier = Modifier.padding(16.dp)
                             ) {
                                 OutlinedTextField(
-                                    value = state.phone,
-                                    onValueChange = { viewModel.updatePhone(it) },
-                                    label = { Text("Nomor Telepon") },
+                                    value = state.identifier,
+                                    onValueChange = { viewModel.updateIdentifier(it) },
+                                    label = { Text("No. Whatsapp/Username") },
                                     modifier = Modifier.fillMaxWidth(),
-                                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                                    keyboardOptions = KeyboardOptions(
+                                        keyboardType = KeyboardType.Text
+                                    ),
                                     trailingIcon = {
-                                        if (state.phone.isNotBlank()) {
-                                            IconButton(onClick = {
-                                                viewModel.updatePhone("")
-                                                viewModel.clearOrders()
-                                            }) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Clear,
-                                                    contentDescription = "Clear"
-                                                )
+                                        Row(verticalAlignment = Alignment.CenterVertically) {
+                                            // Reset Icon
+                                            if (state.identifier.isNotBlank()) {
+                                                IconButton(onClick = {
+                                                    viewModel.updateIdentifier("")
+                                                    viewModel.clearOrders()
+                                                }) {
+                                                    Icon(
+                                                        imageVector = Lucide.X,
+                                                        contentDescription = "Clear"
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -172,7 +176,7 @@ fun CustomerDashboardScreen(
                                             textAlign = TextAlign.Center
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
-                                        TextButton(onClick = { viewModel.loadOrders(state.phone) }) {
+                                        TextButton(onClick = { viewModel.loadOrders(state.identifier) }) {
                                             Text("Coba Lagi")
                                         }
                                     }
@@ -207,7 +211,7 @@ fun CustomerDashboardScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = "Tidak ada order untuk nomor ini.",
+                                        text = "Tidak ada order untuk nomor atau username ini.",
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         style = MaterialTheme.typography.bodyMedium,
                                         textAlign = TextAlign.Center

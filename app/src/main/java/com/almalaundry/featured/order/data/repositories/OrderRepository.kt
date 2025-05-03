@@ -62,13 +62,13 @@ class OrderRepository @Inject constructor(
     }
 
     suspend fun getCustomerOrders(
-        phone: String,
+        identifier: String,
         perPage: Int = 10,
         page: Int = 1
     ): Result<OrderResponse> {
         return try {
             val response = publicApi.getCustomerOrders(
-                phone = phone,
+                identifier = identifier,
                 perPage = perPage,
                 page = page
             )

@@ -151,8 +151,7 @@ fun CreateOrderScreen(
                                                     modifier = Modifier
                                                         .padding(horizontal = 4.dp)
                                                         .height(24.dp),
-
-                                                    )
+                                                )
 
                                                 // Search Icon
                                                 IconButton(onClick = {

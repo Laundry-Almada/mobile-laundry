@@ -1,5 +1,6 @@
 package com.almalaundry.featured.order.presentation.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,11 +35,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -69,6 +72,7 @@ fun FilterDialogHistory(
     var filter by remember { mutableStateOf(currentFilter) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isStartDate by remember { mutableStateOf(true) }
+    val textFieldWidth by remember { mutableFloatStateOf(0f) }
 
     // Ambil laundryId dari SessionManager
     var laundryId by remember { mutableStateOf<String?>(null) }
@@ -179,7 +183,9 @@ fun FilterDialogHistory(
                         DropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .width(with(LocalDensity.current) { textFieldWidth.toDp() })
+                                .background(MaterialTheme.colorScheme.surface)
                         ) {
                             services.forEach { service ->
                                 DropdownMenuItem(

@@ -1,7 +1,7 @@
 package com.almalaundry.featured.auth.data.source
 
 import com.almalaundry.featured.auth.data.dtos.AuthResponse
-import com.almalaundry.featured.auth.data.dtos.AuthData
+import com.almalaundry.featured.auth.data.dtos.DetailLaundryResponse
 import com.almalaundry.featured.auth.data.dtos.LaundryRequest
 import com.almalaundry.featured.auth.data.dtos.LaundryResponse
 import com.almalaundry.featured.auth.data.dtos.LoginRequest
@@ -24,8 +24,8 @@ interface AuthApi {
     @Headers("Accept: application/json")
     suspend fun logout(): Response<LogoutResponse>
 
-    @POST("laundries") // Pastikan path ini sesuai dengan route di Laravel
-    suspend fun createLaundry(@Body request: LaundryRequest): Response<LaundryResponse>
+    @POST("laundries")
+    suspend fun createLaundry(@Body request: LaundryRequest): Response<DetailLaundryResponse>
 
     @GET("laundries")
     suspend fun getLaundries(): Response<LaundryResponse>

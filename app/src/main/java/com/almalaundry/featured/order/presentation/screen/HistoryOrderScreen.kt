@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -16,14 +17,19 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
@@ -35,11 +41,13 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -54,9 +62,13 @@ import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Search
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterialApi::class, FlowPreview::class)
 @Composable
@@ -68,6 +80,10 @@ fun HistoryOrderScreen(
     val sessionManager = LocalSessionManager.current
     val listState = rememberLazyListState()
     var showFilterDialog by remember { mutableStateOf(false) }
+    var showSearchDialog by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    var searchJob by remember { mutableStateOf<Job?>(null) }
 
     // State untuk pull-to-refresh
     val isRefreshing by remember { derivedStateOf { state.isLoading } }
@@ -124,13 +140,23 @@ fun HistoryOrderScreen(
                     imageResId = R.drawable.header_basic2,
 //                    onBackClick = { navController.popBackStack() }, // Tombol back
                     actionButtons = {
-                        // Tombol filter
-                        IconButton(onClick = { showFilterDialog = true }) {
-                            Icon(
-                                imageVector = Lucide.Filter,
-                                contentDescription = "Filter",
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
+                        Row {
+                            // Tombol search
+                            IconButton(onClick = { showSearchDialog = true }) {
+                                Icon(
+                                    imageVector = Lucide.Search,
+                                    contentDescription = "Search Orders",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                            // Tombol filter
+                            IconButton(onClick = { showFilterDialog = true }) {
+                                Icon(
+                                    imageVector = Lucide.Filter,
+                                    contentDescription = "Filter",
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
                         }
                     }
                 )
@@ -270,4 +296,68 @@ fun HistoryOrderScreen(
         onApply = { filter -> viewModel.applyFilter(filter) },
         sessionManager = sessionManager
     )
+
+    // Search Dialog
+    if (showSearchDialog) {
+        AlertDialog(
+            onDismissRequest = { showSearchDialog = false },
+            title = { Text("Cari History Order") },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = searchQuery,
+                        onValueChange = { newQuery ->
+                            searchQuery = newQuery
+                            searchJob?.cancel()
+                            searchJob = coroutineScope.launch {
+                                delay(500) // Debounce 500ms
+                                if (newQuery.length >= 3) {
+                                    viewModel.searchOrders(newQuery)
+                                }
+                            }
+                        },
+                        label = { Text("Nama/Nomor WA/Username") },
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text),
+                        trailingIcon = {
+                            if (searchQuery.isNotBlank()) {
+                                IconButton(onClick = {
+                                    searchQuery = ""
+                                    viewModel.searchOrders("")
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Default.Clear,
+                                        contentDescription = "Clear Search"
+                                    )
+                                }
+                            }
+                        }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (searchQuery.length >= 3) {
+                            viewModel.searchOrders(searchQuery)
+                        }
+                        showSearchDialog = false
+                    }
+                ) {
+                    Text("Cari")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        searchQuery = ""
+                        viewModel.searchOrders("")
+                        showSearchDialog = false
+                    }
+                ) {
+                    Text("Clear")
+                }
+            }
+        )
+    }
 }

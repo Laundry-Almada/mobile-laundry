@@ -21,15 +21,15 @@ class CustomerDashboardViewModel @Inject constructor(
 
     private var fetchJob: Job? = null
 
-    fun updatePhone(phone: String) {
-        _state.value = _state.value.copy(phone = phone)
+    fun updateIdentifier(identifier: String) {
+        _state.value = _state.value.copy(identifier = identifier)
 
-        if (phone.length >= 10) {
-            fetchJob?.cancel() // Cancel fetch sebelumnya
+        if (identifier.length >= 3) {
+            fetchJob?.cancel()
 
             fetchJob = viewModelScope.launch {
-                delay(500) // Tunggu 500ms (half second) sebelum load
-                loadOrders(phone)
+                delay(500)
+                loadOrders(identifier)
             }
         }
     }
@@ -44,15 +44,15 @@ class CustomerDashboardViewModel @Inject constructor(
         )
     }
 
-    fun loadOrders(phone: String, isLoadMore: Boolean = false) {
-        if (_state.value.isLoading || phone.length < 10) return
+    fun loadOrders(identifier: String, isLoadMore: Boolean = false) {
+        if (_state.value.isLoading || identifier.length < 3) return
 
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
 
             val page = if (isLoadMore) _state.value.currentPage + 1 else 1
             val result = repository.getCustomerOrders(
-                phone = phone,
+                identifier = identifier,
                 perPage = 10,
                 page = page
             )

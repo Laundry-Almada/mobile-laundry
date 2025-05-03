@@ -18,7 +18,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface OrderApi {
-    @GET("orders")
+    @GET("admin/orders")
     suspend fun getOrders(
         @Query("status") status: String? = null,
         @Query("service_id") serviceId: String? = null,
@@ -31,33 +31,32 @@ interface OrderApi {
         @Query("page") page: Int = 1
     ): Response<OrderResponse>
 
-    @GET("orders/{orderId}")
+    @GET("admin/orders/{orderId}")
     suspend fun getOrderDetail(@Path("orderId") orderId: String): Response<OrderDetailResponse>
 
-    @GET("orders/barcode/{barcode}")
+    @GET("admin/orders/barcode/{barcode}")
     suspend fun getOrderByBarcode(@Path("barcode") barcode: String): Response<OrderDetailResponse>
 
-    @POST("orders")
+    @POST("admin/orders")
     suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderDetailResponse>
 
-    @PATCH("orders/{orderId}/status")
+    @PATCH("admin/orders/{orderId}/status")
     suspend fun updateOrderStatus(
         @Path("orderId") orderId: String, @Body statusRequest: UpdateStatusRequest
     ): Response<OrderDetailResponse>
 
-    @DELETE("orders/{orderId}")
+    @DELETE("admin/orders/{orderId}")
     suspend fun deleteOrder(@Path("orderId") orderId: String): Response<DeleteOrderResponse>
 
-    @GET("laundries/{laundryId}/services")
+    @GET("admin/laundries/{laundryId}/services")
     suspend fun getServices(@Path("laundryId") laundryId: String): Response<ServicesResponse>
-
 
     @GET("customers/check/{identifier}")
     suspend fun checkCustomer(@Path("identifier") identifier: String): Response<CustomerResponse>
 
-    @GET("customers/{phone}/orders")
+    @GET("customers/{identifier}/orders")
     suspend fun getCustomerOrders(
-        @Path("phone") phone: String,
+        @Path("identifier") identifier: String,
         @Query("per_page") perPage: Int = 10,
         @Query("page") page: Int = 1
     ): Response<OrderResponse>
