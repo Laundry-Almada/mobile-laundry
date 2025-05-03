@@ -5,6 +5,7 @@ import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.OrderMeta
 import com.almalaundry.featured.order.data.dtos.OrderResponse
+import com.almalaundry.featured.order.data.dtos.SearchCustomersResponse
 import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.source.OrderApi
@@ -140,13 +141,12 @@ class OrderRepository @Inject constructor(
         }
     }
 
-    suspend fun checkCustomer(phone: String): Result<CustomerResponse> {
+    suspend fun checkCustomer(identifier: String): Result<CustomerResponse> {
         return try {
-            val response = authenticatedApi.checkCustomer(phone)
+            val response = authenticatedApi.checkCustomer(identifier)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                // Tangani 404 atau error lainnya
                 Result.success(
                     CustomerResponse(
                         success = false,
@@ -180,6 +180,28 @@ class OrderRepository @Inject constructor(
             }
         } catch (e: Exception) {
             Log.e("OrderRepository", "Create order exception: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    suspend fun searchCustomers(query: String): Result<SearchCustomersResponse> {
+        return try {
+            val response = authenticatedApi.searchCustomers(query)
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Search customers failed: $errorBody")
+                Result.success(
+                    SearchCustomersResponse(
+                        success = false,
+                        data = emptyList(),
+                        message = errorBody ?: "Gagal mencari customer"
+                    )
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("OrderRepository", "Search customers exception: ${e.message}")
             Result.failure(e)
         }
     }

@@ -74,7 +74,8 @@ fun BannerHeader(
                 Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
+                        .fillMaxHeight()
+                        .padding(start = 16.dp),
                     contentAlignment = if (subtitle.isEmpty()) {
                         Alignment.Center // Title di tengah vertikal jika tidak ada subtitle
                     } else {
@@ -96,7 +97,7 @@ fun BannerHeader(
                                 text = subtitle,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
-                                modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+                                modifier = Modifier.padding(top = 4.dp, bottom = 8.dp)
                             )
                         }
                     }

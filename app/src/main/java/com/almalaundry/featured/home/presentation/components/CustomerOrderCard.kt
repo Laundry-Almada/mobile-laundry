@@ -202,7 +202,8 @@ fun CustomerOrderCard(
                     }
                     // Nomor telepon
                     Text(
-                        text = "No. Telepon: 0${order.customer.phone}",
+                        text = order.customer.phone?.let { "No. Telepon: $it" }
+                            ?: "Username: ${order.customer.username}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.padding(top = 8.dp)

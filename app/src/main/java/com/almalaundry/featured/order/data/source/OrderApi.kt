@@ -5,6 +5,7 @@ import com.almalaundry.featured.order.data.dtos.CustomerResponse
 import com.almalaundry.featured.order.data.dtos.DeleteOrderResponse
 import com.almalaundry.featured.order.data.dtos.OrderDetailResponse
 import com.almalaundry.featured.order.data.dtos.OrderResponse
+import com.almalaundry.featured.order.data.dtos.SearchCustomersResponse
 import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import retrofit2.Response
@@ -36,16 +37,6 @@ interface OrderApi {
     @GET("orders/barcode/{barcode}")
     suspend fun getOrderByBarcode(@Path("barcode") barcode: String): Response<OrderDetailResponse>
 
-    @GET("customers/check/{phone}")
-    suspend fun checkCustomer(@Path("phone") phone: String): Response<CustomerResponse>
-
-    @GET("customers/{phone}/orders")
-    suspend fun getCustomerOrders(
-        @Path("phone") phone: String,
-        @Query("per_page") perPage: Int = 10,
-        @Query("page") page: Int = 1
-    ): Response<OrderResponse>
-
     @POST("orders")
     suspend fun createOrder(@Body request: CreateOrderRequest): Response<OrderDetailResponse>
 
@@ -59,4 +50,18 @@ interface OrderApi {
 
     @GET("laundries/{laundryId}/services")
     suspend fun getServices(@Path("laundryId") laundryId: String): Response<ServicesResponse>
+
+
+    @GET("customers/check/{identifier}")
+    suspend fun checkCustomer(@Path("identifier") identifier: String): Response<CustomerResponse>
+
+    @GET("customers/{phone}/orders")
+    suspend fun getCustomerOrders(
+        @Path("phone") phone: String,
+        @Query("per_page") perPage: Int = 10,
+        @Query("page") page: Int = 1
+    ): Response<OrderResponse>
+
+    @GET("customers/search")
+    suspend fun searchCustomers(@Query("name") query: String): Response<SearchCustomersResponse>
 }

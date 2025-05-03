@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.repositories.OrderRepository
+import com.almalaundry.featured.order.domain.models.Customer
 import com.almalaundry.featured.order.presentation.state.CreateOrderScreenState
 import com.almalaundry.shared.commons.session.SessionManager
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -52,8 +53,58 @@ class CreateOrderViewModel @Inject constructor(
         }
     }
 
+    fun updateName(name: String) {
+        _state.value = _state.value.copy(name = name)
+        // Tidak memanggil searchCustomers di sini
+    }
+
+    fun searchCustomers() {
+        val query = _state.value.name
+        if (query.isBlank() || query.length < 2) {
+            _state.value = _state.value.copy(customers = emptyList(), isLoadingCustomers = false)
+            return
+        }
+        viewModelScope.launch {
+            _state.value = _state.value.copy(isLoadingCustomers = true, customerSearchError = null)
+            repository.searchCustomers(query).onSuccess { response ->
+                _state.value = _state.value.copy(
+                    isLoadingCustomers = false,
+                    customers = response.data,
+                    customerSearchError = if (response.data.isEmpty()) "Tidak ada customer ditemukan" else null
+                )
+            }.onFailure { exception ->
+                _state.value = _state.value.copy(
+                    isLoadingCustomers = false,
+                    customers = emptyList(),
+                    customerSearchError = exception.message ?: "Gagal mencari customer"
+                )
+            }
+        }
+    }
+
+    fun selectCustomer(customer: Customer) {
+        _state.value = _state.value.copy(
+            name = customer.name,
+            phone = if (_state.value.hasWhatsApp) customer.phone ?: "" else "",
+            username = if (!_state.value.hasWhatsApp) customer.username ?: "" else "",
+            customers = emptyList() // Kosongkan dropdown setelah memilih
+        )
+    }
+
     fun updatePhone(phone: String) {
         _state.value = _state.value.copy(phone = phone)
+    }
+
+    fun updateUsername(username: String) {
+        _state.value = _state.value.copy(username = username)
+    }
+
+    fun updateHasWhatsApp(hasWhatsApp: Boolean) {
+        _state.value = _state.value.copy(
+            hasWhatsApp = hasWhatsApp,
+            phone = if (!hasWhatsApp) "" else _state.value.phone,
+            username = if (hasWhatsApp) "" else _state.value.username
+        )
     }
 
     fun updateServiceId(serviceId: String) {
@@ -72,23 +123,23 @@ class CreateOrderViewModel @Inject constructor(
         _state.value = _state.value.copy(note = note)
     }
 
-    fun updateName(name: String) {
-        _state.value = _state.value.copy(name = name)
-    }
-
-    fun hideNameDialog() {
-        _state.value = _state.value.copy(showNameDialog = false)
-    }
-
     fun createOrder() {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true, error = null)
 
             try {
-                if (_state.value.phone.isBlank()) {
+                // Validasi input
+                if (_state.value.name.isBlank()) {
                     _state.value = _state.value.copy(
                         isLoading = false,
-                        error = "Nomor telepon harus diisi"
+                        error = "Nama pelanggan harus diisi"
+                    )
+                    return@launch
+                }
+                if (_state.value.hasWhatsApp && _state.value.phone.isBlank()) {
+                    _state.value = _state.value.copy(
+                        isLoading = false,
+                        error = "Nomor telepon harus diisi jika menggunakan WhatsApp"
                     )
                     return@launch
                 }
@@ -121,27 +172,8 @@ class CreateOrderViewModel @Inject constructor(
                     return@launch
                 }
 
-                repository.checkCustomer(_state.value.phone).onSuccess { response ->
-                    if (response.success && response.data != null) {
-                        // Customer ada, simpan nama dan lanjutkan membuat order
-                        _state.value = _state.value.copy(
-                            name = response.data.name,
-                            showNameDialog = false
-                        )
-                        proceedCreateOrder()
-                    } else {
-                        // Customer tidak ada, tampilkan dialog nama
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            showNameDialog = true
-                        )
-                    }
-                }.onFailure { exception ->
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = exception.message ?: "Gagal memeriksa customer"
-                    )
-                }
+                // Langsung buat order, biarkan backend menangani username
+                proceedCreateOrder()
             } catch (e: Exception) {
                 _state.value = _state.value.copy(
                     isLoading = false,
@@ -154,8 +186,9 @@ class CreateOrderViewModel @Inject constructor(
     private suspend fun proceedCreateOrder() {
         try {
             val request = CreateOrderRequest(
-                phone = _state.value.phone,
-                name = _state.value.name.takeIf { it.isNotBlank() }, // Kirim nama hanya jika ada
+                name = _state.value.name,
+                phone = _state.value.phone.takeIf { it.isNotBlank() },
+                username = _state.value.username.takeIf { it.isNotBlank() },
                 laundryId = _state.value.laundryId,
                 serviceId = _state.value.serviceId,
                 weight = _state.value.weight.toDoubleOrNull() ?: 0.0,
@@ -168,13 +201,20 @@ class CreateOrderViewModel @Inject constructor(
                     isLoading = false,
                     success = true,
                     error = null,
-                    showNameDialog = false,
-                    name = ""
+                    name = "",
+                    phone = "",
+                    username = "",
+                    customers = emptyList()
                 )
             }.onFailure { exception ->
+                val errorMessage = if (exception.message?.contains("username") == true) {
+                    "Username sudah digunakan, silakan masukkan username lain atau kosongkan untuk otomatis"
+                } else {
+                    exception.message ?: "Gagal membuat order"
+                }
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    error = exception.message ?: "Gagal membuat order"
+                    error = errorMessage
                 )
             }
         } catch (e: Exception) {
@@ -182,27 +222,6 @@ class CreateOrderViewModel @Inject constructor(
                 isLoading = false,
                 error = e.message ?: "Gagal membuat order"
             )
-        }
-    }
-
-    fun saveCustomerAndCreateOrder() {
-        viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, error = null)
-            try {
-                if (_state.value.name.isBlank()) {
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        error = "Nama pelanggan harus diisi"
-                    )
-                    return@launch
-                }
-                proceedCreateOrder()
-            } catch (e: Exception) {
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = e.message ?: "Gagal membuat order"
-                )
-            }
         }
     }
 }

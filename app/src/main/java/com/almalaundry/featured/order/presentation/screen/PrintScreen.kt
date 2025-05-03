@@ -249,6 +249,12 @@ fun PrintScreen(
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
         }
 
+        val titlePaint = Paint().apply {
+            color = android.graphics.Color.BLACK
+            textSize = 20f // Larger text size for the laundry name
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+        }
+
         // Lebar bitmap = 384 piksel (58 mm pada 203 DPI)
         val bitmapWidth = 384
         val qrX = 1f // Margin kiri untuk QR code
@@ -260,6 +266,11 @@ fun PrintScreen(
         // Daftar teks
         val textLines = listOf(
             order.customer.name,
+            if (!order.customer.phone.isNullOrEmpty()) {
+                "Telepon: ${order.customer.phone}"
+            } else {
+                "Username: ${order.customer.username ?: "Unknown"}"
+            },
             "Layanan: ${order.service.name}",
             "Berat: ${order.weight} kg",
             "Harga: Rp${order.totalPrice}",
@@ -305,6 +316,10 @@ fun PrintScreen(
             canvas.drawText(line, textX, y, textPaint)
             y += lineHeight
         }
+        val laundryName = order.laundry.name
+        val laundryNameWidth = titlePaint.measureText(laundryName)
+        val laundryNameX = (bitmapWidth - laundryNameWidth) / 2
+        canvas.drawText(laundryName, laundryNameX, bitmapHeight - 10f, titlePaint)
 
         return bitmap
     }

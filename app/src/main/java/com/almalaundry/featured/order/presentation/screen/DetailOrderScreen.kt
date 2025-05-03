@@ -216,7 +216,12 @@ fun DetailOrderScreen(
                                         )
                                         Spacer(modifier = Modifier.height(8.dp))
                                         Text(text = "Nama: ${state.order?.customer?.name}")
-                                        Text(text = "Telepon: 0${state.order?.customer?.phone}")
+                                        state.order?.customer?.phone?.let {
+                                            Text(text = "Telepon: $it")
+                                        }
+                                        state.order?.customer?.username?.let {
+                                            Text(text = "Username: $it")
+                                        }
 
                                         HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
@@ -289,55 +294,57 @@ fun DetailOrderScreen(
                                         }
 
                                         // WhatsApp Button
-                                        Spacer(modifier = Modifier.height(16.dp))
-                                        Button(
-                                            onClick = {
-                                                state.order?.let { order ->
-                                                    val statusText = when (order.status) {
-                                                        "pending" -> "Menunggu"
-                                                        "washed" -> "Dicuci"
-                                                        "dried" -> "Dikeringkan"
-                                                        "ironed" -> "Disetrika"
-                                                        "ready_picked" -> "Siap Diambil"
-                                                        "completed" -> "Selesai"
-                                                        "cancelled" -> "Dibatalkan"
-                                                        else -> "Menunggu"
+                                        if (!state.order?.customer?.phone.isNullOrEmpty()) {
+                                            Spacer(modifier = Modifier.height(16.dp))
+                                            Button(
+                                                onClick = {
+                                                    state.order?.let { order ->
+                                                        val statusText = when (order.status) {
+                                                            "pending" -> "Menunggu"
+                                                            "washed" -> "Dicuci"
+                                                            "dried" -> "Dikeringkan"
+                                                            "ironed" -> "Disetrika"
+                                                            "ready_picked" -> "Siap Diambil"
+                                                            "completed" -> "Selesai"
+                                                            "cancelled" -> "Dibatalkan"
+                                                            else -> "Menunggu"
+                                                        }
+                                                        val message = """
+                                                            Halo ${order.customer.name},
+                                                            Status pesanan laundry Anda saat ini: *$statusText*
+                                                            Detail Pesanan:
+                                                            - Barcode: ${order.barcode}
+                                                            - Layanan: ${order.service.name}
+                                                            - Berat: ${order.weight} kg
+                                                            - Total Harga: Rp ${order.totalPrice}
+                                                            - Catatan: ${order.note}
+                                                            Terima kasih telah menggunakan Laundry Bersih Jaya!
+                                                        """.trimIndent()
+                                                        order.customer.phone?.let { phone ->
+                                                            openWhatsApp(phone, message, context)
+                                                        }
                                                     }
-                                                    val message = """
-                                                        Halo ${order.customer.name},
-                                                        Status pesanan laundry Anda saat ini: *$statusText*
-                                                        Detail Pesanan:
-                                                        - Barcode: ${order.barcode}
-                                                        - Layanan: ${order.service.name}
-                                                        - Berat: ${order.weight} kg
-                                                        - Total Harga: Rp ${order.totalPrice}
-                                                        - Catatan: ${order.note}
-                                                        Terima kasih telah menggunakan Laundry Bersih Jaya!
-                                                    """.trimIndent()
-                                                    order.customer.phone.let { phone ->
-                                                        openWhatsApp(phone, message, context)
-                                                    }
-                                                }
-                                            },
-                                            modifier = Modifier.fillMaxWidth(),
-                                            colors = ButtonDefaults.buttonColors(
-                                                containerColor = Color(0xFF25D366),
-                                                contentColor = Color.White
-                                            ),
-                                            shape = RoundedCornerShape(8.dp)
-                                        ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.Center
+                                                },
+                                                modifier = Modifier.fillMaxWidth(),
+                                                colors = ButtonDefaults.buttonColors(
+                                                    containerColor = Color(0xFF25D366),
+                                                    contentColor = Color.White
+                                                ),
+                                                shape = RoundedCornerShape(8.dp)
                                             ) {
-                                                Icon(
-                                                    imageVector = FontAwesomeIcons.Brands.Whatsapp,
-                                                    contentDescription = "WhatsApp",
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(24.dp)
-                                                )
-                                                Spacer(modifier = Modifier.width(8.dp))
-                                                Text("Kirim Pesan WhatsApp")
+                                                Row(
+                                                    verticalAlignment = Alignment.CenterVertically,
+                                                    horizontalArrangement = Arrangement.Center
+                                                ) {
+                                                    Icon(
+                                                        imageVector = FontAwesomeIcons.Brands.Whatsapp,
+                                                        contentDescription = "WhatsApp",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(24.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(8.dp))
+                                                    Text("Kirim Pesan WhatsApp")
+                                                }
                                             }
                                         }
 

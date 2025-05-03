@@ -78,9 +78,9 @@ fun OrderCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                // Nomor telepon
+                // Nomor telepon atau username
                 Text(
-                    text = "0${order.customer.phone}",
+                    text = order.customer.phone ?: "@${order.customer.username}",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
