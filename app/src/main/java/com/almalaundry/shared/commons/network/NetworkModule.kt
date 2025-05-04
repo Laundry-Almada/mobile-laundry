@@ -9,8 +9,10 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 import javax.inject.Named
 import javax.inject.Provider
 import javax.inject.Singleton
@@ -20,27 +22,44 @@ import javax.inject.Singleton
 object NetworkModule {
     @Provides
     @Singleton
+    fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
+        return HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BODY
+        }
+    }
+
+    @Provides
+    @Singleton
     @Named("Authenticated")
-    fun provideAuthenticatedOkHttpClient(sessionManagerProvider: Provider<SessionManager>): OkHttpClient {
-        return OkHttpClient.Builder().addInterceptor { chain ->
-            val sessionManager = sessionManagerProvider.get()
-            val token = runBlocking { sessionManager.getToken() }
+    fun provideAuthenticatedOkHttpClient(
+        sessionManagerProvider: Provider<SessionManager>,
+        loggingInterceptor: HttpLoggingInterceptor
+    ): OkHttpClient {
+        return OkHttpClient.Builder()
+            .addInterceptor { chain ->
+                val sessionManager = sessionManagerProvider.get()
+                val token = runBlocking { sessionManager.getToken() }
 
-            val request = chain.request().newBuilder()
-                .addHeader("Content-Type", "application/json")
-                .addHeader("Accept", "application/json")
-                .apply {
-                    token?.let { addHeader("Authorization", "Bearer $it") }
-                }.build()
+                val request = chain.request().newBuilder()
+                    .addHeader("Content-Type", "application/json")
+                    .addHeader("Accept", "application/json")
+                    .apply {
+                        token?.let { addHeader("Authorization", "Bearer $it") }
+                    }.build()
 
-            chain.proceed(request)
-        }.build()
+                chain.proceed(request)
+            }
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
     }
 
     @Provides
     @Singleton
     @Named("Public")
-    fun providePublicOkHttpClient(): OkHttpClient {
+    fun providePublicOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor { chain ->
                 val request = chain.request().newBuilder()
@@ -48,7 +67,12 @@ object NetworkModule {
                     .addHeader("Accept", "application/json")
                     .build()
                 chain.proceed(request)
-            }.build()
+            }
+            .addInterceptor(loggingInterceptor)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .build()
     }
 
     @Provides

@@ -18,4 +18,12 @@ object AuthModule {
     fun provideAuthenticatedAuthApi(@Named("Authenticated") networkApi: NetworkApi): AuthApi {
         return networkApi.retrofit.create(AuthApi::class.java)
     }
+
+
+    @Provides
+    @Singleton
+    @Named("Public")
+    fun providePublicAuthApi(@Named("Public") networkApi: NetworkApi): AuthApi {
+        return networkApi.retrofit.create(AuthApi::class.java)
+    }
 }

@@ -9,6 +9,7 @@ data class AuthData(
     val role: String,
     @SerializedName("laundry_id") val laundryId: String,
     @SerializedName("laundry_name") val laundryName: String,
+    @SerializedName("dashboard_route") val dashboardRoute: String,
 ) {
     fun toSession() = Session(
         token = token,
