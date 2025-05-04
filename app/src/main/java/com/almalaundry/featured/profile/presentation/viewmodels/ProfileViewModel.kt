@@ -32,7 +32,7 @@ class ProfileViewModel @Inject constructor(
         loadProfileData()
     }
 
-    private fun loadProfileData() {
+    fun loadProfileData() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             profileRepository.getUser().fold(
@@ -76,7 +76,7 @@ class ProfileViewModel @Inject constructor(
                             isLoading = false,
                             name = userResponse.data.name,
                             email = userResponse.data.email,
-                            role = userResponse.data.role
+//                            role = userResponse.data.role
                         )
                     }
                     onSuccess()

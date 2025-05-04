@@ -13,6 +13,13 @@ import androidx.navigation.NavController
 import com.almalaundry.featured.profile.commons.ProfileRoutes
 import com.almalaundry.featured.profile.presentation.viewmodels.ProfileViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.Icons
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import com.composables.icons.lucide.Eye
+import com.composables.icons.lucide.EyeOff
+import com.composables.icons.lucide.Lucide
+
 
 @Composable
 fun EditProfileScreen(
@@ -26,6 +33,13 @@ fun EditProfileScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    var passwordVisible by remember { mutableStateOf(false) }
+    var confirmPasswordVisible by remember { mutableStateOf(false) }
+
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmPasswordError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(state.name, state.email) {
         name = state.name
@@ -56,10 +70,55 @@ fun EditProfileScreen(
 
         OutlinedTextField(
             value = password,
-            onValueChange = { password = it },
+            onValueChange = {
+                password = it
+                passwordError = if (password.isNotEmpty()) {
+                    when {
+                        password.length < 8 -> "Minimal 8 karakter"
+                        !password.any { it.isLetter() } -> "Harus ada huruf"
+                        !password.any { it.isDigit() } -> "Harus ada angka"
+                        else -> null
+                    }
+                } else null },
+            isError = passwordError != null,
+            supportingText = {
+                if (passwordError != null) Text(passwordError!!, color = MaterialTheme.colorScheme.error)
+            },
             label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Biarkan kosong jika tidak ingin mengubah") }
+            placeholder = { Text("Biarkan kosong jika tidak ingin mengubah") },
+            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (passwordVisible) Lucide.Eye else Lucide.EyeOff
+                val description = if (passwordVisible) "Sembunyikan password" else "Tampilkan password"
+
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(imageVector = image, contentDescription = description)
+                }
+            }
+        )
+
+        OutlinedTextField(
+            value = confirmPassword,
+            onValueChange = {
+                confirmPassword = it
+                confirmPasswordError = if (password != confirmPassword) "Konfirmasi tidak sesuai" else null},
+            isError = confirmPasswordError != null,
+            supportingText = {
+                if (confirmPasswordError != null) Text(confirmPasswordError!!, color = MaterialTheme.colorScheme.error)
+            },
+            label = { Text("Konfirmasi Password") },
+            modifier = Modifier.fillMaxWidth(),
+            placeholder = { Text("Ulangi password jika ingin mengubah") },
+            visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            trailingIcon = {
+                val image = if (confirmPasswordVisible) Lucide.Eye else Lucide.EyeOff
+                val description = if (confirmPasswordVisible) "Sembunyikan password" else "Tampilkan password"
+
+                IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                    Icon(imageVector = image, contentDescription = description)
+                }
+            }
         )
 
         Button(
@@ -72,11 +131,7 @@ fun EditProfileScreen(
                         onSuccess = {
                             Toast.makeText(context, "Berhasil update profile", Toast.LENGTH_SHORT).show()
                             Log.d("EditProfile", "Navigating back to profile")
-                            navController.navigate(ProfileRoutes.Index.route) {
-                                popUpTo(ProfileRoutes.Edit.route) {
-                                    inclusive = true
-                                }
-                            }
+                            navController.popBackStack()
                         },
                         onError = {
                             Log.e("EditProfile", "Error update profile: $it")
