@@ -102,7 +102,7 @@ fun ProfileScreen(
                     Box {
                         // BannerHeader tetap paling belakang
                         BannerHeader(
-                            title = "Profil",
+                            title = "Profile",
                             subtitle = "Kelola informasi akun Anda",
                             imageResId = R.drawable.header_basic2,
 //          onBackClick = { navController.popBackStack() },
