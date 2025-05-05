@@ -1,16 +1,11 @@
 package com.almalaundry.featured.order.presentation.screen
 
 import android.Manifest
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
-import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Typeface
-import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -45,13 +40,9 @@ import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,27 +50,23 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.almalaundry.R
 import com.almalaundry.featured.order.commons.barcode.QRCodeUtils
+import com.almalaundry.featured.order.commons.utils.BluetoothPrinterUtils
 import com.almalaundry.featured.order.domain.models.Customer
 import com.almalaundry.featured.order.domain.models.Laundry
 import com.almalaundry.featured.order.domain.models.Order
 import com.almalaundry.featured.order.domain.models.Service
+import com.almalaundry.featured.order.presentation.viewmodels.PrintScreenViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
-import com.almalaundry.shared.commons.session.SessionManager
-import com.almalaundry.shared.domain.models.Session
 import com.almalaundry.shared.presentation.components.BannerHeader
-import com.almalaundry.shared.utils.formatDateToIndonesian
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Printer
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.ByteArrayOutputStream
-import java.io.OutputStream
-import java.util.UUID
 
 @Composable
 fun PrintScreen(
@@ -92,9 +79,25 @@ fun PrintScreen(
     weight: String,
     totalPrice: String,
     createdAt: String,
-    navController: NavController = LocalNavController.current,
-    sessionManager: SessionManager = LocalSessionManager.current
+    navController: NavController = LocalNavController.current
 ) {
+    val context = LocalContext.current
+    val sessionManager = LocalSessionManager.current
+    val viewModel: PrintScreenViewModel = viewModel(
+        factory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(PrintScreenViewModel::class.java)) {
+                    @Suppress("UNCHECKED_CAST")
+                    return PrintScreenViewModel(
+                        sessionManager = sessionManager,
+                        bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+                    ) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    )
+    val state by viewModel.state.collectAsState()
     val order = Order(
         barcode = barcode,
         customer = Customer(
@@ -108,30 +111,32 @@ fun PrintScreen(
         totalPrice = totalPrice,
         createdAt = createdAt
     )
-    val context = LocalContext.current
-    val bluetoothManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-    val bluetoothAdapter = bluetoothManager.adapter
-    val scope = rememberCoroutineScope()
-    var bluetoothSocket by remember { mutableStateOf<BluetoothSocket?>(null) }
-    var selectedDevice by remember { mutableStateOf<BluetoothDevice?>(null) }
-    var isConnecting by remember { mutableStateOf(false) }
-    var isPrinting by remember { mutableStateOf(false) }
-    var showDeviceDialog by remember { mutableStateOf(false) }
-    val formattedDate = formatDateToIndonesian(order.createdAt)
+//    val formattedDate = formatDateToIndonesian(order.createdAt)
 
-    // Launcher untuk meminta izin Bluetooth
+    // Launcher for requesting Bluetooth permissions
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        if (permissions.all { it.value }) {
-            showDeviceDialog = true
-        } else {
-            Toast.makeText(context, "Izin Bluetooth diperlukan", Toast.LENGTH_SHORT).show()
+        viewModel.handlePermissionResult(context, permissions)
+    }
+
+    // Launcher for enabling Bluetooth
+    val enableBluetoothLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        viewModel.handleBluetoothEnableResult(context, result.resultCode)
+    }
+
+    // Launch Bluetooth enable request when prompted
+    LaunchedEffect(state.promptEnableBluetooth) {
+        if (state.promptEnableBluetooth) {
+            val enableBtIntent = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            enableBluetoothLauncher.launch(enableBtIntent)
         }
     }
 
-    // Cek dan minta izin Bluetooth
-    fun checkAndRequestBluetoothPermissions() {
+    // Check permissions on start
+    LaunchedEffect(Unit) {
         val permissions =
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 arrayOf(Manifest.permission.BLUETOOTH_CONNECT, Manifest.permission.BLUETOOTH_SCAN)
@@ -140,251 +145,27 @@ fun PrintScreen(
             }
         if (permissions.all {
                 ContextCompat.checkSelfPermission(
-                    context, it
+                    context,
+                    it
                 ) == PackageManager.PERMISSION_GRANTED
             }) {
-            showDeviceDialog = true
+            viewModel.reconnectToSavedPrinter(context)
         } else {
-            permissionLauncher.launch(permissions)
+            viewModel.checkAndRequestBluetoothPermissions(context, permissionLauncher::launch)
         }
     }
 
-    // Fungsi untuk menyambungkan ke printer
-    fun connectToPrinter(device: BluetoothDevice) {
-        scope.launch(Dispatchers.IO) {
-            isConnecting = true
-            try {
-                val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB") // UUID SPP
-                val socket = device.createRfcommSocketToServiceRecord(uuid)
-                socket.connect()
-                bluetoothSocket = socket
-                selectedDevice = device
-                // Simpan alamat printer ke session
-                val currentSession = sessionManager.getSession() ?: Session()
-                sessionManager.saveSession(currentSession.copy(printerAddress = device.address))
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Terhubung ke ${device.name}", Toast.LENGTH_SHORT)
-                        .show()
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Gagal menyambung: ${e.message}", Toast.LENGTH_SHORT)
-                        .show()
-                }
-            } finally {
-                isConnecting = false
-            }
-        }
-    }
-
-    // Fungsi untuk mencoba menyambungkan kembali ke printer yang tersimpan
-    fun reconnectToSavedPrinter() {
-        scope.launch(Dispatchers.IO) {
-            val savedAddress = sessionManager.getPrinterAddress() ?: return@launch
-            val savedDevice = bluetoothAdapter.bondedDevices.find { it.address == savedAddress }
-            if (savedDevice != null && bluetoothSocket?.isConnected != true) {
-                isConnecting = true
-                try {
-                    val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
-                    val socket = savedDevice.createRfcommSocketToServiceRecord(uuid)
-                    socket.connect()
-                    bluetoothSocket = socket
-                    selectedDevice = savedDevice
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context, "Koneksi ke ${savedDevice.name} dipulihkan", Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } catch (e: Exception) {
-                    bluetoothSocket = null
-                    selectedDevice = null
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(
-                            context, "Gagal memulihkan koneksi: ${e.message}", Toast.LENGTH_SHORT
-                        ).show()
-                        checkAndRequestBluetoothPermissions()
-                    }
-                } finally {
-                    isConnecting = false
-                }
-            }
-        }
-    }
-
-    // Cek koneksi saat pertama kali masuk ke PrintScreen
-    LaunchedEffect(Unit) {
-        if (bluetoothSocket?.isConnected != true) {
-            reconnectToSavedPrinter()
-        }
-    }
-
-    // Fungsi untuk mengonversi Bitmap ke byte array untuk dicetak
-    fun bitmapToBytes(bitmap: Bitmap): ByteArray {
-        val width = bitmap.width
-        val height = bitmap.height
-        val bytes = ByteArrayOutputStream()
-        val pixels = IntArray(width * height)
-        bitmap.getPixels(pixels, 0, width, 0, 0, width, height)
-
-        val gs = 0x1D.toByte()
-        bytes.write(byteArrayOf(gs, 0x76, 0x30, 0x00)) // GS v 0 - Print raster bit image
-        val widthBytes = (width + 7) / 8
-        bytes.write(byteArrayOf(widthBytes.toByte(), 0x00))
-        bytes.write(byteArrayOf((height % 256).toByte(), (height / 256).toByte()))
-
-        for (y in 0 until height) {
-            for (x in 0 until widthBytes) {
-                var b = 0
-                for (i in 0 until 8) {
-                    val xPos = x * 8 + i
-                    if (xPos < width) {
-                        val pixel = pixels[y * width + xPos]
-                        if (pixel == android.graphics.Color.BLACK) {
-                            b = b or (0x80 shr i)
-                        }
-                    }
-                }
-                bytes.write(b)
-            }
-        }
-        return bytes.toByteArray()
-    }
-
-    fun createPrintBitmap(order: Order, qrCodeBitmap: Bitmap): Bitmap {
-        val qrCodeSize = qrCodeBitmap.width // QR code size = 160 pixels
-        val textPaint = Paint().apply {
-            color = android.graphics.Color.BLACK
-            textSize = 17f // Small text size to fit
-            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.NORMAL)
-        }
-
-        val titlePaint = Paint().apply {
-            color = android.graphics.Color.BLACK
-            textSize = 20f // Larger text size for laundry name
-            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-        }
-
-        // Bitmap width = 384 pixels (58 mm at 203 DPI)
-        val bitmapWidth = 384
-        val leftColumnWidth = qrCodeSize + 10f // Left column for QR code with margin
-        val textX = leftColumnWidth + 5f // Start of right column for text
-        val maxTextWidth = bitmapWidth - textX - 10f // Max width for text
-        val lineHeight =
-            textPaint.fontMetrics.bottom - textPaint.fontMetrics.top + 1f // Line spacing
-
-        // Text lines for details
-        val textLines = listOf(
-            order.customer.name,
-            if (!order.customer.phone.isNullOrEmpty()) {
-                "Telepon: ${order.customer.phone}"
-            } else {
-                "Username: ${order.customer.username ?: "Unknown"}"
-            },
-            "Layanan: ${order.service.name}",
-            "Berat: ${order.weight} kg",
-            "Harga: Rp${order.totalPrice}",
-            "Tgl Order: $formattedDate"
-        )
-
-        // Wrap text lines that exceed maxTextWidth
-        val wrappedLines = mutableListOf<String>()
-        textLines.forEach { line ->
-            if (textPaint.measureText(line) <= maxTextWidth) {
-                wrappedLines.add(line)
-            } else {
-                val words = line.split(" ")
-                var currentLine = ""
-                words.forEach { word ->
-                    val testLine = if (currentLine.isEmpty()) word else "$currentLine $word"
-                    if (textPaint.measureText(testLine) <= maxTextWidth) {
-                        currentLine = testLine
-                    } else {
-                        if (currentLine.isNotEmpty()) wrappedLines.add(currentLine)
-                        currentLine = word
-                    }
-                }
-                if (currentLine.isNotEmpty()) wrappedLines.add(currentLine)
-            }
-        }
-
-        // Calculate heights
-        val titleLineHeight = titlePaint.fontMetrics.bottom - titlePaint.fontMetrics.top + 1f
-        val textHeight = lineHeight * wrappedLines.size
-        val tearOffSpace = 50 // Extra space at the bottom for tear-off (adjustable)
-        // Bitmap height accommodates QR code, text, title, margins, and tear-off space
-        val bitmapHeight = maxOf(
-            qrCodeSize + titleLineHeight.toInt() + 20, // QR code height + title + margins
-            textHeight.toInt() + titleLineHeight.toInt() + 20 // Text height + title + margins
-        ) + tearOffSpace // Add tear-off space
-
-        // Create bitmap
-        val bitmap = Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        canvas.drawColor(android.graphics.Color.WHITE)
-
-        // Draw laundry name at the top center
-        val laundryNameWidth = titlePaint.measureText(order.laundry.name)
-        val laundryNameX = (bitmapWidth - laundryNameWidth) / 2
-        val laundryNameY = titleLineHeight
-        canvas.drawText(order.laundry.name, laundryNameX, laundryNameY, titlePaint)
-
-        // Draw QR code at the bottom of the left column, above tear-off space
-        val qrX = 5f // Left margin
-        val qrY =
-            bitmapHeight - qrCodeSize - 5f - tearOffSpace // Bottom-aligned above tear-off space
-        canvas.drawBitmap(qrCodeBitmap, qrX, qrY, null)
-
-        // Draw text details in the right column, starting below laundry name
-        var y = laundryNameY + lineHeight + 5f
-        wrappedLines.forEach { line ->
-            canvas.drawText(line, textX, y, textPaint)
-            y += lineHeight
-        }
-
-        return bitmap
-    }
-
-    // Fungsi untuk mencetak QR code dan detail order
-    suspend fun printQRCode(
-        outputStream: OutputStream, context: Context, order: Order
-    ) {
-        try {
-            val qrCodeBitmap = QRCodeUtils.generateQRCode(order.barcode, 160)
-            if (qrCodeBitmap == null) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "Gagal generate QR code", Toast.LENGTH_SHORT).show()
-                }
-                return
-            }
-
-            // Buat bitmap cetakan
-            val printBitmap = createPrintBitmap(order, qrCodeBitmap)
-            val printBytes = bitmapToBytes(printBitmap)
-
-            withContext(Dispatchers.IO) {
-                outputStream.write(byteArrayOf(0x1B, 0x40)) // Inisialisasi printer
-                outputStream.write(printBytes) // Cetak bitmap
-                outputStream.write(byteArrayOf(0x0A, 0x0A)) // Satu baris kosong untuk margin
-                outputStream.write(byteArrayOf(0x1D, 0x56, 0x01)) // Potong kertas
-                outputStream.flush()
-            }
-        } catch (e: Exception) {
-            withContext(Dispatchers.Main) {
-                Toast.makeText(context, "Gagal mencetak: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-    // Dialog untuk memilih perangkat Bluetooth
-    if (showDeviceDialog) {
-        AlertDialog(onDismissRequest = { showDeviceDialog = false },
+    // Device selection dialog
+    if (state.showDeviceDialog) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissDeviceDialog() },
             title = { Text("Pilih Printer Bluetooth") },
             text = {
                 Column {
-                    bluetoothAdapter?.bondedDevices?.forEach { device ->
+                    state.bondedDevices.forEach { device ->
                         TextButton(onClick = {
-                            connectToPrinter(device)
-                            showDeviceDialog = false
+                            viewModel.connectToPrinter(context, device)
+                            viewModel.dismissDeviceDialog()
                         }) {
                             Text(device.name ?: "Unknown Device")
                         }
@@ -392,10 +173,11 @@ fun PrintScreen(
                 }
             },
             confirmButton = {
-                TextButton(onClick = { showDeviceDialog = false }) {
+                TextButton(onClick = { viewModel.dismissDeviceDialog() }) {
                     Text("Batal")
                 }
-            })
+            }
+        )
     }
 
     Scaffold(
@@ -406,9 +188,7 @@ fun PrintScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize()
-            ) {
+            Column(modifier = Modifier.fillMaxSize()) {
                 // Banner Header
                 BannerHeader(
                     title = "Print QR Code",
@@ -418,11 +198,11 @@ fun PrintScreen(
                     titleAlignment = Alignment.Start
                 )
 
-                // LazyColumn untuk konten
+                // LazyColumn for content
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .offset(y = (-40).dp) // Menutupi sebagian banner
+                        .offset(y = (-40).dp)
                         .background(Color.Transparent),
                     contentPadding = PaddingValues(16.dp)
                 ) {
@@ -442,7 +222,8 @@ fun PrintScreen(
                                 // Preview bitmap
                                 val qrCodeBitmap = QRCodeUtils.generateQRCode(order.barcode, 160)
                                 if (qrCodeBitmap != null) {
-                                    val printBitmap = createPrintBitmap(order, qrCodeBitmap)
+                                    val printBitmap =
+                                        BluetoothPrinterUtils.createPrintBitmap(order, qrCodeBitmap)
                                     Image(
                                         bitmap = printBitmap.asImageBitmap(),
                                         contentDescription = "Preview Cetakan",
@@ -460,63 +241,37 @@ fun PrintScreen(
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                // Status koneksi
+                                // Connection status
                                 Text(
                                     text = when {
-                                        isConnecting -> "Menyambungkan..."
-                                        bluetoothSocket?.isConnected == true -> "Terhubung ke ${selectedDevice?.name}"
+                                        state.isConnecting -> "Menyambungkan..."
+                                        state.isConnected -> "Terhubung ke ${state.selectedDevice?.name}"
                                         else -> "Tidak terhubung"
                                     },
-                                    color = if (bluetoothSocket?.isConnected == true) Color.Green else Color.Red,
+                                    color = if (state.isConnected) Color.Green else Color.Red,
                                     modifier = Modifier.align(Alignment.CenterHorizontally)
                                 )
 
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                // Tombol Print
+                                // Print Button
                                 Button(
                                     onClick = {
-                                        if (bluetoothAdapter == null) {
-                                            Toast.makeText(
-                                                context,
-                                                "Bluetooth tidak didukung",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            return@Button
-                                        }
-                                        if (!bluetoothAdapter.isEnabled) {
-                                            Toast.makeText(
-                                                context,
-                                                "Hidupkan Bluetooth terlebih dahulu",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                            return@Button
-                                        }
-                                        if (bluetoothSocket?.isConnected == true) {
-                                            scope.launch(Dispatchers.IO) {
-                                                isPrinting = true
-                                                bluetoothSocket?.outputStream?.let { outputStream ->
-                                                    printQRCode(outputStream, context, order)
-                                                    withContext(Dispatchers.Main) {
-                                                        Toast.makeText(
-                                                            context,
-                                                            "Mencetak...",
-                                                            Toast.LENGTH_SHORT
-                                                        ).show()
-                                                    }
-                                                }
-                                                isPrinting = false
-                                            }
+                                        if (state.isConnected) {
+                                            viewModel.printQRCode(context, order)
                                         } else {
-                                            checkAndRequestBluetoothPermissions()
+                                            viewModel.checkAndRequestBluetoothPermissions(
+                                                context,
+                                                permissionLauncher::launch
+                                            )
                                         }
                                     },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .align(Alignment.CenterHorizontally),
-                                    enabled = !isConnecting && !isPrinting,
+                                    enabled = !state.isConnecting && !state.isPrinting,
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
+                                        containerColor = MaterialTheme.colorScheme.primary
                                     )
                                 ) {
                                     Row(
@@ -531,7 +286,7 @@ fun PrintScreen(
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(
-                                            text = if (isPrinting) "Mencetak..." else "Cetak",
+                                            text = if (state.isPrinting) "Mencetak..." else "Cetak",
                                             color = Color.White
                                         )
                                     }
@@ -541,13 +296,6 @@ fun PrintScreen(
                     }
                 }
             }
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            // Jangan tutup socket di sini agar tetap terjaga
-            // bluetoothSocket?.close()
         }
     }
 }

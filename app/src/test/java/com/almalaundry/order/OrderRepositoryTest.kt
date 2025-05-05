@@ -1,8 +1,11 @@
 package com.almalaundry.order
 
 import android.util.Log
+import com.almalaundry.featured.order.data.dtos.DeleteOrderResponse
+import com.almalaundry.featured.order.data.dtos.OrderDetailResponse
 import com.almalaundry.featured.order.data.dtos.OrderMeta
 import com.almalaundry.featured.order.data.dtos.OrderResponse
+import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.repositories.OrderRepository
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
@@ -20,7 +23,6 @@ import org.junit.Test
 import retrofit2.Response
 
 class OrderRepositoryTest {
-
     private lateinit var repository: OrderRepository
     private val authenticatedApi: OrderApi = mockk()
     private val publicApi: OrderApi = mockk()
@@ -185,6 +187,157 @@ class OrderRepositoryTest {
 
         // Act
         val result = repository.getCustomerOrders(identifier = "customer123")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getOrderDetail returns success when response is successful`() = runTest {
+        // Arrange
+        val order = Order(id = "1", status = "pending")
+        val orderDetailResponse = OrderDetailResponse(success = true, data = order)
+        coEvery { authenticatedApi.getOrderDetail("1") } returns Response.success(
+            orderDetailResponse
+        )
+
+        // Act
+        val result = repository.getOrderDetail("1")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(order, result.getOrNull())
+    }
+
+    @Test
+    fun `getOrderDetail returns failure when response is not successful`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.getOrderDetail("1") } returns Response.error(
+            404,
+            "Not Found".toResponseBody()
+        )
+
+        // Act
+        val result = repository.getOrderDetail("1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Failed to fetch order detail: 404", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getOrderDetail returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.getOrderDetail("1") } throws Exception("Network error")
+
+        // Act
+        val result = repository.getOrderDetail("1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `updateOrderStatus returns success when response is successful`() = runTest {
+        // Arrange
+        val updatedOrder = Order(id = "1", status = "completed")
+        val updateResponse = OrderDetailResponse(success = true, data = updatedOrder)
+        coEvery {
+            authenticatedApi.updateOrderStatus("1", UpdateStatusRequest("completed"))
+        } returns Response.success(updateResponse)
+
+        // Act
+        val result = repository.updateOrderStatus("1", "completed")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(updatedOrder, result.getOrNull())
+    }
+
+    @Test
+    fun `updateOrderStatus returns failure when response is not successful`() = runTest {
+        // Arrange
+        coEvery {
+            authenticatedApi.updateOrderStatus("1", UpdateStatusRequest("completed"))
+        } returns Response.error(400, "Bad Request".toResponseBody())
+
+        // Act
+        val result = repository.updateOrderStatus("1", "completed")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Failed to update order status", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `updateOrderStatus returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery {
+            authenticatedApi.updateOrderStatus("1", UpdateStatusRequest("completed"))
+        } throws Exception("Network error")
+
+        // Act
+        val result = repository.updateOrderStatus("1", "completed")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `deleteOrder returns success when response is successful`() = runTest {
+        // Arrange
+        val deleteResponse = DeleteOrderResponse(success = true, message = "Order deleted")
+        coEvery { authenticatedApi.deleteOrder("1") } returns Response.success(deleteResponse)
+
+        // Act
+        val result = repository.deleteOrder("1")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(true, result.getOrNull())
+    }
+
+    @Test
+    fun `deleteOrder returns failure when response indicates failure`() = runTest {
+        // Arrange
+        val deleteResponse =
+            DeleteOrderResponse(success = false, message = "Order not found", error = "Not found")
+        coEvery { authenticatedApi.deleteOrder("1") } returns Response.success(deleteResponse)
+
+        // Act
+        val result = repository.deleteOrder("1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Not found", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `deleteOrder returns failure when response is not successful`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.deleteOrder("1") } returns Response.error(
+            500,
+            "Internal Server Error".toResponseBody()
+        )
+
+        // Act
+        val result = repository.deleteOrder("1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Failed to delete order", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `deleteOrder returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.deleteOrder("1") } throws Exception("Network error")
+
+        // Act
+        val result = repository.deleteOrder("1")
 
         // Assert
         assertTrue(result.isFailure)
