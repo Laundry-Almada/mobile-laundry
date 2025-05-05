@@ -16,13 +16,13 @@ import javax.inject.Inject
 class CustomerDashboardViewModel @Inject constructor(
     private val repository: OrderRepository
 ) : ViewModel() {
-    private val _state = MutableStateFlow(CustomerDashboardState())
-    val state = _state.asStateFlow()
+    internal val mutableState = MutableStateFlow(CustomerDashboardState())
+    val state = mutableState.asStateFlow()
 
     private var fetchJob: Job? = null
 
     fun updateIdentifier(identifier: String) {
-        _state.value = _state.value.copy(identifier = identifier)
+        mutableState.value = mutableState.value.copy(identifier = identifier)
 
         if (identifier.length >= 3) {
             fetchJob?.cancel()
@@ -35,7 +35,7 @@ class CustomerDashboardViewModel @Inject constructor(
     }
 
     fun clearOrders() {
-        _state.value = _state.value.copy(
+        mutableState.value = mutableState.value.copy(
             orders = emptyList(),
             error = null,
             totalOrders = 0,
@@ -45,12 +45,12 @@ class CustomerDashboardViewModel @Inject constructor(
     }
 
     fun loadOrders(identifier: String, isLoadMore: Boolean = false) {
-        if (_state.value.isLoading || identifier.length < 3) return
+        if (mutableState.value.isLoading || identifier.length < 3) return
 
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            mutableState.value = mutableState.value.copy(isLoading = true)
 
-            val page = if (isLoadMore) _state.value.currentPage + 1 else 1
+            val page = if (isLoadMore) mutableState.value.currentPage + 1 else 1
             val result = repository.getCustomerOrders(
                 identifier = identifier,
                 perPage = 10,
@@ -59,12 +59,12 @@ class CustomerDashboardViewModel @Inject constructor(
 
             result.onSuccess { response ->
                 val newOrders = if (isLoadMore) {
-                    _state.value.orders + response.data
+                    mutableState.value.orders + response.data
                 } else {
                     response.data
                 }
 
-                _state.value = _state.value.copy(
+                mutableState.value = mutableState.value.copy(
                     isLoading = false,
                     orders = newOrders,
                     error = null,
@@ -73,7 +73,7 @@ class CustomerDashboardViewModel @Inject constructor(
                     currentPage = response.meta.currentPage
                 )
             }.onFailure { exception ->
-                _state.value = _state.value.copy(
+                mutableState.value = mutableState.value.copy(
                     isLoading = false,
                     error = exception.message
                 )

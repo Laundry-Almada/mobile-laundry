@@ -117,4 +117,77 @@ class OrderRepositoryTest {
         assertTrue(result.isFailure)
         assertEquals("Network error", result.exceptionOrNull()?.message)
     }
+
+    @Test
+    fun `getCustomerOrders returns success when response is successful`() = runTest {
+        // Arrange
+        val orderResponse = OrderResponse(
+            success = true,
+            data = listOf(Order(id = "1", status = "pending")),
+            meta = OrderMeta(totalOrders = 1, totalPages = 1, currentPage = 1, perPage = 10)
+        )
+        coEvery {
+            publicApi.getCustomerOrders(identifier = "customer123", perPage = 10, page = 1)
+        } returns Response.success(orderResponse)
+
+        // Act
+        val result = repository.getCustomerOrders(identifier = "customer123")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(orderResponse, result.getOrNull())
+    }
+
+    @Test
+    fun `getCustomerOrders returns success with empty data when response is 404`() = runTest {
+        // Arrange
+        val emptyOrderResponse = OrderResponse(
+            success = false,
+            data = emptyList(),
+            meta = OrderMeta(totalOrders = 0, totalPages = 0, currentPage = 1, perPage = 10)
+        )
+        coEvery {
+            publicApi.getCustomerOrders(identifier = "customer123", perPage = 10, page = 1)
+        } returns Response.error(404, "Not Found".toResponseBody())
+
+        // Act
+        val result = repository.getCustomerOrders(identifier = "customer123")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(emptyOrderResponse, result.getOrNull())
+    }
+
+    @Test
+    fun `getCustomerOrders returns failure when response is not successful`() = runTest {
+        // Arrange
+        coEvery {
+            publicApi.getCustomerOrders(identifier = "customer123", perPage = 10, page = 1)
+        } returns Response.error(500, "Internal Server Error".toResponseBody())
+
+        // Act
+        val result = repository.getCustomerOrders(identifier = "customer123")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals(
+            "Failed to fetch customer orders: Response.error()",
+            result.exceptionOrNull()?.message
+        )
+    }
+
+    @Test
+    fun `getCustomerOrders returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery {
+            publicApi.getCustomerOrders(identifier = "customer123", perPage = 10, page = 1)
+        } throws Exception("Network error")
+
+        // Act
+        val result = repository.getCustomerOrders(identifier = "customer123")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
 }
