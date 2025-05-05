@@ -2,7 +2,6 @@ package com.almalaundry.featured.order.presentation.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -14,16 +13,15 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DateRangePicker
-import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
@@ -34,13 +32,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -75,7 +71,6 @@ fun FilterDialog(
     var filter by remember { mutableStateOf(currentFilter) }
     var showDatePicker by remember { mutableStateOf(false) }
     var isStartDate by remember { mutableStateOf(true) }
-    val textFieldWidth by remember { mutableFloatStateOf(0f) }
 
     // Ambil laundryId dari SessionManager
     var laundryId by remember { mutableStateOf<String?>(null) }
@@ -106,10 +101,7 @@ fun FilterDialog(
                 )
 
                 // Status Filter
-                Text(
-                    text = "Status",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                Text(text = "Status", style = MaterialTheme.typography.bodyMedium)
                 FlowRow(
                     modifier = Modifier.padding(vertical = 8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -157,7 +149,9 @@ fun FilterDialog(
                     )
                 } else {
                     var expanded by remember { mutableStateOf(false) }
-                    Box(
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(vertical = 8.dp)
@@ -166,7 +160,12 @@ fun FilterDialog(
                             value = services.find { it.id == filter.serviceId }?.name
                                 ?: "Pilih Layanan",
                             onValueChange = {},
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(
+                                    type = MenuAnchorType.PrimaryEditable,
+                                    enabled = true
+                                ),
                             readOnly = true,
                             label = {
                                 Text(
@@ -175,46 +174,44 @@ fun FilterDialog(
                                 )
                             },
                             trailingIcon = {
-                                IconButton(onClick = { expanded = true }) {
-                                    Icon(
-                                        imageVector = Icons.Default.ArrowDropDown,
-                                        contentDescription = "Pilih Layanan"
-                                    )
-                                }
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
                             }
                         )
 
-                        DropdownMenu(
+                        ExposedDropdownMenu(
                             expanded = expanded,
                             onDismissRequest = { expanded = false },
                             modifier = Modifier
-                                .width(with(LocalDensity.current) { textFieldWidth.toDp() })
+                                .exposedDropdownSize() // Menyesuaikan ukuran dropdown dengan TextField
                                 .background(MaterialTheme.colorScheme.surface)
                         ) {
-                            services.forEach { service ->
-                                DropdownMenuItem(
-                                    onClick = {
-                                        filter = filter.copy(serviceId = service.id)
-                                        expanded = false
-                                    }
-                                ) {
-                                    Text(
-                                        text = service.name,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            }
-
                             // Opsi untuk reset service
                             DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        "Semua Layanan",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                },
                                 onClick = {
                                     filter = filter.copy(serviceId = null)
                                     expanded = false
                                 }
-                            ) {
-                                Text(
-                                    text = "Semua Layanan",
-                                    style = MaterialTheme.typography.bodyMedium
+                            )
+
+
+                            services.forEach { service ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            service.name,
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    },
+                                    onClick = {
+                                        filter = filter.copy(serviceId = service.id)
+                                        expanded = false
+                                    }
                                 )
                             }
                         }
@@ -330,4 +327,3 @@ fun FilterDialog(
         }
     }
 }
-

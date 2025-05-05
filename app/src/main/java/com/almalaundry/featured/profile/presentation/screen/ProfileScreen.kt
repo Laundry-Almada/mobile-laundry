@@ -2,9 +2,9 @@ package com.almalaundry.featured.profile.presentation.screen
 
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,9 +14,10 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -44,9 +45,6 @@ import com.almalaundry.featured.profile.presentation.viewmodels.ProfileViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.components.BannerHeader
 import kotlinx.coroutines.launch
-import androidx.compose.foundation.Image
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 
 @Composable
 fun ProfileScreen(

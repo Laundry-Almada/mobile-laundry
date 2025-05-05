@@ -24,9 +24,13 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
@@ -56,7 +60,6 @@ import com.almalaundry.R
 import com.almalaundry.featured.order.presentation.viewmodels.CreateOrderViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.components.BannerHeader
-import com.composables.icons.lucide.ChevronDown
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Search
 import com.composables.icons.lucide.X
@@ -308,7 +311,11 @@ fun CreateOrderScreen(
                                     )
                                 } else {
                                     var isServiceDropdownExpanded by remember { mutableStateOf(false) }
-                                    Box(
+                                    ExposedDropdownMenuBox(
+                                        expanded = isServiceDropdownExpanded,
+                                        onExpandedChange = {
+                                            isServiceDropdownExpanded = !isServiceDropdownExpanded
+                                        },
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .padding(vertical = 8.dp)
@@ -317,27 +324,28 @@ fun CreateOrderScreen(
                                             value = state.services.find { it.id == state.serviceId }?.name
                                                 ?: "Pilih Layanan",
                                             onValueChange = {},
-                                            modifier = Modifier.fillMaxWidth(),
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .menuAnchor(
+                                                    type = MenuAnchorType.PrimaryEditable,
+                                                    enabled = true
+                                                ),
                                             readOnly = true,
                                             label = { Text("Layanan") },
                                             trailingIcon = {
-                                                IconButton(onClick = {
-                                                    isServiceDropdownExpanded = true
-                                                }) {
-                                                    Icon(
-                                                        imageVector = Lucide.ChevronDown,
-                                                        contentDescription = "Dropdown"
-                                                    )
-                                                }
+                                                ExposedDropdownMenuDefaults.TrailingIcon(
+                                                    expanded = isServiceDropdownExpanded
+                                                )
                                             }
                                         )
-                                        DropdownMenu(
+
+                                        ExposedDropdownMenu(
                                             expanded = isServiceDropdownExpanded,
                                             onDismissRequest = {
                                                 isServiceDropdownExpanded = false
                                             },
                                             modifier = Modifier
-                                                .width(with(LocalDensity.current) { textFieldWidth.toDp() })
+                                                .exposedDropdownSize() // Menyesuaikan ukuran dropdown
                                                 .background(MaterialTheme.colorScheme.surface)
                                         ) {
                                             state.services.forEach { service ->
@@ -425,15 +433,4 @@ fun CreateOrderScreen(
             }
         }
     }
-}
-
-@Composable
-fun DropdownMenuItem(
-    text: @Composable () -> Unit,
-    onClick: () -> Unit
-) {
-    androidx.compose.material3.DropdownMenuItem(
-        text = text,
-        onClick = onClick
-    )
 }

@@ -2,26 +2,45 @@ package com.almalaundry.featured.profile.presentation.screen
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ScaffoldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.almalaundry.featured.profile.commons.ProfileRoutes
-import com.almalaundry.featured.profile.presentation.viewmodels.ProfileViewModel
-import kotlinx.coroutines.launch
-import androidx.compose.material.icons.Icons
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import com.almalaundry.R
+import com.almalaundry.featured.profile.presentation.viewmodels.ProfileViewModel
 import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.Eye
 import com.composables.icons.lucide.EyeOff
 import com.composables.icons.lucide.Lucide
+import kotlinx.coroutines.launch
 
 
 @Composable
@@ -62,6 +81,7 @@ fun EditProfileScreen(
                     title = "Edit Profile",
                     subtitle = "Perbarui informasi akun Anda",
                     imageResId = R.drawable.header_basic2,
+                    onBackClick = { navController.navigateUp() },
                     titleAlignment = Alignment.Start
                 )
             }
@@ -95,8 +115,8 @@ fun EditProfileScreen(
                         passwordError = if (password.isNotEmpty()) {
                             when {
                                 password.length < 8 -> "Minimal 8 karakter"
-                                !password.any { it.isLetter() } -> "Harus ada huruf"
-                                !password.any { it.isDigit() } -> "Harus ada angka"
+                                !password.any { char -> char.isLetter() } -> "Harus ada huruf"
+                                !password.any { char -> char.isDigit() } -> "Harus ada angka"
                                 else -> null
                             }
                         } else null
