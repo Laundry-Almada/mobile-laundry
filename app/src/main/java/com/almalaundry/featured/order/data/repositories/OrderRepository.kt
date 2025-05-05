@@ -52,8 +52,9 @@ class OrderRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
-                Result.failure(Exception("Failed to fetch orders: ${response.message()}"))
+                val errorMessage = response.errorBody()?.string() ?: response.message()
+                Log.e("OrderRepository", "Error: $errorMessage")
+                Result.failure(Exception("Failed to fetch orders: $errorMessage"))
             }
         } catch (e: Exception) {
             Log.e("OrderRepository", "Exception: ${e.message}")

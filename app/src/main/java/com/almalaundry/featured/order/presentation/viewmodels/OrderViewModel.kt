@@ -15,43 +15,45 @@ import javax.inject.Inject
 class OrderViewModel @Inject constructor(
     private val repository: OrderRepository
 ) : ViewModel() {
-    private val _state = MutableStateFlow(OrderScreenState())
-    val state = _state.asStateFlow()
+    internal val mutableState = MutableStateFlow(OrderScreenState())
+    val state = mutableState.asStateFlow()
 
     init {
         loadOrders()
     }
 
     fun applyFilter(filter: OrderFilter) {
-        _state.value = _state.value.copy(filter = filter, currentPage = 1, orders = emptyList())
+        mutableState.value =
+            mutableState.value.copy(filter = filter, currentPage = 1, orders = emptyList())
         loadOrders()
     }
 
     fun searchOrders(searchQuery: String) {
         val trimmedQuery = searchQuery.trim()
         val filter = if (trimmedQuery.length >= 3) {
-            _state.value.filter.copy(search = trimmedQuery)
+            mutableState.value.filter.copy(search = trimmedQuery)
         } else {
-            _state.value.filter.copy(search = null) // Reset search jika kurang dari 3 huruf
+            mutableState.value.filter.copy(search = null) // Reset search jika kurang dari 3 huruf
         }
-        _state.value = _state.value.copy(filter = filter, currentPage = 1, orders = emptyList())
+        mutableState.value =
+            mutableState.value.copy(filter = filter, currentPage = 1, orders = emptyList())
         loadOrders()
     }
 
     fun loadOrders(isLoadMore: Boolean = false) {
         viewModelScope.launch {
             if (isLoadMore) {
-                if (_state.value.currentPage >= _state.value.totalPages || !_state.value.hasMoreData) {
+                if (mutableState.value.currentPage >= mutableState.value.totalPages || !mutableState.value.hasMoreData) {
                     return@launch
                 }
-                _state.value = _state.value.copy(isLoadingMore = true)
+                mutableState.value = mutableState.value.copy(isLoadingMore = true)
             } else {
-                _state.value =
-                    _state.value.copy(isLoading = true, error = null, orders = emptyList())
+                mutableState.value =
+                    mutableState.value.copy(isLoading = true, error = null, orders = emptyList())
             }
 
             try {
-                val filter = _state.value.filter
+                val filter = mutableState.value.filter
                 val result = repository.getOrders(
                     status = if (filter.status.isEmpty()) null else filter.status.joinToString(","),
                     serviceId = filter.serviceId,
@@ -60,15 +62,15 @@ class OrderViewModel @Inject constructor(
                     search = filter.search,
                     sortBy = filter.sortBy,
                     sortDirection = filter.sortDirection,
-                    perPage = _state.value.perPage,
-                    page = if (isLoadMore) _state.value.currentPage + 1 else 1
+                    perPage = mutableState.value.perPage,
+                    page = if (isLoadMore) mutableState.value.currentPage + 1 else 1
                 )
 
                 result.onSuccess { response ->
-                    _state.value = _state.value.copy(
+                    mutableState.value = mutableState.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
-                        orders = if (isLoadMore) _state.value.orders + response.data else response.data,
+                        orders = if (isLoadMore) mutableState.value.orders + response.data else response.data,
                         totalOrders = response.meta.totalOrders,
                         currentPage = response.meta.currentPage,
                         totalPages = response.meta.totalPages,
@@ -76,14 +78,14 @@ class OrderViewModel @Inject constructor(
                         error = null
                     )
                 }.onFailure { exception ->
-                    _state.value = _state.value.copy(
+                    mutableState.value = mutableState.value.copy(
                         isLoading = false,
                         isLoadingMore = false,
                         error = exception.message ?: "Gagal memuat order"
                     )
                 }
             } catch (e: Exception) {
-                _state.value = _state.value.copy(
+                mutableState.value = mutableState.value.copy(
                     isLoading = false,
                     isLoadingMore = false,
                     error = e.message ?: "Gagal memuat order"
