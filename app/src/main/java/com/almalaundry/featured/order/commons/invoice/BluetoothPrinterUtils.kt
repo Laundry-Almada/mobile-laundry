@@ -1,4 +1,4 @@
-package com.almalaundry.featured.order.commons.utils
+package com.almalaundry.featured.order.commons.invoice
 
 import android.Manifest
 import android.bluetooth.BluetoothDevice
@@ -12,7 +12,6 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import com.almalaundry.featured.order.commons.barcode.QRCodeUtils
 import com.almalaundry.featured.order.domain.models.Order
 import com.almalaundry.shared.commons.session.SessionManager
 import com.almalaundry.shared.domain.models.Session

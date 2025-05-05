@@ -1,4 +1,4 @@
-package com.almalaundry.featured.order.commons.barcode
+package com.almalaundry.featured.order.commons.invoice
 
 import android.graphics.Bitmap
 import com.google.zxing.BarcodeFormat

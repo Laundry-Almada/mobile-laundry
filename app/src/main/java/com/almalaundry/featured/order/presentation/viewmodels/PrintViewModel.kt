@@ -10,7 +10,7 @@ import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.almalaundry.featured.order.commons.utils.BluetoothPrinterUtils
+import com.almalaundry.featured.order.commons.invoice.BluetoothPrinterUtils
 import com.almalaundry.featured.order.domain.models.Order
 import com.almalaundry.featured.order.presentation.state.PrintScreenState
 import com.almalaundry.shared.commons.session.SessionManager

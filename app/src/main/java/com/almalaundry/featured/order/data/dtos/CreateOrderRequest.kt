@@ -10,5 +10,5 @@ data class CreateOrderRequest(
     @SerializedName("service_id") val serviceId: String,
     val weight: Double,
     @SerializedName("total_price") val totalPrice: Int,
-    val note: String
+    val note: String? = null,
 )

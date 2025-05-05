@@ -1,4 +1,4 @@
-package com.almalaundry.featured.order.commons.barcode
+package com.almalaundry.featured.order.commons.invoice
 
 fun extractOrderId(url: String): String? {
     return try {

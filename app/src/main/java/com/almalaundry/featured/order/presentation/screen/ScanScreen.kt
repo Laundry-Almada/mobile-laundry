@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
-import com.almalaundry.featured.order.commons.barcode.extractOrderId
+import com.almalaundry.featured.order.commons.invoice.extractOrderId
 import com.almalaundry.featured.order.presentation.components.BarcodeScanner
 import com.almalaundry.featured.order.presentation.components.ScanOverlay
 import com.almalaundry.featured.order.presentation.viewmodels.ScanViewModel

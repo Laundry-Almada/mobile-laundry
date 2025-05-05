@@ -149,13 +149,22 @@ class OrderRepository @Inject constructor(
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e("OrderRepository", "Create order failed: $errorBody")
-                val errorMessage = try {
-                    val jsonObject = JSONObject(errorBody ?: "")
-                    val message = jsonObject.getString("message")
-                    val errorDetail = jsonObject.optString("error", "")
-                    if (errorDetail.isNotEmpty()) "$message: $errorDetail" else message
-                } catch (e: Exception) {
-                    "Failed to create order"
+                val errorMessage = if (errorBody.isNullOrBlank()) {
+                    "Failed to create order: No error details available"
+                } else {
+                    try {
+                        val jsonObject = JSONObject(errorBody)
+                        val message = jsonObject.getString("message")
+                        val errorDetail = jsonObject.optString("error", "")
+                        Log.d("OrderRepository", "Parsed message: $message, error: $errorDetail")
+                        if (errorDetail.isNotEmpty()) "$message: $errorDetail" else message
+                    } catch (e: Exception) {
+                        Log.e(
+                            "OrderRepository",
+                            "Error parsing errorBody: ${e.message}, raw errorBody: $errorBody"
+                        )
+                        "Failed to create order: Invalid error format"
+                    }
                 }
                 Result.failure(Exception(errorMessage))
             }
@@ -198,12 +207,26 @@ class OrderRepository @Inject constructor(
                 Result.success(response.body()!!)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e("OrderRepository", "Service Error: $errorBody")
-                val errorMessage = try {
-                    val jsonObject = JSONObject(errorBody ?: "")
-                    jsonObject.getString("message")
-                } catch (e: Exception) {
-                    "Failed to fetch services"
+                Log.e("OrderRepository", "Service Error, raw errorBody: $errorBody")
+                val errorMessage = if (errorBody.isNullOrBlank()) {
+                    "Failed to fetch services: No error details available"
+                } else {
+                    try {
+                        val jsonObject = JSONObject(errorBody)
+                        val message = jsonObject.getString("message")
+                        Log.d("OrderRepository", "Parsed message: $message")
+                        message
+                    } catch (e: Exception) {
+                        Log.e(
+                            "OrderRepository",
+                            "Error parsing errorBody: ${e.message}, raw errorBody: $errorBody"
+                        )
+                        Log.e(
+                            "OrderRepository",
+                            "ErrorBody bytes: ${response.errorBody()?.bytes()?.contentToString()}"
+                        )
+                        "Failed to fetch services: Invalid error format"
+                    }
                 }
                 Result.failure(Exception(errorMessage))
             }

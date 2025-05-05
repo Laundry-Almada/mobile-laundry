@@ -1,21 +1,29 @@
 package com.almalaundry.order
 
 import android.util.Log
+import com.almalaundry.featured.order.data.dtos.CreateOrderRequest
 import com.almalaundry.featured.order.data.dtos.DeleteOrderResponse
 import com.almalaundry.featured.order.data.dtos.OrderDetailResponse
 import com.almalaundry.featured.order.data.dtos.OrderMeta
 import com.almalaundry.featured.order.data.dtos.OrderResponse
+import com.almalaundry.featured.order.data.dtos.SearchCustomersResponse
+import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.repositories.OrderRepository
 import com.almalaundry.featured.order.data.source.OrderApi
+import com.almalaundry.featured.order.domain.models.Customer
 import com.almalaundry.featured.order.domain.models.Order
+import com.almalaundry.featured.order.domain.models.Service
 import com.almalaundry.shared.commons.session.SessionManager
+import io.mockk.EqMatcher
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import io.mockk.mockkStatic
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
+import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -338,6 +346,253 @@ class OrderRepositoryTest {
 
         // Act
         val result = repository.deleteOrder("1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getOrderByBarcode returns success when response is successful`() = runTest {
+        // Arrange
+        val order = Order(id = "1", status = "pending", barcode = "123456")
+        val orderDetailResponse = OrderDetailResponse(success = true, data = order)
+        coEvery { authenticatedApi.getOrderByBarcode("123456") } returns Response.success(
+            orderDetailResponse
+        )
+
+        // Act
+        val result = repository.getOrderByBarcode("123456")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(order, result.getOrNull())
+    }
+
+    @Test
+    fun `getOrderByBarcode returns failure when response is not successful`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.getOrderByBarcode("123456") } returns Response.error(
+            404,
+            "Not Found".toResponseBody()
+        )
+
+        // Act
+        val result = repository.getOrderByBarcode("123456")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Failed to fetch order by barcode", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getOrderByBarcode returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.getOrderByBarcode("123456") } throws Exception("Network error")
+
+        // Act
+        val result = repository.getOrderByBarcode("123456")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `createOrder returns success when response is successful`() = runTest {
+        // Arrange
+        val order = Order(id = "1", status = "pending")
+        val createOrderResponse = OrderDetailResponse(success = true, data = order)
+        coEvery { authenticatedApi.createOrder(any<CreateOrderRequest>()) } returns Response.success(
+            createOrderResponse
+        )
+
+        // Act
+        val result = repository.createOrder(
+            CreateOrderRequest(
+                name = "John Doe",
+                laundryId = "laundry1",
+                serviceId = "service1",
+                weight = 1.0,
+                totalPrice = 100
+            )
+        )
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(order, result.getOrNull())
+    }
+
+    @Test
+    fun `createOrder returns failure when response is not successful`() = runTest {
+        // Arrange
+        val errorBody = """{"message":"Invalid request","error":"Duplicate username"}"""
+        coEvery { authenticatedApi.createOrder(any<CreateOrderRequest>()) } returns Response.error(
+            400,
+            errorBody.toResponseBody()
+        )
+
+        // Mock JSONObject untuk parsing di kode produksi
+        mockkConstructor(JSONObject::class)
+        every { constructedWith<JSONObject>(EqMatcher(errorBody)).getString("message") } returns "Invalid request"
+        every {
+            constructedWith<JSONObject>(EqMatcher(errorBody)).optString(
+                "error",
+                ""
+            )
+        } returns "Duplicate username"
+
+        // Act
+        val result = repository.createOrder(
+            CreateOrderRequest(
+                name = "John Doe",
+                laundryId = "laundry1",
+                serviceId = "service1",
+                weight = 1.0,
+                totalPrice = 100
+            )
+        )
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Invalid request: Duplicate username", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `createOrder returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.createOrder(any<CreateOrderRequest>()) } throws Exception("Network error")
+
+        // Act
+        val result = repository.createOrder(
+            CreateOrderRequest(
+                name = "John Doe",
+                laundryId = "laundry1",
+                serviceId = "service1",
+                weight = 1.0,
+                totalPrice = 100
+            )
+        )
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `searchCustomers returns success when response is successful`() = runTest {
+        // Arrange
+        val customers = listOf(Customer(id = "1", name = "John Doe"))
+        val searchResponse =
+            SearchCustomersResponse(success = true, data = customers, message = "Success")
+        coEvery { authenticatedApi.searchCustomers("John") } returns Response.success(searchResponse)
+
+        // Act
+        val result = repository.searchCustomers("John")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(searchResponse, result.getOrNull())
+    }
+
+    @Test
+    fun `searchCustomers returns success with empty data when response is not successful`() =
+        runTest {
+            // Arrange
+            val errorBody = "No customers found"
+            coEvery { authenticatedApi.searchCustomers("John") } returns Response.error(
+                404,
+                errorBody.toResponseBody()
+            )
+
+            // Act
+            val result = repository.searchCustomers("John")
+
+            // Assert
+            assertTrue(result.isSuccess)
+            assertEquals(
+                SearchCustomersResponse(
+                    success = false,
+                    data = emptyList(),
+                    message = errorBody
+                ), result.getOrNull()
+            )
+        }
+
+    @Test
+    fun `searchCustomers returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery { authenticatedApi.searchCustomers("John") } throws Exception("Network error")
+
+        // Act
+        val result = repository.searchCustomers("John")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Network error", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getServices returns success when response is successful`() = runTest {
+        // Arrange
+        coEvery { sessionManager.isLoggedIn() } returns true
+        val services = listOf(Service(id = "1", name = "Wash"))
+        val servicesResponse = ServicesResponse(success = true, data = services)
+        coEvery { authenticatedApi.getServices("laundry1") } returns Response.success(
+            servicesResponse
+        )
+
+        // Act
+        val result = repository.getServices("laundry1")
+
+        // Assert
+        assertTrue(result.isSuccess)
+        assertEquals(servicesResponse, result.getOrNull())
+    }
+
+    @Test
+    fun `getServices returns failure when user is not logged in`() = runTest {
+        // Arrange
+        coEvery { sessionManager.isLoggedIn() } returns false
+
+        // Act
+        val result = repository.getServices("laundry1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("User not logged in", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getServices returns failure when response is not successful`() = runTest {
+        // Arrange
+        coEvery { sessionManager.isLoggedIn() } returns true
+        val errorBody = """{"message":"Invalid laundry ID"}"""
+        coEvery { authenticatedApi.getServices("laundry1") } returns Response.error(
+            400,
+            errorBody.toResponseBody()
+        )
+
+        // Mock JSONObject untuk parsing di kode produksi
+        mockkConstructor(JSONObject::class)
+        every { constructedWith<JSONObject>(EqMatcher(errorBody)).getString("message") } returns "Invalid laundry ID"
+
+        // Act
+        val result = repository.getServices("laundry1")
+
+        // Assert
+        assertTrue(result.isFailure)
+        assertEquals("Invalid laundry ID", result.exceptionOrNull()?.message)
+    }
+
+    @Test
+    fun `getServices returns failure when network exception occurs`() = runTest {
+        // Arrange
+        coEvery { sessionManager.isLoggedIn() } returns true
+        coEvery { authenticatedApi.getServices("laundry1") } throws Exception("Network error")
+
+        // Act
+        val result = repository.getServices("laundry1")
 
         // Assert
         assertTrue(result.isFailure)

@@ -55,8 +55,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.almalaundry.R
-import com.almalaundry.featured.order.commons.barcode.QRCodeUtils
-import com.almalaundry.featured.order.commons.utils.BluetoothPrinterUtils
+import com.almalaundry.featured.order.commons.invoice.BluetoothPrinterUtils
+import com.almalaundry.featured.order.commons.invoice.QRCodeUtils
 import com.almalaundry.featured.order.domain.models.Customer
 import com.almalaundry.featured.order.domain.models.Laundry
 import com.almalaundry.featured.order.domain.models.Order
