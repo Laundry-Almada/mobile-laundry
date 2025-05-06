@@ -24,13 +24,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     }
-
-    val keyProperties = Properties().apply {
-        load(rootProject.file("key.properties").inputStream())
-    }
-
+    
     signingConfigs {
         create("release") {
+            val keyProperties = Properties().apply {
+                load(rootProject.file(".env.production").inputStream())
+            }
             storeFile =
                 file(keyProperties.getProperty("RELEASE_STORE_FILE", "release-keystore.jks"))
             storePassword = keyProperties.getProperty("RELEASE_STORE_PASSWORD")

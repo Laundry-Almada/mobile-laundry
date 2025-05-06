@@ -15,5 +15,4 @@
 local.properties
 .env.development
 .env.production
-key.properties
 release-keystore.jks
