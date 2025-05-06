@@ -1,11 +1,11 @@
 package com.almalaundry.featured.order.presentation.components
 
-import android.util.Size
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ExperimentalGetImage
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.runtime.Composable
@@ -43,13 +43,30 @@ fun BarcodeScanner(
                     val cameraProvider = cameraProviderFuture.get()
 
                     // Camera configuration
-                    val preview = Preview.Builder().build()
+                    val resolutionSelector = ResolutionSelector.Builder()
+                        .setResolutionFilter { supportedSizes, _ ->
+                            supportedSizes.filter { size ->
+                                // Filter resolusi dengan rasio aspek ~16:9 (1.777...)
+                                val aspectRatio = size.width.toFloat() / size.height
+                                (aspectRatio in 1.7f..1.8f) &&
+                                        size.width <= 1280 && size.height <= 720
+                            }.sortedBy { size ->
+                                // Prioritaskan resolusi mendekati 1280x720
+                                (1280 - size.width) + (720 - size.height)
+                            }
+                        }
+                        .build()
+
+                    val preview = Preview.Builder()
+                        .setResolutionSelector(resolutionSelector)
+                        .build()
+
                     val cameraSelector = CameraSelector.Builder()
                         .requireLensFacing(CameraSelector.LENS_FACING_BACK)
                         .build()
 
                     val imageAnalysis = ImageAnalysis.Builder()
-                        .setTargetResolution(Size(1280, 720))
+                        .setResolutionSelector(resolutionSelector)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .build()
                         .apply {
