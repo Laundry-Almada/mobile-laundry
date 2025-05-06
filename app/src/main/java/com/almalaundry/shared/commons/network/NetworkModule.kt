@@ -1,6 +1,5 @@
 package com.almalaundry.shared.commons.network
 
-import com.almalaundry.featured.profile.data.remote.ApiService
 import com.almalaundry.shared.commons.config.BuildConfig
 import com.almalaundry.shared.commons.session.SessionManager
 import dagger.Module
@@ -115,11 +114,5 @@ object NetworkModule {
             override val retrofit: Retrofit = retrofit
             override val httpClient: OkHttpClient = retrofit.callFactory() as OkHttpClient
         }
-    }
-
-    @Provides
-    @Singleton
-    fun provideApiService(@Named("Authenticated") retrofit: Retrofit): ApiService {
-        return retrofit.create(ApiService::class.java)
     }
 }

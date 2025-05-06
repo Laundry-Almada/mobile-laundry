@@ -2,6 +2,7 @@ package com.almalaundry.featured.profile.presentation.screen
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
@@ -67,23 +69,34 @@ fun ProfileScreen(
         }
     }
 
+    // Tampilkan Snackbar saat ada pesan pembaruan
     LaunchedEffect(state.updateMessage) {
+        Log.d("ProfileScreen", "updateMessage changed: ${state.updateMessage}")
         state.updateMessage?.let { message ->
             scope.launch {
+                Log.d("ProfileScreen", "Menampilkan Snackbar: $message")
                 val result = snackbarHostState.showSnackbar(
                     message = message,
                     actionLabel = if (state.isUpdateAvailable && state.updateApkUrl != null) "Unduh" else null,
-                    duration = SnackbarDuration.Long
+                    duration = if (state.isUpdateAvailable) SnackbarDuration.Indefinite else SnackbarDuration.Long
                 )
+                Log.d("ProfileScreen", "Snackbar result: $result")
                 if (result == SnackbarResult.ActionPerformed && state.updateApkUrl != null) {
+                    Log.d("ProfileScreen", "Membuka URL: ${state.updateApkUrl}")
                     val intent = Intent(Intent.ACTION_VIEW, Uri.parse(state.updateApkUrl))
                     context.startActivity(intent)
                 }
             }
+//            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
         }
     }
 
     Scaffold(
+        snackbarHost = {
+            SnackbarHost(
+                hostState = snackbarHostState,
+            )
+        },
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top)
     ) { paddingValues ->
         Box(
@@ -103,7 +116,6 @@ fun ProfileScreen(
                             title = "Profile",
                             subtitle = "Kelola informasi akun Anda",
                             imageResId = R.drawable.header_basic2,
-//          onBackClick = { navController.popBackStack() },
                             titleAlignment = Alignment.Start
                         )
 
@@ -191,188 +203,3 @@ fun ProfileScreen(
         }
     }
 }
-
-//@Composable
-//fun ProfileScreen(
-//    viewModel: ProfileViewModel = hiltViewModel()
-//) {
-//    LaunchedEffect(Unit) {
-//        viewModel.loadProfileData()
-//    }
-//    val state by viewModel.state.collectAsState()
-//    val navController = LocalNavController.current
-//    val context = LocalContext.current
-//    val scope = rememberCoroutineScope()
-//    val snackbarHostState = remember { SnackbarHostState() }
-//
-//    // Navigasi ke layar login setelah logout berhasil
-//    LaunchedEffect(state.isLoggedOut) {
-//        if (state.isLoggedOut) {
-//            navController.navigate(AuthRoutes.Login.route) {
-//                popUpTo(ProfileRoutes.Index.route) { inclusive = true }
-//            }
-//        }
-//    }
-//    LaunchedEffect(state.updateMessage) {
-//        state.updateMessage?.let { message ->
-//            scope.launch {
-//                val result = snackbarHostState.showSnackbar(
-//                    message = message,
-//                    actionLabel = if (state.isUpdateAvailable && state.updateApkUrl != null) "Unduh" else null,
-//                    duration = SnackbarDuration.Long
-//                )
-//                if (result == SnackbarResult.ActionPerformed && state.updateApkUrl != null) {
-//                    // Buka URL APK di browser
-//                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(state.updateApkUrl))
-//                    context.startActivity(intent)
-//                }
-//            }
-//        }
-//    }
-//
-//    Scaffold { paddingValues ->
-//        Box(
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(paddingValues)
-//        ) {
-//
-//            if (state.isLoading) {
-//                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-//            } else {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxSize()
-//                        .padding(16.dp),
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Text(
-//                        text = "Profile",
-//                        style = MaterialTheme.typography.headlineSmall
-//                    )
-//
-//                    Spacer(modifier = Modifier.height(16.dp))
-//
-//                    // Tampilkan informasi user
-//                    Text(text = "Nama: ${state.name}")
-//                    Text(text = "Email: ${state.email}")
-//                    Text(text = "Role: ${state.role}")
-//                    Text(text = "Cabang Laundry: ${state.laundryName}")
-//
-//                    Spacer(modifier = Modifier.height(24.dp))
-//
-//                    // Tombol Edit Profile
-//                    Button(
-//                        onClick = { navController.navigate("edit-profile") },
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        Text("Edit Profile")
-//                    }
-//
-//                    Spacer(modifier = Modifier.height(8.dp))
-//
-//                    // Tombol Cek Pembaruan
-//                    Button(
-//                        onClick = { viewModel.checkForUpdate(context) },
-//                        modifier = Modifier.fillMaxWidth(),
-//                        enabled = !state.isCheckingUpdate
-//                    ) {
-//                        if (state.isCheckingUpdate) {
-//                            CircularProgressIndicator(
-//                                modifier = Modifier.size(24.dp),
-//                                color = MaterialTheme.colorScheme.onPrimary
-//                            )
-//                        } else {
-//                            Text("Cek Pembaruan")
-//                        }
-//                    }
-//
-//                    Spacer(modifier = Modifier.height(8.dp))
-//
-//                    // Tombol Logout
-//                    Button(
-//                        onClick = { viewModel.logout() },
-//                        modifier = Modifier.fillMaxWidth(),
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = MaterialTheme.colorScheme.error,
-//                            contentColor = MaterialTheme.colorScheme.onError
-//                        )
-//                    ) {
-//                        Text("Logout")
-//                    }
-//
-//                    // Tampilkan error jika ada
-//                    if (state.error != null) {
-//                        Text(
-//                            text = state.error ?: "Unknown error",
-//                            color = MaterialTheme.colorScheme.error,
-//                            modifier = Modifier.padding(top = 8.dp)
-//                        )
-//                    }
-//                }
-//            }
-//        }
-//    }
-//}
-
-//@Composable
-//fun ProfileScreen(
-//    viewModel: ProfileViewModel = hiltViewModel()
-//) {
-//    val state by viewModel.state.collectAsState()
-//    val navController = LocalNavController.current
-//
-//    // Navigasi ke layar login setelah logout berhasil
-//    LaunchedEffect(state.isLoggedOut) {
-//        if (state.isLoggedOut) {
-//            navController.navigate(AuthRoutes.Login.route) {
-//                popUpTo(ProfileRoutes.Index.route) { inclusive = true }
-//            }
-//        }
-//    }
-//
-//    Scaffold { paddingValues ->
-//        Box(modifier = Modifier.padding(paddingValues)) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(16.dp),
-//                horizontalAlignment = Alignment.CenterHorizontally
-//            ) {
-//                Text(
-//                    text = "Profile Screen", style = MaterialTheme.typography.bodyMedium
-//                )
-//
-//                Spacer(modifier = Modifier.height(16.dp))
-//
-//                // Tombol Logout
-//                Button(
-//                    onClick = { viewModel.logout() },
-//                    enabled = !state.isLoading,
-//                    modifier = Modifier.fillMaxWidth(),
-//                    colors = ButtonDefaults.buttonColors(
-//                        containerColor = MaterialTheme.colorScheme.error,
-//                        contentColor = MaterialTheme.colorScheme.onError
-//                    )
-//                ) {
-//                    if (state.isLoading) {
-//                        CircularProgressIndicator(
-//                            modifier = Modifier.size(24.dp),
-//                            color = MaterialTheme.colorScheme.onError
-//                        )
-//                    } else {
-//                        Text("Logout")
-//                    }
-//                }
-//
-//                if (state.error != null) {
-//                    Text(
-//                        text = state.error ?: "Unknown error",
-//                        color = MaterialTheme.colorScheme.error,
-//                        modifier = Modifier.padding(top = 8.dp)
-//                    )
-//                }
-//            }
-//        }
-//    }
-//}
