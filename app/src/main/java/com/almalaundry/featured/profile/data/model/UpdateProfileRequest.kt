@@ -1,7 +1,9 @@
 package com.almalaundry.featured.profile.data.model
 
+import com.google.gson.annotations.SerializedName
+
 data class UpdateProfileRequest(
-    val name: String,
-    val email: String,
-    val password: String? // optional
+    @SerializedName("name") val name: String,
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String? = null, // optional
 )

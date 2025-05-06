@@ -58,6 +58,7 @@ import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.presentation.components.BannerHeader
+import com.almalaundry.shared.presentation.components.shimmer.ShimmerPlaceholder
 import com.almalaundry.shared.presentation.ui.theme.primaryLight
 import com.composables.icons.lucide.Lucide
 import com.composables.icons.lucide.Plus
@@ -164,16 +165,22 @@ fun LaundryDashboard(
                                     RoundedCornerShape(20.dp)
                                 )
                         ) {
-                            Text(
-                                text = "Total Laundry",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            LaundryTypeChart(
-                                monthlyStats = state.monthlyStats,
-                                dailyStats = state.dailyStats
-                            )
+                            if (state.isLoading) {
+                                // Shimmer untuk OrderStatsChart
+                                ShimmerPlaceholder()
+                            } else {
+                                Text(
+                                    text = "Total Laundry",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                OrderStatsChart(
+                                    monthlyStats = state.monthlyStats,
+                                    dailyStats = state.dailyStats
+                                )
+
+                            }
                         }
                     }
 
@@ -184,25 +191,32 @@ fun LaundryDashboard(
                             modifier = Modifier
                                 .padding(16.dp)
                                 .width(383.dp)
-                                .height(152.dp)
+                                .height(152.dp) // Tinggi tetap cukup
                                 .shadow(10.dp, RoundedCornerShape(20.dp))
                                 .background(
                                     MaterialTheme.colorScheme.surface,
                                     RoundedCornerShape(20.dp)
                                 )
                         ) {
-                            Text(
-                                text = "Total Pendapatan",
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            RevenueChart(
-                                monthlyStats = state.monthlyStats,
-                                dailyStats = state.dailyStats
-                            )
+                            if (state.isLoading) {
+                                // Shimmer untuk RevenueChart
+                                ShimmerPlaceholder()
+                            } else {
+                                Text(
+                                    text = "Total Pendapatan",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                RevenueChart(
+                                    monthlyStats = state.monthlyStats,
+                                    dailyStats = state.dailyStats
+                                )
+
+                            }
                         }
                     }
+
                     // Image Slider
                     item {
                         val filteredImages = listOfNotNull(
@@ -260,6 +274,7 @@ fun LaundryDashboard(
                     }
                 }
             }
+
             // Pull Refresh Indicator
             PullRefreshIndicator(
                 refreshing = state.isLoading,
@@ -271,7 +286,7 @@ fun LaundryDashboard(
 }
 
 @Composable
-fun LaundryTypeChart(
+fun OrderStatsChart(
     modifier: Modifier = Modifier,
     columnColor: Color = primaryLight,
     monthlyStats: List<MonthlyStatistic>,

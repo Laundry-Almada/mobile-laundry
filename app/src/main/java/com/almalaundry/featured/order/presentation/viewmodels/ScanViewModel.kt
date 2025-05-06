@@ -42,7 +42,9 @@ class ScanViewModel @Inject constructor(
     fun startScanning() {
         _state.update {
             it.copy(
-                isScanning = true, error = null, barcodeValue = ""
+                isScanning = true,
+                error = null,
+                barcodeValue = ""
             )
         }
     }
@@ -56,8 +58,6 @@ class ScanViewModel @Inject constructor(
     }
 
     fun resetState() {
-        _state.update {
-            ScanScreenState()
-        }
+        _state.update { ScanScreenState() }
     }
 }

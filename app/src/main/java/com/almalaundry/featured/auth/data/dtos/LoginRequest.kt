@@ -1,6 +1,9 @@
 package com.almalaundry.featured.auth.data.dtos
 
+import com.google.gson.annotations.SerializedName
+
 data class LoginRequest(
-    val email: String,
-    val password: String
+    @SerializedName("email") val email: String,
+    @SerializedName("password") val password: String
+
 )

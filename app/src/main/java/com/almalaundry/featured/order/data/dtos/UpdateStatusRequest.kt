@@ -1,5 +1,7 @@
 package com.almalaundry.featured.order.data.dtos
 
+import com.google.gson.annotations.SerializedName
+
 data class UpdateStatusRequest(
-    val status: String
+    @SerializedName("status") val status: String
 )

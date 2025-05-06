@@ -24,14 +24,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.almalaundry.featured.order.commons.OrderRoutes
 import com.almalaundry.featured.order.commons.invoice.extractOrderId
-import com.almalaundry.featured.order.presentation.components.BarcodeScanner
 import com.almalaundry.featured.order.presentation.components.ScanOverlay
 import com.almalaundry.featured.order.presentation.viewmodels.ScanViewModel
 import com.almalaundry.shared.commons.compositional.LocalNavController
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.ResultPoint
+import com.journeyapps.barcodescanner.BarcodeCallback
+import com.journeyapps.barcodescanner.BarcodeResult
+import com.journeyapps.barcodescanner.BarcodeView
+import com.journeyapps.barcodescanner.DefaultDecoderFactory
 import kotlinx.coroutines.launch
 
 @Composable
@@ -60,7 +66,8 @@ fun ScanScreen(
     LaunchedEffect(Unit) {
         viewModel.resetState()
         if (!state.isScanning && ContextCompat.checkSelfPermission(
-                context, Manifest.permission.CAMERA
+                context,
+                Manifest.permission.CAMERA
             ) == PackageManager.PERMISSION_GRANTED
         ) {
             viewModel.updatePermissionStatus(true)
@@ -69,47 +76,71 @@ fun ScanScreen(
             launcher.launch(Manifest.permission.CAMERA)
         }
     }
+
     DisposableEffect(Unit) {
         onDispose {
             viewModel.resetState()
         }
     }
 
-    Box(
-        modifier = Modifier.fillMaxSize()
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         if (state.hasPermission && state.isScanning) {
-            BarcodeScanner(
-                onBarcodeDetected = { barcode ->
-                    if (!isProcessingBarcode && !state.isNavigating) {
-                        isProcessingBarcode = true
-                        viewModel.onBarcodeDetected(barcode)
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    BarcodeView(ctx).apply {
+                        // Konfigurasi format barcode (hanya QR code)
+                        val formats = listOf(BarcodeFormat.QR_CODE)
+                        decoderFactory = DefaultDecoderFactory(formats)
+                        cameraSettings.isAutoFocusEnabled = true
+                        cameraSettings.requestedCameraId = -1 // Kamera belakang
 
-                        val orderId = extractOrderId(barcode)
+                        // Callback untuk hasil pemindaian
+                        decodeContinuous(object : BarcodeCallback {
+                            override fun barcodeResult(result: BarcodeResult) {
+                                if (!isProcessingBarcode && !state.isNavigating) {
+                                    isProcessingBarcode = true
+                                    viewModel.onBarcodeDetected(result.text)
 
-                        if (orderId != null) {
-                            scope.launch {
-                                viewModel.processBarcodeResult(orderId).fold(
-                                    onSuccess = { order ->
-                                        navController.navigate(OrderRoutes.Detail(order.id)) {
-                                            launchSingleTop = true
+                                    val orderId = extractOrderId(result.text)
+                                    if (orderId != null) {
+                                        scope.launch {
+                                            viewModel.processBarcodeResult(orderId).fold(
+                                                onSuccess = { order ->
+                                                    navController.navigate(
+                                                        OrderRoutes.Detail(order.id)
+                                                    ) {
+                                                        launchSingleTop = true
+                                                    }
+                                                },
+                                                onFailure = { error ->
+                                                    viewModel.setError("Order tidak ditemukan: ${error.message}")
+                                                }
+                                            )
+                                            isProcessingBarcode = false
+                                            viewModel.setNavigating(false)
                                         }
-                                    },
-                                    onFailure = { error ->
-                                        viewModel.setError("Order tidak ditemukan: ${error.message}")
+                                    } else {
+                                        viewModel.setError("Invalid QR code format")
+                                        isProcessingBarcode = false
+                                        viewModel.setNavigating(false)
                                     }
-                                )
-                                isProcessingBarcode = false
-                                viewModel.setNavigating(false)
+                                }
                             }
-                        }
+
+                            override fun possibleResultPoints(resultPoints: List<ResultPoint>) {
+                                // Tidak digunakan untuk saat ini
+                            }
+                        })
                     }
                 },
-                onError = { error ->
-                    viewModel.setError(error)
-                    navController.popBackStack()
-                },
-                modifier = Modifier.fillMaxSize()
+                update = { barcodeView ->
+                    if (state.isScanning) {
+                        barcodeView.resume()
+                    } else {
+                        barcodeView.pause()
+                    }
+                }
             )
 
             // Overlay dengan kotak transparan dan sudut-sudut

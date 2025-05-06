@@ -50,8 +50,8 @@ android {
                 load(rootProject.file(".env.production").inputStream())
             }
             buildConfigField("String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\"")
-            isMinifyEnabled = true
-            isShrinkResources = true
+//            isMinifyEnabled = true
+//            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -112,18 +112,16 @@ dependencies {
     implementation(libs.core)
 
     // ML Kit Barcode Scanning
-    implementation(libs.barcode.scanning)
+//    implementation(libs.barcode.scanning)
 
     // CameraX
-    implementation(libs.androidx.camera.core)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.view)
+//    implementation(libs.androidx.camera.core)
+//    implementation(libs.androidx.camera.camera2)
+//    implementation(libs.androidx.camera.lifecycle)
+//    implementation(libs.androidx.camera.view)
 
-    implementation(libs.core)
-
-    // Coil
-    implementation(libs.coil.compose)
+    // zxing
+    implementation(libs.zxing.android.embedded)
 
     // Shimmer shimmer
     implementation(libs.shimmer)

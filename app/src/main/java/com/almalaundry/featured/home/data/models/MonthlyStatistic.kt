@@ -1,7 +1,9 @@
 package com.almalaundry.featured.home.data.models
 
+import com.google.gson.annotations.SerializedName
+
 data class MonthlyStatistic(
-    val month: String, // Format: "YYYY-MM"
-    val count: Int,
-    val revenue: Double,
+    @SerializedName("month") val month: String, // Format: "YYYY-MM"
+    @SerializedName("count") val count: Int,
+    @SerializedName("revenue") val revenue: Double
 )
