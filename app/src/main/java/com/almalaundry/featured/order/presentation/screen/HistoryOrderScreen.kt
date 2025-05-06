@@ -3,7 +3,6 @@ package com.almalaundry.featured.order.presentation.screen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -17,15 +16,20 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -62,6 +66,7 @@ import com.almalaundry.shared.commons.compositional.LocalSessionManager
 import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.Filter
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Plus
 import com.composables.icons.lucide.Search
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -116,11 +121,11 @@ fun HistoryOrderScreen(
 
     Scaffold(
         contentWindowInsets = ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Top),
-//        floatingActionButton = {
-//            FloatingActionButton(onClick = { navController.navigate(OrderRoutes.Create.route) }) {
-//                Icon(Lucide.Plus, contentDescription = "Create Order")
-//            }
-//        }
+        floatingActionButton = {
+            FloatingActionButton(onClick = { navController.navigate(OrderRoutes.Create.route) }) {
+                Icon(Lucide.Plus, contentDescription = "Create Order")
+            }
+        }
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -135,10 +140,9 @@ fun HistoryOrderScreen(
             ) {
                 // Banner Header
                 BannerHeader(
-                    title = "History Order",
-                    subtitle = "Order yang sudah selesai/batal",
+                    title = "Daftar Order",
+                    subtitle = "Order yang diproses dan selesai",
                     imageResId = R.drawable.header_basic2,
-//                    onBackClick = { navController.popBackStack() }, // Tombol back
                     actionButtons = {
                         Row {
                             // Tombol search
@@ -162,7 +166,7 @@ fun HistoryOrderScreen(
                 )
 
                 // LazyColumn dengan offset untuk menutupi banner
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .offset(y = (-40).dp)
@@ -170,111 +174,123 @@ fun HistoryOrderScreen(
                 ) {
                     when {
                         state.isLoading && !state.isLoadingMore -> {
-                            LazyColumn(
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                items(3) {
-                                    ShimmerOrderCard()
-                                }
+                            items(3) {
+                                ShimmerOrderCard()
                             }
                         }
 
                         state.error != null -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
+                            item {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp),
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.errorContainer
+                                    ),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                                 ) {
-                                    Text(
-                                        text = state.error
-                                            ?: "Terjadi kesalahan saat memuat history",
-                                        color = MaterialTheme.colorScheme.error,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    TextButton(onClick = { viewModel.loadHistories() }) {
-                                        Text(
-                                            "Coba Lagi",
-                                            style = MaterialTheme.typography.labelLarge
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Warning,
+                                            contentDescription = "Error",
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(32.dp)
                                         )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Text(
+                                            text = state.error!!,
+                                            color = MaterialTheme.colorScheme.error,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        Spacer(modifier = Modifier.height(12.dp))
+                                        TextButton(onClick = { viewModel.loadHistories() }) {
+                                            Text(
+                                                text = "Coba Lagi",
+                                                style = MaterialTheme.typography.labelLarge,
+                                                color = MaterialTheme.colorScheme.primary
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
 
                         state.histories.isEmpty() && state.totalHistories > 0 -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Column(
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = "Tidak ada history di halaman ini. Coba ubah filter atau muat ulang.",
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        textAlign = TextAlign.Center
-                                    )
-                                    Spacer(modifier = Modifier.height(8.dp))
-                                    TextButton(onClick = { viewModel.loadHistories() }) {
+                                    Column(
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    ) {
                                         Text(
-                                            "Muat Ulang",
-                                            style = MaterialTheme.typography.labelLarge
+                                            text = "Tidak ada order di halaman ini. Coba ubah filter atau muat ulang.",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            textAlign = TextAlign.Center
                                         )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        TextButton(onClick = { viewModel.loadHistories() }) {
+                                            Text(
+                                                "Muat Ulang",
+                                                style = MaterialTheme.typography.labelLarge
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
 
                         state.histories.isEmpty() -> {
-                            Box(
-                                modifier = Modifier.fillMaxSize(),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = "Belum ada order yang selesai/batal",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.padding(horizontal = 16.dp)
-                                )
+                            item {
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "Tidak ada order tersedia.",
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.padding(horizontal = 16.dp)
+                                    )
+                                }
                             }
                         }
 
                         else -> {
-                            LazyColumn(
-                                state = listState,
-                                modifier = Modifier.fillMaxSize(),
-                                contentPadding = PaddingValues(vertical = 8.dp)
-                            ) {
-                                items(state.histories) { history ->
-                                    OrderCard(order = history, onClick = {
-                                        navController.navigate(OrderRoutes.Detail(history.id))
-                                    })
-                                }
 
-                                item {
-                                    if (state.isLoadingMore) {
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(16.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
+                            items(state.histories) { history ->
+                                OrderCard(order = history, onClick = {
+                                    navController.navigate(OrderRoutes.Detail(history.id))
+                                })
+                            }
+
+                            item {
+                                if (state.isLoadingMore) {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp)
+                                        )
                                     }
                                 }
                             }
+
                         }
                     }
                 }

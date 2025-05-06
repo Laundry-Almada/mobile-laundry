@@ -51,6 +51,7 @@ android {
             }
             buildConfigField("String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\"")
             isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

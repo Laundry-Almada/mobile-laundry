@@ -9,8 +9,8 @@ import com.almalaundry.featured.order.data.dtos.ServicesResponse
 import com.almalaundry.featured.order.data.dtos.UpdateStatusRequest
 import com.almalaundry.featured.order.data.source.OrderApi
 import com.almalaundry.featured.order.domain.models.Order
+import com.almalaundry.shared.commons.ErrorHandler
 import com.almalaundry.shared.commons.session.SessionManager
-import org.json.JSONObject
 import javax.inject.Inject
 import javax.inject.Named
 import javax.inject.Singleton
@@ -52,13 +52,13 @@ class OrderRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
             } else {
-                val errorMessage = response.errorBody()?.string() ?: response.message()
-                Log.e("OrderRepository", "Error: $errorMessage")
-                Result.failure(Exception("Failed to fetch orders: $errorMessage"))
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Error: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -77,29 +77,28 @@ class OrderRepository @Inject constructor(
 
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
-            } else {
-                if (response.code() == 404) {
-                    // Jika 404 (Customer tidak ditemukan), return sukses dengan data kosong
-                    Result.success(
-                        OrderResponse(
-                            success = false,
-                            data = emptyList(),
-                            meta = OrderMeta(
-                                totalOrders = 0,
-                                totalPages = 0,
-                                currentPage = 1,
-                                perPage = perPage
-                            )
+            } else if (response.code() == 404) {
+                // Kembalikan sukses dengan data kosong untuk 404
+                Result.success(
+                    OrderResponse(
+                        success = false,
+                        data = emptyList(),
+                        meta = OrderMeta(
+                            totalOrders = 0,
+                            totalPages = 0,
+                            currentPage = 1,
+                            perPage = perPage
                         )
                     )
-                } else {
-                    Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
-                    Result.failure(Exception("Failed to fetch customer orders: ${response.message()}"))
-                }
+                )
+            } else {
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Error: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -107,19 +106,18 @@ class OrderRepository @Inject constructor(
         return try {
             Log.d("OrderRepository", "Fetching order detail: $orderId")
             val response = authenticatedApi.getOrderDetail(orderId)
-            Log.d("OrderRepository", "Response code: ${response.code()}")
-            Log.d("OrderRepository", "Response body: ${response.body()}")
-            Log.d("OrderRepository", "Error body: ${response.errorBody()?.string()}")
+            Log.d("OrderRepository", "Response code: ${response.code()}, body: ${response.body()}")
 
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
-                Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
-                Result.failure(Exception("Failed to fetch order detail: ${response.code()}"))
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Error: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -132,12 +130,13 @@ class OrderRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
-                Log.e("OrderRepository", "Error: ${response.errorBody()?.string()}")
-                Result.failure(Exception("Failed to fetch order by barcode"))
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Error: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -149,28 +148,11 @@ class OrderRepository @Inject constructor(
             } else {
                 val errorBody = response.errorBody()?.string()
                 Log.e("OrderRepository", "Create order failed: $errorBody")
-                val errorMessage = if (errorBody.isNullOrBlank()) {
-                    "Failed to create order: No error details available"
-                } else {
-                    try {
-                        val jsonObject = JSONObject(errorBody)
-                        val message = jsonObject.getString("message")
-                        val errorDetail = jsonObject.optString("error", "")
-                        Log.d("OrderRepository", "Parsed message: $message, error: $errorDetail")
-                        if (errorDetail.isNotEmpty()) "$message: $errorDetail" else message
-                    } catch (e: Exception) {
-                        Log.e(
-                            "OrderRepository",
-                            "Error parsing errorBody: ${e.message}, raw errorBody: $errorBody"
-                        )
-                        "Failed to create order: Invalid error format"
-                    }
-                }
-                Result.failure(Exception(errorMessage))
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Create order exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Create order exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -186,13 +168,13 @@ class OrderRepository @Inject constructor(
                     SearchCustomersResponse(
                         success = false,
                         data = emptyList(),
-                        message = errorBody ?: "Gagal mencari customer"
+                        message = ErrorHandler.parseApiError(errorBody)
                     )
                 )
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Search customers exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Search customers exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -203,36 +185,17 @@ class OrderRepository @Inject constructor(
             }
             val response = authenticatedApi.getServices(laundryId)
             Log.d("OrderRepository", "Service Response: ${response.body()}")
+
             if (response.isSuccessful && response.body()?.success == true) {
                 Result.success(response.body()!!)
             } else {
                 val errorBody = response.errorBody()?.string()
-                Log.e("OrderRepository", "Service Error, raw errorBody: $errorBody")
-                val errorMessage = if (errorBody.isNullOrBlank()) {
-                    "Failed to fetch services: No error details available"
-                } else {
-                    try {
-                        val jsonObject = JSONObject(errorBody)
-                        val message = jsonObject.getString("message")
-                        Log.d("OrderRepository", "Parsed message: $message")
-                        message
-                    } catch (e: Exception) {
-                        Log.e(
-                            "OrderRepository",
-                            "Error parsing errorBody: ${e.message}, raw errorBody: $errorBody"
-                        )
-                        Log.e(
-                            "OrderRepository",
-                            "ErrorBody bytes: ${response.errorBody()?.bytes()?.contentToString()}"
-                        )
-                        "Failed to fetch services: Invalid error format"
-                    }
-                }
-                Result.failure(Exception(errorMessage))
+                Log.e("OrderRepository", "Service Error: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Log.e("OrderRepository", "Service Exception: ${e.message}")
-            Result.failure(e)
+            Log.e("OrderRepository", "Service Exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -242,10 +205,13 @@ class OrderRepository @Inject constructor(
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!.data)
             } else {
-                Result.failure(Exception("Failed to update order status"))
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Update status failed: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e("OrderRepository", "Update status exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 
@@ -257,13 +223,23 @@ class OrderRepository @Inject constructor(
                 if (body.success) {
                     Result.success(true)
                 } else {
-                    Result.failure(Exception(body.error ?: body.message))
+                    Log.e("OrderRepository", "Delete order failed: ${body.error ?: body.message}")
+                    Result.failure(
+                        Exception(
+                            ErrorHandler.parseApiError(
+                                body.error ?: body.message
+                            )
+                        )
+                    )
                 }
             } else {
-                Result.failure(Exception("Failed to delete order"))
+                val errorBody = response.errorBody()?.string()
+                Log.e("OrderRepository", "Delete order failed: $errorBody")
+                Result.failure(Exception(ErrorHandler.parseApiError(errorBody)))
             }
         } catch (e: Exception) {
-            Result.failure(e)
+            Log.e("OrderRepository", "Delete order exception: ${e.message}", e)
+            Result.failure(Exception(ErrorHandler.getErrorMessage(e)))
         }
     }
 }
