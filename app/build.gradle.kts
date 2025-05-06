@@ -23,34 +23,40 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-//        buildConfigField("String", "BASE_URL", "\"http://10.0.2.2:8000/api/\"")
-//        val properties = Properties()
-//        properties.load(rootProject.file(".env.development").inputStream())
-//        buildConfigField(
-//            "String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\""
-//        )
+    }
+
+    val keyProperties = Properties().apply {
+        load(rootProject.file("key.properties").inputStream())
+    }
+
+    signingConfigs {
+        create("release") {
+            storeFile =
+                file(keyProperties.getProperty("RELEASE_STORE_FILE", "release-keystore.jks"))
+            storePassword = keyProperties.getProperty("RELEASE_STORE_PASSWORD")
+            keyAlias = keyProperties.getProperty("RELEASE_KEY_ALIAS")
+            keyPassword = keyProperties.getProperty("RELEASE_KEY_PASSWORD")
+        }
     }
 
     buildTypes {
         debug {
-            val properties = Properties()
-            properties.load(rootProject.file(".env.development").inputStream())
-
-            buildConfigField(
-                "String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\""
-            )
+            val properties = Properties().apply {
+                load(rootProject.file(".env.development").inputStream())
+            }
+            buildConfigField("String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\"")
         }
         release {
-            val properties = Properties()
-            properties.load(rootProject.file(".env.production").inputStream())
-
-            buildConfigField(
-                "String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\""
-            )
+            val properties = Properties().apply {
+                load(rootProject.file(".env.production").inputStream())
+            }
+            buildConfigField("String", "BASE_URL", "\"${properties.getProperty("BASE_URL")}\"")
             isMinifyEnabled = true
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
