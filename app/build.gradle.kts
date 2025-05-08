@@ -140,6 +140,8 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.mockk) // Untuk mocking
     testImplementation(libs.mockk.android)
+    testImplementation("org.mockito:mockito-inline:5.2.0") // atau versi terbaru yang kompatibel
+    testImplementation ("org.mockito.kotlin:mockito-kotlin:5.2.1")
     testImplementation(libs.kotlinx.coroutines.test) // Untuk Coroutines Test
     testImplementation(libs.androidx.core.testing) // Untuk InstantTaskExecutorRule
     testImplementation(libs.hilt.android.testing) // Untuk Hilt testing
