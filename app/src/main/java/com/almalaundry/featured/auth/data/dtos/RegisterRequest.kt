@@ -11,4 +11,7 @@ data class RegisterRequest(
     @SerializedName("c_password") val confirmPassword: String,
     @SerializedName("role") val role: String,
     @SerializedName("laundry_id") val laundryId: String
+//    @SerializedName("laundry_name") val laundryName: String,
+//    @SerializedName("dashboard_route") val dashboardRoute: String
+
 )
