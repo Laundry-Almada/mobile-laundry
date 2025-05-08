@@ -158,7 +158,7 @@ fun LaundryDashboard(
                             modifier = Modifier
                                 .padding(16.dp)
                                 .width(383.dp)
-                                .height(152.dp)
+                                .height(190.dp)
                                 .shadow(10.dp, RoundedCornerShape(20.dp))
                                 .background(
                                     MaterialTheme.colorScheme.surface,
@@ -191,7 +191,7 @@ fun LaundryDashboard(
                             modifier = Modifier
                                 .padding(16.dp)
                                 .width(383.dp)
-                                .height(152.dp) // Tinggi tetap cukup
+                                .height(190.dp)
                                 .shadow(10.dp, RoundedCornerShape(20.dp))
                                 .background(
                                     MaterialTheme.colorScheme.surface,
