@@ -1,6 +1,7 @@
 package com.almalaundry.featured.order.presentation.state
 
 import android.bluetooth.BluetoothDevice
+import android.graphics.Bitmap
 
 data class PrintScreenState(
     val isConnecting: Boolean = false,
@@ -9,5 +10,7 @@ data class PrintScreenState(
     val selectedDevice: BluetoothDevice? = null,
     val showDeviceDialog: Boolean = false,
     val bondedDevices: List<BluetoothDevice> = emptyList(),
-    val promptEnableBluetooth: Boolean = false
+    val promptEnableBluetooth: Boolean = false,
+    val connectionError: String? = null,
+    val screenshotBitmap: Bitmap? = null
 )

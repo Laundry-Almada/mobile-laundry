@@ -19,11 +19,11 @@ import com.almalaundry.shared.utils.formatDateToIndonesian
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
+import java.io.IOException
 import java.io.OutputStream
 import java.util.UUID
 
 object BluetoothPrinterUtils {
-
     // Check and request Bluetooth permissions
     fun checkAndRequestBluetoothPermissions(
         context: Context,
@@ -55,6 +55,7 @@ object BluetoothPrinterUtils {
         sessionManager: SessionManager,
         onConnectionResult: (BluetoothSocket?, Boolean) -> Unit
     ) {
+        var socket: BluetoothSocket? = null
         // Check BLUETOOTH_CONNECT permission
         val hasPermission =
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
@@ -86,8 +87,36 @@ object BluetoothPrinterUtils {
                 onConnectionResult(socket, true)
             }
         } catch (e: Exception) {
+            try {
+                socket?.close()
+            } catch (closeException: Exception) {
+                android.util.Log.e(
+                    "BluetoothPrinterUtils",
+                    "Error closing socket: ${closeException.message}",
+                    closeException
+                )
+            }
             withContext(Dispatchers.Main) {
                 Toast.makeText(context, "Gagal menyambung: ${e.message}", Toast.LENGTH_SHORT).show()
+                onConnectionResult(null, false)
+            }
+        } catch (e: SecurityException) {
+            try {
+                socket?.close()
+            } catch (closeException: Exception) {
+                android.util.Log.e(
+                    "BluetoothPrinterUtils",
+                    "Error closing socket: ${closeException.message}",
+                    closeException
+                )
+            }
+            withContext(Dispatchers.Main) {
+                Toast.makeText(
+                    context,
+                    "Izin Bluetooth diperlukan: ${e.message}",
+                    Toast.LENGTH_SHORT
+                )
+                    .show()
                 onConnectionResult(null, false)
             }
         }
@@ -125,6 +154,7 @@ object BluetoothPrinterUtils {
         }
         val savedDevice = bluetoothManager.adapter.bondedDevices.find { it.address == savedAddress }
         if (savedDevice != null) {
+            val socket: BluetoothSocket? = null
             try {
                 val uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
                 val socket = savedDevice.createRfcommSocketToServiceRecord(uuid)
@@ -138,10 +168,37 @@ object BluetoothPrinterUtils {
                     onReconnectionResult(socket, savedDevice, true)
                 }
             } catch (e: Exception) {
+                try {
+                    socket?.close()
+                } catch (closeException: Exception) {
+                    android.util.Log.e(
+                        "BluetoothPrinterUtils",
+                        "Error closing socket: ${closeException.message}",
+                        closeException
+                    )
+                }
                 withContext(Dispatchers.Main) {
                     Toast.makeText(
                         context,
                         "Gagal memulihkan koneksi: ${e.message}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    onReconnectionResult(null, null, false)
+                }
+            } catch (e: SecurityException) {
+                try {
+                    socket?.close()
+                } catch (closeException: Exception) {
+                    android.util.Log.e(
+                        "BluetoothPrinterUtils",
+                        "Error closing socket: ${closeException.message}",
+                        closeException
+                    )
+                }
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(
+                        context,
+                        "Izin Bluetooth diperlukan: ${e.message}",
                         Toast.LENGTH_SHORT
                     ).show()
                     onReconnectionResult(null, null, false)
@@ -246,7 +303,7 @@ object BluetoothPrinterUtils {
         // Calculate heights
         val titleLineHeight = titlePaint.fontMetrics.bottom - titlePaint.fontMetrics.top + 1f
         val textHeight = lineHeight * wrappedLines.size
-        val tearOffSpace = 30 // Extra space at the bottom for tear-off
+        val tearOffSpace = 40 // Extra space at the bottom for tear-off
         // Bitmap height accommodates QR code, text, title, margins, and tear-off space
         val bitmapHeight = maxOf(
             qrCodeSize + titleLineHeight.toInt() + 20, // QR code height + title + margins
@@ -307,6 +364,11 @@ object BluetoothPrinterUtils {
                 outputStream.flush()
             }
             withContext(Dispatchers.Main) {
+                onPrintComplete()
+            }
+        } catch (e: IOException) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, "Gagal mencetak: ${e.message}", Toast.LENGTH_SHORT).show()
                 onPrintComplete()
             }
         } catch (e: Exception) {

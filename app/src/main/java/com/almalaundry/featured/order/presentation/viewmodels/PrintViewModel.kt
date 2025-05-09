@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.pm.PackageManager
+import android.util.Log
 import android.widget.Toast
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 class PrintScreenViewModel(
     private val sessionManager: SessionManager,
@@ -42,7 +44,6 @@ class PrintScreenViewModel(
             return
         }
         BluetoothPrinterUtils.checkAndRequestBluetoothPermissions(context, permissionLauncher) {
-            // Load bonded devices when permissions are granted
             loadBondedDevices(context)
             _state.update { it.copy(showDeviceDialog = true) }
         }
@@ -55,19 +56,49 @@ class PrintScreenViewModel(
         }
         viewModelScope.launch {
             _state.update { it.copy(isConnecting = true) }
-            BluetoothPrinterUtils.connectToPrinter(
-                context,
-                device,
-                sessionManager
-            ) { socket, isConnected ->
-                bluetoothSocket = socket
+            try {
+                withTimeout(5000L) { // Timeout 5 detik
+                    BluetoothPrinterUtils.connectToPrinter(
+                        context,
+                        device,
+                        sessionManager
+                    ) { socket, isConnected ->
+                        bluetoothSocket = socket
+                        _state.update {
+                            it.copy(
+                                isConnecting = false,
+                                isConnected = isConnected,
+                                selectedDevice = if (isConnected) device else null
+                            )
+                        }
+                        if (!isConnected) {
+                            Toast.makeText(
+                                context,
+                                "Gagal menyambung ke printer",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                try {
+                    bluetoothSocket?.close()
+                } catch (e: Exception) {
+                    // Ignore closing errors
+                }
+                bluetoothSocket = null
                 _state.update {
                     it.copy(
                         isConnecting = false,
-                        isConnected = isConnected,
-                        selectedDevice = if (isConnected) device else null
+                        isConnected = false,
+                        selectedDevice = null
                     )
                 }
+                Toast.makeText(
+                    context,
+                    "Timeout atau error koneksi: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -79,19 +110,46 @@ class PrintScreenViewModel(
         }
         viewModelScope.launch {
             _state.update { it.copy(isConnecting = true) }
-            BluetoothPrinterUtils.reconnectToSavedPrinter(
-                context,
-                sessionManager,
-                bluetoothManager
-            ) { socket, device, isConnected ->
-                bluetoothSocket = socket
+            try {
+                withTimeout(5000L) { // Timeout 5 detik
+                    BluetoothPrinterUtils.reconnectToSavedPrinter(
+                        context,
+                        sessionManager,
+                        bluetoothManager
+                    ) { socket, device, isConnected ->
+                        bluetoothSocket = socket
+                        _state.update {
+                            it.copy(
+                                isConnecting = false,
+                                isConnected = isConnected,
+                                selectedDevice = device
+                            )
+                        }
+                        if (!isConnected) {
+                            Toast.makeText(context, "Gagal memulihkan koneksi", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                try {
+                    bluetoothSocket?.close()
+                } catch (e: Exception) {
+                    // Ignore closing errors
+                }
+                bluetoothSocket = null
                 _state.update {
                     it.copy(
                         isConnecting = false,
-                        isConnected = isConnected,
-                        selectedDevice = device
+                        isConnected = false,
+                        selectedDevice = null
                     )
                 }
+                Toast.makeText(
+                    context,
+                    "Timeout atau error koneksi: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -104,10 +162,18 @@ class PrintScreenViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             _state.update { it.copy(isPrinting = true) }
             bluetoothSocket?.outputStream?.let { outputStream ->
-                BluetoothPrinterUtils.printQRCode(context, order, outputStream) {
+                try {
+                    BluetoothPrinterUtils.printQRCode(context, order, outputStream) {
+                        viewModelScope.launch {
+                            _state.update { it.copy(isPrinting = false) }
+                            Toast.makeText(context, "Mencetak selesai", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } catch (e: Exception) {
                     viewModelScope.launch {
                         _state.update { it.copy(isPrinting = false) }
-                        Toast.makeText(context, "Mencetak...", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "Gagal mencetak: ${e.message}", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
             } ?: run {
@@ -121,21 +187,18 @@ class PrintScreenViewModel(
 
     fun handlePermissionResult(context: Context, permissions: Map<String, Boolean>) {
         if (permissions.all { it.value }) {
-            // Load bonded devices when permissions are granted
             loadBondedDevices(context)
             _state.update { it.copy(showDeviceDialog = true) }
         } else {
-            // Handle permission denied (notified in BluetoothPrinterUtils)
+            Toast.makeText(context, "Izin Bluetooth ditolak", Toast.LENGTH_SHORT).show()
         }
     }
 
     fun handleBluetoothEnableResult(context: Context, resultCode: Int) {
         if (resultCode == android.app.Activity.RESULT_OK) {
-            // Bluetooth enabled, proceed with operations
             loadBondedDevices(context)
             _state.update { it.copy(promptEnableBluetooth = false, showDeviceDialog = true) }
         } else {
-            // User declined to enable Bluetooth
             Toast.makeText(context, "Hidupkan Bluetooth terlebih dahulu", Toast.LENGTH_SHORT).show()
             _state.update { it.copy(promptEnableBluetooth = false) }
         }
@@ -146,7 +209,6 @@ class PrintScreenViewModel(
     }
 
     private fun loadBondedDevices(context: Context) {
-        // Check BLUETOOTH_CONNECT permission
         val hasPermission =
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 ContextCompat.checkSelfPermission(
@@ -154,7 +216,7 @@ class PrintScreenViewModel(
                     Manifest.permission.BLUETOOTH_CONNECT
                 ) == PackageManager.PERMISSION_GRANTED
             } else {
-                true // Permission not required for older Android versions
+                true
             }
 
         if (hasPermission && isBluetoothEnabled()) {
@@ -167,12 +229,17 @@ class PrintScreenViewModel(
 
     override fun onCleared() {
         super.onCleared()
-        // Close the socket when ViewModel is cleared
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                bluetoothSocket?.close()
+                bluetoothSocket?.let { socket ->
+                    if (socket.isConnected) {
+                        socket.close()
+                    }
+                }
             } catch (e: Exception) {
-                // Ignore closing errors
+                Log.e("PrintScreenViewModel", "Error closing socket in onCleared: ${e.message}", e)
+            } finally {
+                bluetoothSocket = null
             }
         }
     }
