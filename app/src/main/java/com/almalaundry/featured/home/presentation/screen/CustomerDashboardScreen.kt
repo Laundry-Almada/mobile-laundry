@@ -1,6 +1,7 @@
 package com.almalaundry.featured.home.presentation.screen
 
 import android.os.Build
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ScaffoldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,6 +43,7 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -52,6 +55,7 @@ import com.almalaundry.featured.order.presentation.components.shimmer.ShimmerOrd
 import com.almalaundry.shared.commons.compositional.LocalNavController
 import com.almalaundry.shared.presentation.components.BannerHeader
 import com.composables.icons.lucide.Lucide
+import com.composables.icons.lucide.Search
 import com.composables.icons.lucide.X
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
@@ -76,7 +80,7 @@ fun CustomerDashboardScreen(
             .debounce(300)
             .distinctUntilChanged()
             .collect { shouldLoadMore ->
-                if (shouldLoadMore && !state.isLoading && state.hasMoreData && state.identifier.length >= 3) {
+                if (shouldLoadMore && !state.isLoading && state.hasMoreData) {
                     viewModel.loadOrders(state.identifier, isLoadMore = true)
                 }
             }
@@ -131,18 +135,50 @@ fun CustomerDashboardScreen(
                                         keyboardType = KeyboardType.Text
                                     ),
                                     trailingIcon = {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            // Reset Icon
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // Clear Icon
                                             if (state.identifier.isNotBlank()) {
-                                                IconButton(onClick = {
-                                                    viewModel.updateIdentifier("")
-                                                    viewModel.clearOrders()
-                                                }) {
+                                                IconButton(
+                                                    onClick = {
+                                                        viewModel.updateIdentifier("")
+                                                        viewModel.clearOrders()
+                                                    }
+                                                ) {
                                                     Icon(
                                                         imageVector = Lucide.X,
-                                                        contentDescription = "Clear"
+                                                        contentDescription = "Clear",
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(16.dp)
                                                     )
                                                 }
+                                            }
+                                            VerticalDivider(
+                                                modifier = Modifier
+                                                    .padding(horizontal = 4.dp)
+                                                    .height(24.dp),
+                                            )
+                                            val context = LocalContext.current
+                                            // Search Icon
+                                            IconButton(
+                                                onClick = {
+                                                    if (state.identifier.length >= 3) {
+                                                        viewModel.loadOrders(state.identifier)
+                                                    } else {
+                                                        Toast.makeText(
+                                                            context,
+                                                            "Masukkan setidaknya 3 karakter",
+                                                            Toast.LENGTH_SHORT
+                                                        ).show()
+                                                    }
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Lucide.Search,
+                                                    contentDescription = "Cari Customer",
+                                                    tint = MaterialTheme.colorScheme.primary,
+                                                )
                                             }
                                         }
                                     }
@@ -191,7 +227,9 @@ fun CustomerDashboardScreen(
                                             textAlign = TextAlign.Center
                                         )
                                         Spacer(modifier = Modifier.height(12.dp))
-                                        TextButton(onClick = { viewModel.loadOrders(state.identifier) }) {
+                                        TextButton(
+                                            onClick = { viewModel.loadOrders(state.identifier) }
+                                        ) {
                                             Text(
                                                 text = "Coba Lagi",
                                                 style = MaterialTheme.typography.labelLarge,

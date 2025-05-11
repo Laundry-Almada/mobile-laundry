@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.almalaundry.featured.home.presentation.state.CustomerDashboardState
 import com.almalaundry.featured.order.data.repositories.OrderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -19,19 +17,8 @@ class CustomerDashboardViewModel @Inject constructor(
     internal val mutableState = MutableStateFlow(CustomerDashboardState())
     val state = mutableState.asStateFlow()
 
-    private var fetchJob: Job? = null
-
     fun updateIdentifier(identifier: String) {
         mutableState.value = mutableState.value.copy(identifier = identifier)
-
-        if (identifier.length >= 3) {
-            fetchJob?.cancel()
-
-            fetchJob = viewModelScope.launch {
-                delay(500)
-                loadOrders(identifier)
-            }
-        }
     }
 
     fun clearOrders() {
@@ -58,10 +45,16 @@ class CustomerDashboardViewModel @Inject constructor(
             )
 
             result.onSuccess { response ->
+                // Filter order dengan data lengkap
+                val filteredOrders = response.data.filter { order ->
+                    order.customer.name.isNotBlank() &&
+                            (order.customer.phone != null || order.customer.username != null) &&
+                            order.laundry.phone != null
+                }
                 val newOrders = if (isLoadMore) {
-                    mutableState.value.orders + response.data
+                    mutableState.value.orders + filteredOrders
                 } else {
-                    response.data
+                    filteredOrders
                 }
 
                 mutableState.value = mutableState.value.copy(

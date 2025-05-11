@@ -164,10 +164,15 @@ fun CustomerOrderCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                if (order.laundry.phone.isNotBlank()) {
+                                if (order.laundry.phone?.isNotBlank() == true) {
+                                    val customerIdentity = when {
+                                        order.customer.phone?.isNotBlank() == true -> "No. telepon ${order.customer.phone}"
+                                        order.customer.username?.isNotBlank() == true -> "Username @${order.customer.username}"
+                                        else -> "tidak tersedia"
+                                    }
                                     openWhatsApp(
                                         phone = order.laundry.phone,
-                                        message = "Halo, saya ingin bertanya tentang pesanan laundry dengan nama ${order.customer.name}, No. telepon ${order.customer.phone}, barcode ${order.barcode}",
+                                        message = "Halo, saya ingin bertanya tentang pesanan laundry dengan nama ${order.customer.name}, $customerIdentity, barcode ${order.barcode}",
                                         context = context
                                     )
                                 } else {
@@ -208,7 +213,12 @@ fun CustomerOrderCard(
                             color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(top = 8.dp)
                         )
-                    }
+                    } ?: Text(
+                        text = "No. Telepon: Tidak tersedia",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 8.dp)
+                    )
 
                     // username
                     order.customer.username?.takeIf { it.isNotBlank() }?.let { username ->
@@ -241,7 +251,7 @@ fun CustomerOrderCard(
                         modifier = Modifier.padding(top = 8.dp)
                     )
                     // Catatan
-                    if (order.note.isNotBlank()) {
+                    if (!order.note.isNullOrBlank()) {
                         Text(
                             text = "Catatan: ${order.note}",
                             style = MaterialTheme.typography.bodyMedium,
