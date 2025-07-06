@@ -134,7 +134,8 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 
 | Status | Fungsional |
 |:------:|------------|
-|   ✅    | Statistik Order & Pendapatan  |
+|   ✅    | Statistik Order  |
+|   ✅    | Statistik Pendapatan  |
 
 ### Profile
 
@@ -154,7 +155,7 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 |   ✅    | Filtering order                  |
 |   ✅    | Searching order                  |
 |   ✅    | Delete Order                     |
-|   ✅    | Send Nota/message whatsapp       |
+|   ✅    | Send Update Status Pesanan melalui Whatsapp (Notifikasi) |
 
 ### History Order
 
