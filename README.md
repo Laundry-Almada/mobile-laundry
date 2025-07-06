@@ -134,8 +134,7 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 
 | Status | Fungsional |
 |:------:|------------|
-|   ✅    | Statistik  |
-|   -    | Notif      |
+|   ✅    | Statistik Order & Pendapatan  |
 
 ### Profile
 
@@ -143,6 +142,7 @@ Berikut adalah daftar dependensi utama yang digunakan dalam proyek ini, dikelomp
 |:------:|----------------|
 |   ✅   | Get Profile    |
 |   ✅   | Update Profile |
+|   ✅   | Update Pembaruan Aplikasi |
 
 ### Order
 
